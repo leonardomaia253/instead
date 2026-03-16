@@ -2,11 +2,12 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { HealthGauge } from "@/components/HealthGauge";
 import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
 import { supabase, type GeneratedToken } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
+import { useTranslations } from "next-intl";
 
 type LendingPosition = {
   collateral_asset: string;

@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAccount } from "wagmi";
+import { useTranslations } from "next-intl";
 
 export default function AdminDashboard() {
+  const t = useTranslations("Common");
   const { address } = useAccount();
   const [stats, setStats] = useState({
     totalUsers: 0,

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { supabase, type GeneratedToken } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { Skeleton } from "@/components/Skeleton";
+import { useTranslations } from "next-intl";
 
 export default function TokenPage() {
   const params       = useParams();

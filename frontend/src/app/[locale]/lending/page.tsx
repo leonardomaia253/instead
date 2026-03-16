@@ -1,13 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useInsteadLending } from "@/hooks/useInsteadLending";
-import Link from "next/link";
-import { insertAudit, upsertLendingPosition } from "@/lib/supabase";
-import { useEffect, useRef } from "react";
+import { Link } from "@/navigation";
+import { insertAudit, upsertLendingPosition, supabase, type GeneratedToken } from "@/lib/supabase";
 import { useChainId } from "wagmi";
 import { AIAssistant } from "@/components/shared/AIAssistant";
+import { useTranslations } from "next-intl";
+import { HealthGauge } from "@/components/HealthGauge";
+import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
+import { CHAIN_META } from "@/lib/wagmi";
 
 // Tokens de exemplo
 const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as `0x${string}`;
@@ -16,6 +19,7 @@ const WETH_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1" as `0x${string
 type Tab = "deposit" | "borrow" | "repay";
 
 export default function LendingPage() {
+  const t = useTranslations("Common");
   const { isConnected, address } = useAccount();
   const chainId = useChainId();
   const [tab, setTab] = useState<Tab>("deposit");
@@ -73,7 +77,7 @@ export default function LendingPage() {
           <div>
             <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar</Link>
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700, marginTop: 8 }}>
-              🏦 <span className="gradient-text">Crypto Lending</span>
+              🏦 <span className="gradient-text">{t("lending")}</span>
             </h1>
             <p style={{ color: "var(--text-muted)", marginTop: 8 }}>
               Deposite colateral e tome empréstimos com LTV de até 70%. Juros calculados dinamicamente.
@@ -84,13 +88,13 @@ export default function LendingPage() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, background: "var(--bg-surface)", padding: 6, borderRadius: 14, marginBottom: 28, width: "fit-content" }}>
-          {(["deposit", "borrow", "repay"] as Tab[]).map((t) => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              background: tab === t ? "var(--accent-grad)" : "transparent",
-              color: tab === t ? "white" : "var(--text-muted)",
+          {(["deposit", "borrow", "repay"] as Tab[]).map((tBtn) => (
+            <button key={tBtn} onClick={() => setTab(tBtn)} style={{
+              background: tab === tBtn ? "var(--accent-grad)" : "transparent",
+              color: tab === tBtn ? "white" : "var(--text-muted)",
               border: "none", borderRadius: 10, padding: "10px 24px",
               fontWeight: 600, cursor: "pointer", textTransform: "capitalize", transition: "all 0.15s",
-            }}>{t === "deposit" ? "Depositar" : t === "borrow" ? "Tomar Empréstimo" : "Repagar"}</button>
+            }}>{tBtn === "deposit" ? "Depositar" : tBtn === "borrow" ? "Tomar Empréstimo" : "Repagar"}</button>
           ))}
         </div>
 
