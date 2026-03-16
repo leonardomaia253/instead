@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale, localePrefix } from './navigation';
+import { routing } from './navigation';
 
-const intlMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix
-});
+const intlMiddleware = createMiddleware(routing);
 
 export const config = {
   matcher: [
@@ -27,7 +23,7 @@ export default async function middleware(req: NextRequest) {
   // 1. IP and Header based Locale Detection
   // Check if we already have a locale prefix in the URL
   const { pathname } = url;
-  const pathnameHasLocale = locales.some(
+  const pathnameHasLocale = routing.locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
 
@@ -36,7 +32,7 @@ export default async function middleware(req: NextRequest) {
     const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || 'US';
     const acceptLanguage = req.headers.get('accept-language') || '';
     
-    let detectedLocale = defaultLocale;
+    let detectedLocale = routing.defaultLocale;
     
     // Simple mapping: Brazil -> pt, Others -> en
     if (country === 'BR' || acceptLanguage.toLowerCase().includes('pt')) {

@@ -1,9 +1,9 @@
 import { getRequestConfig } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { locales } from '../navigation';
+import { routing } from '../navigation';
 
 export default getRequestConfig(async ({ locale }) => {
-  if (!locales.includes(locale as any)) notFound();
+  if (!routing.locales.includes(locale as any)) notFound();
 
   return {
     locale: locale as string,
