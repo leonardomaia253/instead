@@ -1,0 +1,13 @@
+{
+  "Index": {
+    "title": "Instead DeFi | Lending and Tokenization in one Platform",
+    "description": "Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation across 7+ EVM networks."
+  },
+  "Common": {
+    "lending": "Lending",
+    "factory": "Factory",
+    "staking": "Staking",
+    "docs": "Documentation",
+    "security": "Security"
+  }
+}

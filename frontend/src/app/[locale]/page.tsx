@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import Link from "next/link";
+import { Link } from "../../navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CHAIN_META } from "@/lib/wagmi";
 import { getPlatformStats, type PlatformStat } from "@/lib/supabase";
+import { useTranslations } from "next-intl";
 
 const HealthGauge = dynamic(() => import("@/components/HealthGauge").then(mod => mod.HealthGauge), { ssr: false });
 const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
@@ -31,6 +32,8 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const t = useTranslations("Index");
+  const common = useTranslations("Common");
   const statsRef = useRef(null);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
@@ -113,7 +116,7 @@ export default function Home() {
               }}
               variants={fadeIn}
             >
-              Empréstimos e Tokenização <br />
+              {t("title").split("|")[0]} <br />
               <span className="gradient-text">Sem Complicação.</span>
             </motion.h1>
             
@@ -127,7 +130,7 @@ export default function Home() {
               }}
               variants={fadeIn}
             >
-              A plataforma Instead oferece liquidez instantânea para seus ativos e permite lançar seus próprios tokens em segundos em mais de 7 redes simultâneas.
+              {t("description")}
             </motion.p>
 
             <motion.div 
@@ -135,10 +138,10 @@ export default function Home() {
               variants={fadeIn}
             >
               <Link href="/lending" className="btn-primary" style={{ padding: "18px 48px", fontSize: 18, textDecoration: "none" }}>
-                Começar a Emprestar
+                {common("lending")}
               </Link>
               <Link href="/factory" className="btn-outline glass-morphism" style={{ padding: "18px 48px", fontSize: 18, textDecoration: "none" }}>
-                Criar seu Token
+                {common("factory")}
               </Link>
             </motion.div>
           </motion.div>
@@ -185,7 +188,7 @@ export default function Home() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
                   <div>
                     <div style={{ fontSize: 44, marginBottom: 20 }}>🏦</div>
-                    <h2 style={{ fontSize: 26, fontWeight: 700, marginBottom: 14, fontFamily: "'Space Grotesk', sans-serif" }}>Crypto Lending</h2>
+                    <h2 style={{ fontSize: 26, fontWeight: 700, marginBottom: 14, fontFamily: "'Space Grotesk', sans-serif" }}>{common("lending")}</h2>
                     <p style={{ color: "var(--text-muted)", fontSize: 16, lineHeight: 1.6 }}>
                       Deposite ativos Bluechip ou seus próprios tokens como colateral e retire liquidez imediata com taxas dinâmicas.
                     </p>
@@ -199,7 +202,7 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/lending" className="btn-outline" style={{ display: "block", textDecoration: "none" }}>Ver Pools de Liquidez</Link>
+                <Link href="/lending" className="btn-outline" style={{ display: "block", textDecoration: "none" }}>Pools</Link>
               </div>
 
               {/* Factory Card */}
@@ -207,7 +210,7 @@ export default function Home() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
                   <div>
                     <div style={{ fontSize: 44, marginBottom: 20 }}>🏭</div>
-                    <h2 style={{ fontSize: 26, fontWeight: 700, marginBottom: 14, fontFamily: "'Space Grotesk', sans-serif" }}>Token Factory</h2>
+                    <h2 style={{ fontSize: 26, fontWeight: 700, marginBottom: 14, fontFamily: "'Space Grotesk', sans-serif" }}>{common("factory")}</h2>
                     <p style={{ color: "var(--text-muted)", fontSize: 16, lineHeight: 1.6 }}>
                       A maneira mais rápida de lançar seu projeto. Deploy em múltiplas chains simultâneas com funcionalidades avançadas.
                     </p>
@@ -228,7 +231,7 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/factory" className="btn-outline" style={{ display: "block", textDecoration: "none" }}>Criar meu Token Agora</Link>
+                <Link href="/factory" className="btn-outline" style={{ display: "block", textDecoration: "none" }}>{common("factory")}</Link>
               </div>
             </motion.div>
           </div>

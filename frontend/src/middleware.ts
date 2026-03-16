@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale, localePrefix } from './navigation';
+
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix
+});
 
 export const config = {
   matcher: [
@@ -16,23 +24,34 @@ export const config = {
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
-  // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
-  const hostname = req.headers
-    .get("host")!
-    .replace(".localhost:3000", `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`);
+  // 1. IP and Header based Locale Detection
+  // Check if we already have a locale prefix in the URL
+  const { pathname } = url;
+  const pathnameHasLocale = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
 
-  // Get the partial path (e.g. /blog/hello-world)
-  const searchParams = req.nextUrl.searchParams.toString();
-  const path = `${url.pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
+  if (!pathnameHasLocale) {
+    // Detect from Cloudflare or Vercel Geolocation headers if available
+    const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || 'US';
+    const acceptLanguage = req.headers.get('accept-language') || '';
+    
+    let detectedLocale = defaultLocale;
+    
+    // Simple mapping: Brazil -> pt, Others -> en
+    if (country === 'BR' || acceptLanguage.toLowerCase().includes('pt')) {
+      detectedLocale = 'pt';
+    }
 
-  // Admin protection
-  if (url.pathname.startsWith("/admin") && url.pathname !== "/admin/login") {
-    // For now, we rely on the client-side check in AdminLayout for deep verification,
-    // but we can add a basic session check here if needed.
-    // In a production app, we'd verify the JWT and check the role claim.
+    // Redirect to the detected locale if it's not the default or if we want to enforce prefix
+    // next-intl middleware handles this as well, but we can nudge it here
   }
 
-  return NextResponse.next();
+  // Admin protection logic remains
+  if (url.pathname.startsWith("/admin") && url.pathname !== "/admin/login") {
+     // Admin check...
+  }
+
+  // Use next-intl middleware
+  return intlMiddleware(req);
 }

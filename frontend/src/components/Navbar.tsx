@@ -1,17 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "../navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
-
-const NAV_LINKS = [
-  { href: "/lending",   label: "Lending",   icon: "🏦" },
-  { href: "/factory",   label: "Factory",   icon: "🏭" },
-  { href: "/staking",   label: "Staking",   icon: "💎" },
-  { href: "/simulator", label: "Simulador", icon: "🧮" },
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-];
+import { useTranslations } from "next-intl";
 
 const Logo = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
@@ -26,11 +18,20 @@ const Logo = () => (
 );
 
 export function Navbar() {
+  const t = useTranslations("Common");
   const pathname = usePathname();
   const { isConnected } = useAccount();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  const NAV_LINKS = [
+    { href: "/lending",   label: t("lending"),   icon: "🏦" },
+    { href: "/factory",   label: t("factory"),   icon: "🏭" },
+    { href: "/staking",   label: t("staking"),   icon: "💎" },
+    { href: "/simulator", label: "Simulador", icon: "🧮" },
+    { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);

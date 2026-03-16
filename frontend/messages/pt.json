@@ -1,0 +1,13 @@
+{
+  "Index": {
+    "title": "Instead DeFi | Empréstimos e Tokenização em uma Plataforma",
+    "description": "A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code em mais de 7 redes EVM."
+  },
+  "Common": {
+    "lending": "Lending",
+    "factory": "Factory",
+    "staking": "Staking",
+    "docs": "Documentação",
+    "security": "Segurança"
+  }
+}
