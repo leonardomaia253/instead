@@ -5,12 +5,14 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
-import { HealthGauge } from "@/components/HealthGauge";
 import { Footer } from "@/components/Footer";
-import Scene3D from "@/components/Scene3D";
 import { CHAIN_META } from "@/lib/wagmi";
 import { getPlatformStats, type PlatformStat } from "@/lib/supabase";
+
+const HealthGauge = dynamic(() => import("@/components/HealthGauge").then(mod => mod.HealthGauge), { ssr: false });
+const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
 
 gsap.registerPlugin(ScrollTrigger);
 
