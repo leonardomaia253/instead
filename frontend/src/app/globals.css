@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── CSS Variables (Dark Theme) ─────────────────────────────────────────── */
+:root {
+  --bg-base:      #080b14;
+  --bg-surface:   #0e1628;
+  --bg-card:      #131d35;
+  --accent-1:     #7c3aed;
+  --accent-2:     #2563eb;
+  --accent-grad:  linear-gradient(135deg, #7c3aed, #2563eb);
+  --text-primary: #f1f5f9;
+  --text-muted:   #64748b;
+  --border:       rgba(255,255,255,0.07);
+  --green:        #10b981;
+  --red:          #ef4444;
+  --radius:       16px;
+  --shadow:       0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* ─── Light Mode ─────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-base:      #f8fafc;
+  --bg-surface:   #f1f5f9;
+  --bg-card:      #ffffff;
+  --text-primary: #0f172a;
+  --text-muted:   #64748b;
+  --border:       rgba(0,0,0,0.08);
+  --shadow:       0 4px 16px rgba(0,0,0,0.08);
+}
+
+html, body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Performance Optimizations ────────────────────────────────────────────── */
+.animate-fade-up, .card, .btn-primary, .btn-outline {
+  will-change: transform, opacity;
+  contain: content;
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.gradient-text {
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top right, rgba(124,58,237,0.05), transparent 60%);
+  pointer-events: none;
+}
+.card:hover { 
+  border-color: rgba(124,58,237,0.3); 
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5); 
+  transform: translateY(-4px); 
+}
+
+.glass-morphism {
+  background: rgba(19, 29, 53, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+.btn-primary {
+  background: var(--accent-grad);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+}
+.btn-primary:hover  { opacity: 0.92; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(124,58,237,0.4); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+  text-align: center;
+}
+.btn-outline:hover { 
+  border-color: var(--accent-1); 
+  background: rgba(124,58,237,0.05); 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* ─── Layout Extras ──────────────────────────────────────────────────────── */
+.section-glow {
+  position: relative;
+}
+.section-glow::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 100%;
+  background: radial-gradient(circle, rgba(124,58,237,0.03) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ─── Form Inputs ────────────────────────────────────────────────────────── */
+input, select, textarea {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 15px;
+  padding: 12px 16px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.14);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--accent-1); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #9333ea; }
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+  .show-mobile { display: block !important; }
+  
+  .card { padding: 20px; }
+  .btn-primary, .btn-outline { padding: 10px 20px; font-size: 14px; }
+  .container { padding: 0 20px; }
+}
+
+@media (min-width: 769px) {
+  .show-mobile { display: none !important; }
+  .md-grid-2 { grid-template-columns: repeat(2, 1fr) !important; display: grid !important; gap: 24px; }
+  .md-grid-3 { grid-template-columns: repeat(3, 1fr) !important; display: grid !important; gap: 24px; }
+  .md-grid-4 { grid-template-columns: repeat(4, 1fr) !important; display: grid !important; gap: 20px; }
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  opacity: 0;
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
