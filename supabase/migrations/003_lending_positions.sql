@@ -28,9 +28,9 @@ CREATE POLICY "Posições são públicas para leitura"
 CREATE POLICY "Permitir upsert de posições"
   ON public.lending_positions
   FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Permitir update de posições"
   ON public.lending_positions
   FOR UPDATE
-  USING (true);
+  USING (wallet_address = (auth.jwt() ->> 'wallet_address'));

@@ -23,6 +23,7 @@ import {
   type StakingPool, 
   type PlatformStat 
 } from "@/lib/supabase";
+import { useInsteadStaking } from "@/hooks/useInsteadStaking";
 
 // Mapper para ícones do Lucide baseado no banco de dados
 const IconMapper: Record<string, React.ReactNode> = {
@@ -39,6 +40,8 @@ export default function StakingPage() {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { stake, unstake, claimReward, stakedBalance, pendingReward, isPending: txPending, isConfirmed, txHash, refetch } = useInsteadStaking();
 
   useEffect(() => {
     async function loadData() {
@@ -59,14 +62,23 @@ export default function StakingPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (isConfirmed) {
+      refetch();
+      setIsSubmitting(false);
+      setAmount("");
+    }
+  }, [isConfirmed, refetch]);
+
   const handleStake = async () => {
     if (!address || !selectedPool || !amount) return;
     
     setIsSubmitting(true);
     try {
-      // Simulação de transação on-chain seguida de auditoria
-      await new Promise(r => setTimeout(r, 1500));
+      // Transação real on-chain
+      await stake(amount);
       
+      // Auditoria no Supabase
       await insertAudit({
         user_wallet: address,
         action: "STAKE",
@@ -74,16 +86,15 @@ export default function StakingPage() {
           pool_id: selectedPool.id,
           pool_name: selectedPool.name,
           amount: amount,
-          symbol: "INST"
+          symbol: "INST",
+          tx_hash: txHash
         }
       });
       
-      alert(`Stake de ${amount} INST realizado com sucesso no pool ${selectedPool.name}! (Auditado no Supabase)`);
-      setAmount("");
-    } catch (error) {
+      alert(`Solicitação de Stake de ${amount} INST enviada! (Auditada no Supabase)`);
+    } catch (error: any) {
       console.error("Erro ao realizar stake:", error);
-      alert("Erro ao realizar stake. Verifique o console.");
-    } finally {
+      alert(`Erro ao realizar stake: ${error.message || "Verifique o console."}`);
       setIsSubmitting(false);
     }
   };

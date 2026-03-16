@@ -10,6 +10,7 @@ import { HealthGauge } from "@/components/HealthGauge";
 import { Footer } from "@/components/Footer";
 import Scene3D from "@/components/Scene3D";
 import { CHAIN_META } from "@/lib/wagmi";
+import { getPlatformStats, type PlatformStat } from "@/lib/supabase";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -33,8 +34,19 @@ export default function Home() {
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+  const [platformStats, setPlatformStats] = React.useState<PlatformStat[]>([]);
 
   useEffect(() => {
+    async function loadStats() {
+      try {
+        const stats = await getPlatformStats();
+        setPlatformStats(stats);
+      } catch (error) {
+        console.error("Erro ao carregar stats:", error);
+      }
+    }
+    loadStats();
+
     // GSAP Animation for stats
     const ctx = gsap.context(() => {
       gsap.from(".stat-item", {
@@ -52,6 +64,9 @@ export default function Home() {
 
     return () => ctx.revert();
   }, []);
+
+  const getStat = (key: string, defaultValue: string) => 
+    platformStats.find(s => s.key === key)?.value || defaultValue;
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
@@ -141,10 +156,10 @@ export default function Home() {
           marginTop: -20
         }}>
           {[
-            { label: "TVL Total", value: "$4.2M+" },
-            { label: "Tokens Criados", value: "1,240+" },
-            { label: "Taxas Economizadas", value: "$850K" },
-            { label: "Redes Ativas", value: "7+" }
+            { label: "TVL Total", value: getStat("total_value_locked", "$4.2M+") },
+            { label: "Tokens Criados", value: getStat("tokens_created", "1,240+") },
+            { label: "Taxas Economizadas", value: getStat("fees_saved", "$850K") },
+            { label: "Redes Ativas", value: getStat("active_networks", "7+") }
           ].map((s, i) => (
             <div key={i} className="stat-item" style={{ textAlign: "center" }}>
               <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</div>

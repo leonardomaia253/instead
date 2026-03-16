@@ -22,7 +22,7 @@ export default function LendingPage() {
   const [selectedAsset, setSelectedAsset] = useState(USDC_ADDRESS);
   const [colAsset, setColAsset] = useState(WETH_ADDRESS);
   
-  const { deposit, depositCollateral, borrow, repay, isPending, isConfirmed, txHash, error } =
+  const { deposit, depositCollateral, borrow, repay, isPending, isConfirmed, txHash, error, collateralBalance, borrowBalance } =
     useInsteadLending(selectedAsset);
 
   const lastAuditedHash = useRef<string | null>(null);
@@ -44,20 +44,18 @@ export default function LendingPage() {
         }
       }).catch(console.error);
 
-      // 2. Persist Position (Only for Deposit and Borrow for now)
-      if (tab === "deposit" || tab === "borrow") {
-        upsertLendingPosition({
-          wallet_address: address,
-          collateral_asset: colAsset,
-          borrow_asset: selectedAsset,
-          collateral_amount: tab === "deposit" ? numAmount : 0, // Simplificado: Idealmente lido do contrato
-          borrowed_amount: tab === "borrow" ? numAmount : 0,
-          health_factor: tab === "deposit" ? 999 : 1.5, // Mock seguro para UI
-          chain_id: chainId,
-        }).catch(console.error);
-      }
+      // 2. Persist Position with real contract data
+      upsertLendingPosition({
+        wallet_address: address,
+        collateral_asset: colAsset,
+        borrow_asset: selectedAsset,
+        collateral_amount: Number(collateralBalance) / (10 ** 18), // Simplificado: Assume 18 decimais para tokens core
+        borrowed_amount: Number(borrowBalance) / (10 ** 18),
+        health_factor: Number(borrowBalance) > 0 ? (Number(collateralBalance) / Number(borrowBalance) * 0.8) : 999, 
+        chain_id: chainId,
+      }).catch(console.error);
     }
-  }, [isConfirmed, txHash, address, tab, selectedAsset, amount, colAsset, chainId]);
+  }, [isConfirmed, txHash, address, tab, selectedAsset, amount, colAsset, chainId, collateralBalance, borrowBalance]);
 
   function handleAction() {
     if (!amount) return;

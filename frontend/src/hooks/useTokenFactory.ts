@@ -12,6 +12,7 @@ const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "42161");
  */
 export function useTokenFactory() {
   const { writeContractAsync, isPending, error } = useWriteContract();
+  const publicClient = (require("wagmi")).usePublicClient(); // Dynamic import or just add at top
 
   // Leitura ao vivo da taxa de criação em ETH (baseada no preço Chainlink do ETH/USD)
   const { data: feeInEth, refetch: refetchFee } = useReadContract({
@@ -41,10 +42,26 @@ export function useTokenFactory() {
       value: feeWithSlippage,
     });
 
-    // Aguarda o recibo e persiste no Supabase (Note: em produção, o endereço exato do token deve
-    // ser lido do evento da transação via parseEventLogs do viem)
+    // Aguarda o recibo para extrair o endereço real do token
+    let tokenAddress = "pending";
+    try {
+      const { parseEventLogs } = await import("viem");
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const logs = parseEventLogs({
+        abi: TOKEN_FACTORY_ABI,
+        eventName: "TokenCreated",
+        logs: receipt.logs,
+      });
+      if (logs.length > 0) {
+        tokenAddress = (logs[0].args as any).tokenAddress;
+      }
+    } catch (err) {
+      console.error("Error parsing token address:", err);
+    }
+
+    // Persiste no Supabase com o endereço real (se encontrado)
     await insertGeneratedToken({
-      token_address: "pending", // substituído após parsing do evento
+      token_address: tokenAddress,
       creator_wallet: params.creatorWallet,
       name: params.name,
       symbol: params.symbol,

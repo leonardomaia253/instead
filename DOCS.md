@@ -12,6 +12,8 @@ Bem-vindo ao centro de conhecimento da Instead Finance. Este documento serve com
 5. [Segurança e Auditoria](#5-segurança-e-auditoria)
 6. [Governança e Tokenomics](#6-governança-e-tokenomics)
 7. [API e Integração](#7-api-e-integração)
+8. [Riscos e Divulgação de Segurança](#8-riscos-e-divulgação-de-segurança)
+9. [Guia de Deployment](#9-guia-de-deployment)
 
 ---
 
@@ -82,6 +84,34 @@ const sdk = new InsteadSDK(window.ethereum);
 await sdk.lending.deposit('WETH', '1.5');
 const health = await sdk.lending.getHealthFactor(userAddress);
 ```
+
+---
+
+## 8. Riscos e Divulgação de Segurança
+A transparência é fundamental no DeFi. Abaixo estão os riscos inerentes à arquitetura atual da Instead Finance:
+
+### A. Risco de Agregação (Lending Pool)
+O `InsteadLendingPool` atua como uma fachada para a Aave v3. Atualmente, todas as posições são agrupadas sob o endereço do contrato da Instead. Isso significa que:
+- O **Health Factor** é global para o contrato. Embora o frontend mostre dados individuais, a liquidação on-chain ocorre no nível do contrato.
+- Uma falha na gestão de colateral por um grande usuário pode afetar a liquidez disponível para outros se o contrato for liquidado na Aave.
+
+### B. Dependência de Oráculos
+A precificação e as taxas de criação de tokens dependem do Chainlink. Em caso de latência extrema ou falha do feed, as funções de criação podem ser pausadas automaticamente pelo contrato.
+
+---
+
+## 9. Guia de Deployment
+
+### Contratos Inteligentes
+1. Configure as chaves de API e Mnemonic no `hardhat.config.ts`.
+2. Execute o deploy: `npx hardhat run scripts/deploy.ts --network <network>`.
+3. Verifique os contratos no block explorer: `npx hardhat verify --network <network> <address> <args>`.
+
+### Frontend
+1. Clone o repositório.
+2. Copie `.env.example` para `.env.local` e preencha as variáveis.
+3. Instale dependências: `npm install --legacy-peer-deps`.
+4. Build: `npm run build`.
 
 ---
 

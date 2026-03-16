@@ -45,7 +45,7 @@ CREATE POLICY "Tokens são públicos para leitura"
 CREATE POLICY "Somente o criador pode inserir seu token"
   ON public.generated_tokens
   FOR INSERT
-  WITH CHECK (true); -- verificação real feita no backend via anon key + validação de wallet
+  WITH CHECK (auth.uid() IS NOT NULL); -- Em produção usaríamos validação de wallet signature no backend
 
 -- Política: users podem ler qualquer perfil público
 CREATE POLICY "Perfis são públicos"
@@ -57,4 +57,4 @@ CREATE POLICY "Perfis são públicos"
 CREATE POLICY "Usuário atualiza próprio perfil"
   ON public.users
   FOR UPDATE
-  USING (true);
+  USING (wallet_address = (auth.jwt() ->> 'wallet_address')); -- Assumindo que o JWT contém a wallet

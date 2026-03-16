@@ -10,8 +10,9 @@ import { erc20Abi } from "viem";
  */
 export function useInsteadLending(assetAddress?: `0x${string}`) {
   const { address } = useAccount();
-  const { writeContract, data: txHash, isPending, error } = useWriteContract();
+  const { writeContract, writeContractAsync, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
+  const publicClient = (require("wagmi")).usePublicClient();
 
   // Leitura de saldo de colateral do user
   const { data: userPosition } = useReadContract({
@@ -27,15 +28,30 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
 
   async function approveAndDeposit(asset: `0x${string}`, amount: string, decimals = 18) {
     const amountBN = parseUnits(amount, decimals);
-    // 1. Aprovar o LendingPool
-    writeContract({
-      address: asset,
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [CONTRACTS.LENDING_POOL, amountBN],
-    });
-    // Nota: Em uma implementação completa, aguardaria a aprovação concluir antes de depositar.
-    // Use um useEffect monitorando isConfirmed para encadear as transações.
+    
+    try {
+      // 1. Aprovar o LendingPool
+      const approveHash = await writeContractAsync({
+        address: asset,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [CONTRACTS.LENDING_POOL, amountBN],
+      });
+      
+      // 2. Aguardar confirmação da aprovação
+      await publicClient.waitForTransactionReceipt({ hash: approveHash });
+
+      // 3. Executar o depósito
+      return await writeContractAsync({
+        address: CONTRACTS.LENDING_POOL,
+        abi: LENDING_POOL_ABI,
+        functionName: "depositCollateral",
+        args: [asset, amountBN],
+      });
+    } catch (err) {
+      console.error("Error in approveAndDeposit:", err);
+      throw err;
+    }
   }
 
 

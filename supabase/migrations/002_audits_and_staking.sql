@@ -75,8 +75,8 @@ CREATE POLICY "Qualquer um pode ler stats da plataforma"
   FOR SELECT
   USING (true);
 
--- Permissão para inserir audits (anon ou auth)
+-- Permissão para inserir audits (apenas se autenticado)
 CREATE POLICY "Permitir inserção de audits"
   ON public.audits
   FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.uid() IS NOT NULL);
