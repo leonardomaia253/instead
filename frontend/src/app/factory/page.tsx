@@ -12,6 +12,7 @@ import {
   type GeneratedToken 
 } from "@/lib/supabase";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { AIAssistant } from "@/components/shared/AIAssistant";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type TokenForm = {
@@ -685,6 +686,16 @@ export default function FactoryPage() {
           </div>
         )}
       </div>
+
+      <AIAssistant 
+        type="token" 
+        contextData={{
+          name: form.name,
+          symbol: form.symbol,
+          description: form.description,
+          step: step
+        }} 
+      />
     </main>
   );
 }

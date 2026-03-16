@@ -7,6 +7,7 @@ import Link from "next/link";
 import { insertAudit, upsertLendingPosition } from "@/lib/supabase";
 import { useEffect, useRef } from "react";
 import { useChainId } from "wagmi";
+import { AIAssistant } from "@/components/shared/AIAssistant";
 
 // Tokens de exemplo
 const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as `0x${string}`;
@@ -186,6 +187,17 @@ export default function LendingPage() {
           )}
         </div>
       </div>
+
+      <AIAssistant 
+        type="lending" 
+        contextData={{
+          collateral: colAsset === WETH_ADDRESS ? "WETH" : "USDC",
+          collateralAmount: Number(collateralBalance) / (10 ** 18),
+          borrow: selectedAsset === USDC_ADDRESS ? "USDC" : "WETH",
+          borrowAmount: parseFloat(amount || "0"),
+          healthFactor: Number(borrowBalance) > 0 ? (Number(collateralBalance) / Number(borrowBalance) * 0.8) : 999,
+        }} 
+      />
     </main>
   );
 }
