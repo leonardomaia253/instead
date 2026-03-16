@@ -185,7 +185,7 @@ function SocialIcon({ href, icon }: { href: string; icon: React.ReactNode }) {
   );
 }
 
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
   columnTitle: { 
     fontSize: 16, 
     fontWeight: 700, 
