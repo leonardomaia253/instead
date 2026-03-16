@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+import { Providers } from './providers';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Instead DeFi | Empréstimos e Tokenização em uma Plataforma',
@@ -26,5 +28,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <html lang="pt-BR">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
 }

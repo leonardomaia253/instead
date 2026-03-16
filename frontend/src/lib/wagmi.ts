@@ -24,6 +24,7 @@ export const SUPPORTED_CHAINS = [
 
 export const wagmiConfig = createConfig({
   chains: SUPPORTED_CHAINS,
+  ssr: true,
   connectors: [
     injected(),
     walletConnect({ projectId }),
