@@ -4,8 +4,9 @@ import React from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { EyeOff, Database, ShieldCheck, Cpu, Fingerprint } from "lucide-react";
+import { Link } from "@/navigation";
+import { AlertTriangle, Cpu, Database, EyeOff, FileText, Fingerprint, Gavel, Globe, Shield, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function PrivacyPage() {
   return (

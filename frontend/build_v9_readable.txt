@@ -1,0 +1,98 @@
+﻿
+> instead-frontend@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.35
+
+   Creating an optimized production build ...
+node.exe :  ΓÜá Found lockfile missing 
+swc dependencies, patching...
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: ( ΓÜá Found lock...es, patching...  
+  :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+ Γ¿» Failed to patch lockfile, please try 
+uninstalling and reinstalling next in 
+this workspace
+TypeError: Cannot read properties of 
+undefined (reading 'os')
+    at fetchPkgInfo (C:\Users\Administrato
+r\instead\frontend\node_modules\next\dist\
+lib\patch-incorrect-lockfile.js:73:25)
+    at process.processTicksAndRejections 
+(node:internal/process/task_queues:104:5)
+    at async Promise.all (index 0)
+    at async patchIncorrectLockfile (C:\Us
+ers\Administrator\instead\frontend\node_mo
+dules\next\dist\lib\patch-incorrect-lockfi
+le.js:162:26)
+Failed to compile.
+
+./node_modules/derive-valtio/dist/index.mo
+dern.js
+Module not found: Can't resolve 
+'valtio/vanilla'
+
+https://nextjs.org/docs/messages/module-no
+t-found
+
+Import trace for requested module:
+./node_modules/valtio/esm/vanilla/utils.mj
+s
+./node_modules/@reown/appkit-controllers/d
+ist/esm/src/controllers/ModalController.js
+./node_modules/@reown/appkit-controllers/d
+ist/esm/exports/index.js
+./node_modules/@reown/appkit/dist/esm/src/
+client/appkit-core.js
+./node_modules/@reown/appkit/dist/esm/expo
+rts/core.js
+./node_modules/@walletconnect/ethereum-pro
+vider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/
+walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/
+exports/index.js
+./node_modules/wagmi/dist/esm/exports/conn
+ectors.js
+./node_modules/@rainbow-me/rainbowkit/dist
+/index.js
+./src/app/[locale]/login/page.tsx
+
+./src/app/[locale]/docs/page.tsx
+Module not found: Can't resolve 
+'framer-motion'
+
+https://nextjs.org/docs/messages/module-no
+t-found
+
+./src/app/[locale]/legal/privacy/page.tsx
+Module not found: Can't resolve 
+'framer-motion'
+
+https://nextjs.org/docs/messages/module-no
+t-found
+
+./src/app/[locale]/legal/terms/page.tsx
+Module not found: Can't resolve 
+'framer-motion'
+
+https://nextjs.org/docs/messages/module-no
+t-found
+
+./src/app/[locale]/page.tsx
+Module not found: Can't resolve 
+'framer-motion'
+
+https://nextjs.org/docs/messages/module-no
+t-found
+
+
+> Build failed because of webpack errors

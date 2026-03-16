@@ -1,10 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/navigation";
+import { CHAIN_META } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
+import { useTranslations } from "next-intl";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function RegisterPage() {

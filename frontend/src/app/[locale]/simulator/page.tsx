@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { CHAIN_META } from "@/lib/wagmi";
+import { useTranslations } from "next-intl";
 
 // Simulação simplificada — preços em USD estáticos para demo
 const ASSET_PRICES: Record<string, number> = {

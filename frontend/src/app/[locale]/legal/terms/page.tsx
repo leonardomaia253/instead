@@ -5,6 +5,8 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Shield, AlertTriangle, FileText, Gavel, Globe } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/navigation";
 
 export default function TermsPage() {
   return (

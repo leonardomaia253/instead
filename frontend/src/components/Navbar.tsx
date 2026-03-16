@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Link, usePathname } from "../navigation";
+import { Link, usePathname } from "@/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { useTranslations } from "next-intl";
