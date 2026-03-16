@@ -1,71 +1,144 @@
 "use client";
 
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
+import { motion, useScroll, useTransform } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { Navbar } from "@/components/Navbar";
 import { HealthGauge } from "@/components/HealthGauge";
+import { Footer } from "@/components/Footer";
+import Scene3D from "@/components/Scene3D";
 import { CHAIN_META } from "@/lib/wagmi";
 
+gsap.registerPlugin(ScrollTrigger);
+
+const fadeIn = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
 export default function Home() {
+  const statsRef = useRef(null);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+
+  useEffect(() => {
+    // GSAP Animation for stats
+    const ctx = gsap.context(() => {
+      gsap.from(".stat-item", {
+        scrollTrigger: {
+          trigger: statsRef.current,
+          start: "top 80%",
+        },
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        stagger: 0.2,
+        ease: "power4.out"
+      });
+    }, statsRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
       <Navbar />
 
       <main style={{ flex: 1 }}>
         {/* Hero Section */}
-        <section className="hero section-glow" style={{ 
+        <section className="hero" style={{ 
           padding: "160px 24px 100px", 
           textAlign: "center", 
           position: "relative",
-          overflow: "hidden" 
+          overflow: "hidden",
+          minHeight: "90vh",
+          display: "flex",
+          alignItems: "center"
         }}>
-          {/* Animated Background Elements */}
-          <div style={{
-            position: "absolute", top: "0%", left: "50%", transform: "translateX(-50%)",
-            width: "100%", height: "600px", background: "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 60%)",
-            filter: "blur(80px)", pointerEvents: "none", zIndex: 0
-          }} />
-
-          <div className="container" style={{ position: "relative", zIndex: 1, maxWidth: 900 }}>
-            <span className="badge-premium animate-fade-up" style={{ marginBottom: 32 }}>
+          <Scene3D />
+          
+          <motion.div 
+            className="container" 
+            style={{ position: "relative", zIndex: 1, maxWidth: 900, opacity, scale }}
+            initial="initial"
+            animate="animate"
+            variants={staggerContainer}
+          >
+            <motion.span 
+              className="badge-premium" 
+              style={{ marginBottom: 32 }}
+              variants={fadeIn}
+            >
               ✨ Nova Era do DeFi Multinível & Tokenização
-            </span>
-            <h1 className="animate-fade-up delay-1" style={{ 
-              fontSize: "clamp(44px, 10vw, 84px)", 
-              lineHeight: 1, 
-              fontWeight: 800, 
-              marginBottom: 32,
-              fontFamily: "'Space Grotesk', sans-serif",
-              letterSpacing: "-0.03em"
-            }}>
+            </motion.span>
+            
+            <motion.h1 
+              style={{ 
+                fontSize: "clamp(44px, 10vw, 84px)", 
+                lineHeight: 1, 
+                fontWeight: 800, 
+                marginBottom: 32,
+                fontFamily: "'Space Grotesk', sans-serif",
+                letterSpacing: "-0.03em"
+              }}
+              variants={fadeIn}
+            >
               Empréstimos e Tokenização <br />
               <span className="gradient-text">Sem Complicação.</span>
-            </h1>
-            <p className="animate-fade-up delay-2" style={{ 
-              fontSize: "clamp(18px, 4vw, 22px)", 
-              color: "var(--text-muted)", 
-              maxWidth: 700, 
-              margin: "0 auto 48px",
-              lineHeight: 1.6
-            }}>
+            </motion.h1>
+            
+            <motion.p 
+              style={{ 
+                fontSize: "clamp(18px, 4vw, 22px)", 
+                color: "var(--text-muted)", 
+                maxWidth: 700, 
+                margin: "0 auto 48px",
+                lineHeight: 1.6
+              }}
+              variants={fadeIn}
+            >
               A plataforma Instead oferece liquidez instantânea para seus ativos e permite lançar seus próprios tokens em segundos em mais de 7 redes simultâneas.
-            </p>
+            </motion.p>
 
-            <div className="animate-fade-up delay-3" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <motion.div 
+              style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}
+              variants={fadeIn}
+            >
               <Link href="/lending" className="btn-primary" style={{ padding: "18px 48px", fontSize: 18, textDecoration: "none" }}>
                 Começar a Emprestar
               </Link>
               <Link href="/factory" className="btn-outline glass-morphism" style={{ padding: "18px 48px", fontSize: 18, textDecoration: "none" }}>
                 Criar seu Token
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
+
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0, height: "150px",
+            background: "linear-gradient(to top, var(--bg-base), transparent)",
+            zIndex: 1
+          }} />
         </section>
 
         {/* Stats Bar */}
-        <div className="stats-bar glass-morphism" style={{
-          display: "flex", justifyContent: "center", gap: "clamp(40px, 8vw, 100px)", padding: "32px 40px",
+        <div ref={statsRef} className="stats-bar glass-morphism" style={{
+          display: "flex", justifyContent: "center", gap: "clamp(40px, 8vw, 100px)", padding: "48px 40px",
           borderLeft: "none", borderRight: "none",
-          flexWrap: "wrap", position: "relative", zIndex: 2
+          flexWrap: "wrap", position: "relative", zIndex: 10,
+          marginTop: -20
         }}>
           {[
             { label: "TVL Total", value: "$4.2M+" },
@@ -73,7 +146,7 @@ export default function Home() {
             { label: "Taxas Economizadas", value: "$850K" },
             { label: "Redes Ativas", value: "7+" }
           ].map((s, i) => (
-            <div key={i} className="animate-fade-up" style={{ textAlign: "center", animationDelay: `${0.4 + (i * 0.1)}s` }}>
+            <div key={i} className="stat-item" style={{ textAlign: "center" }}>
               <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>{s.value}</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1.5, marginTop: 4, fontWeight: 600 }}>{s.label}</div>
             </div>
@@ -81,9 +154,15 @@ export default function Home() {
         </div>
 
         {/* Features Blocks */}
-        <section style={{ padding: "120px 24px" }}>
+        <section style={{ padding: "120px 24px", position: "relative" }}>
           <div className="container">
-            <div className="md-grid-2">
+            <motion.div 
+              className="md-grid-2"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
               {/* Lending Card */}
               <div className="card-premium">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
@@ -132,9 +211,9 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/factory" className="btn-outline" style={{ display: "block", textDecoration: "none" }}>Criar meu Token الآن</Link>
+                <Link href="/factory" className="btn-outline" style={{ display: "block", textDecoration: "none" }}>Criar meu Token Agora</Link>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -148,11 +227,19 @@ export default function Home() {
                    { icon: "💎", title: "DeFi Yields", desc: "Maximize seus ganhos com taxas dinâmicas." },
                    { icon: "🌍", title: "Multi-Chain", desc: "Arbitrum, Polygon, BSC, Base e muito mais." }
                  ].map((feat, i) => (
-                   <div key={i} className="animate-fade-up card" style={{ padding: 24, animationDelay: `${0.2 * i}s` }}>
+                   <motion.div 
+                     key={i} 
+                     className="card" 
+                     style={{ padding: 24 }}
+                     initial={{ opacity: 0, scale: 0.9 }}
+                     whileInView={{ opacity: 1, scale: 1 }}
+                     viewport={{ once: true }}
+                     transition={{ delay: i * 0.1, duration: 0.5 }}
+                   >
                       <div style={{ fontSize: 32, marginBottom: 16 }}>{feat.icon}</div>
                       <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{feat.title}</h3>
                       <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.5 }}>{feat.desc}</p>
-                   </div>
+                   </motion.div>
                  ))}
               </div>
            </div>
@@ -172,34 +259,9 @@ export default function Home() {
         </section>
       </main>
 
-      <footer style={{ padding: "80px 24px", borderTop: "1px solid var(--border)", background: "var(--bg-base)" }}>
-        <div className="container">
-          <div style={{ marginBottom: 32 }}>
-            <span className="gradient-text" style={{ fontSize: 28, fontWeight: 800, fontFamily: "'Space Grotesk', sans-serif" }}>Instead DeFi</span>
-            <p style={{ color: "var(--text-muted)", fontSize: 16, marginTop: 12 }}>Infraestrutura robusta para a nova economia descentralizada.</p>
-          </div>
-          
-          <div style={{ display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap", marginBottom: 40 }}>
-            {["Documentation", "GitHub", "Twitter", "Security", "Terms"].map(link => (
-              <a key={link} href="#" style={{ color: "var(--text-primary)", fontSize: 14, textDecoration: "none", fontWeight: 500 }} className="hover-link">{link}</a>
-            ))}
-          </div>
+      <Footer />
 
-          <p style={{ color: "var(--text-muted)", fontSize: 13, borderTop: "1px solid var(--border)", paddingTop: 32 }}>
-            © 2026 Instead Finance. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
-
-      <style>{`
-        .hover-link {
-          transition: color 0.2s ease, transform 0.2s ease;
-        }
-        .hover-link:hover {
-          color: var(--accent-1) !important;
-          transform: translateY(-1px);
-        }
-
+      <style jsx>{`
         .badge-premium {
           display: inline-block;
           padding: 8px 18px;
