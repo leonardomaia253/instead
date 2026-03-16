@@ -191,7 +191,7 @@ export default function Home() {
         </div>
       </footer>
 
-      <style jsx>{`
+      <style>{`
         .hover-link {
           transition: color 0.2s ease, transform 0.2s ease;
         }

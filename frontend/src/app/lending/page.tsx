@@ -23,7 +23,7 @@ export default function LendingPage() {
   function handleAction() {
     if (!amount) return;
     if (tab === "deposit") deposit(selectedAsset, amount);
-    else if (tab === "borrow") borrow(selectedAsset, amount, colAsset);
+    else if (tab === "borrow") borrow(selectedAsset, amount);
     else repay(selectedAsset, amount);
   }
 

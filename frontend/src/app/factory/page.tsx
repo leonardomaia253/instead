@@ -378,7 +378,7 @@ function StepReview({
         ))}
       </div>
 
-      {feeInEth && (
+      {!!feeInEth && (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "18px 20px", background: "rgba(124,58,237,0.08)",

@@ -45,7 +45,7 @@ export default function DashboardPage() {
         schema: "public",
         table: "lending_positions",
         filter: `wallet_address=eq.${wallet}`,
-      }, (payload) => {
+      }, (payload: any) => {
         setPositions((prev) =>
           prev.map((p) => p.borrow_asset === (payload.new as LendingPosition).borrow_asset ? (payload.new as LendingPosition) : p)
         );

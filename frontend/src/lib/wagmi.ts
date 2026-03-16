@@ -8,7 +8,7 @@ import {
   optimism,
   mainnet,
   avalanche,
-} from "wagmi/chains";
+} from "viem/chains";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
 
@@ -153,12 +153,12 @@ export const TOKEN_FACTORY_ABI = [
 ] as const;
 
 export const LENDING_POOL_ABI = [
-  { name: "deposit",          type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
   { name: "depositCollateral",type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "borrow",           type: "function", stateMutability: "nonpayable", inputs: [{ name: "borrowAsset", type: "address" }, { name: "borrowAmount", type: "uint256" }, { name: "colAsset", type: "address" }], outputs: [] },
+  { name: "withdrawCollateral",type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { name: "borrow",           type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
   { name: "repay",            type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "deposits",         type: "function", stateMutability: "view", inputs: [{ name: "asset", type: "address" }, { name: "user", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-  { name: "borrows",          type: "function", stateMutability: "view", inputs: [{ name: "asset", type: "address" }, { name: "user", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
+  { name: "userPositions",    type: "function", stateMutability: "view",       inputs: [{ name: "", type: "address" }, { name: "", type: "address" }], outputs: [{ name: "collateralBalance", type: "uint256" }, { name: "borrowBalance", type: "uint256" }] },
+  { name: "supportedAssets",  type: "function", stateMutability: "view",       inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "bool" }] },
 ] as const;
 
 export const STAKING_ABI = [
@@ -170,6 +170,7 @@ export const STAKING_ABI = [
 ] as const;
 
 export const CONTRACTS = {
-  LENDING_POOL: process.env.NEXT_PUBLIC_LENDING_POOL_ADDRESS as `0x${string}`,
-  STAKING:      process.env.NEXT_PUBLIC_STAKING_ADDRESS as `0x${string}`,
+  LENDING_POOL:  process.env.NEXT_PUBLIC_LENDING_POOL_ADDRESS as `0x${string}`,
+  STAKING:       process.env.NEXT_PUBLIC_STAKING_ADDRESS as `0x${string}`,
+  TOKEN_FACTORY: (process.env.NEXT_PUBLIC_FACTORY_ARBITRUM || process.env.NEXT_PUBLIC_TOKEN_FACTORY_ADDRESS) as `0x${string}`,
 };

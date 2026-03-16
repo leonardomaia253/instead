@@ -57,6 +57,15 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
     });
   }
 
+  function withdrawCollateral(asset: `0x${string}`, amount: string, decimals = 18) {
+    writeContract({
+      address: CONTRACTS.LENDING_POOL,
+      abi: LENDING_POOL_ABI,
+      functionName: "withdrawCollateral",
+      args: [asset, parseUnits(amount, decimals)],
+    });
+  }
+
   function repay(asset: `0x${string}`, amount: string, decimals = 18) {
     writeContract({
       address: CONTRACTS.LENDING_POOL,
@@ -67,6 +76,11 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
   }
 
   return {
+    deposit: depositCollateral,
+    depositCollateral,
+    withdrawCollateral,
+    borrow,
+    repay,
     collateralBalance,
     borrowBalance,
     txHash,
