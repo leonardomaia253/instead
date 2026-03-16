@@ -4,6 +4,9 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useInsteadLending } from "@/hooks/useInsteadLending";
 import Link from "next/link";
+import { insertAudit, upsertLendingPosition } from "@/lib/supabase";
+import { useEffect, useRef } from "react";
+import { useChainId } from "wagmi";
 
 // Tokens de exemplo
 const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as `0x${string}`;
@@ -12,13 +15,49 @@ const WETH_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1" as `0x${string
 type Tab = "deposit" | "borrow" | "repay";
 
 export default function LendingPage() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const chainId = useChainId();
   const [tab, setTab] = useState<Tab>("deposit");
   const [amount, setAmount] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(USDC_ADDRESS);
   const [colAsset, setColAsset] = useState(WETH_ADDRESS);
-  const { deposit, depositCollateral, borrow, repay, isPending, isConfirmed, error } =
+  
+  const { deposit, depositCollateral, borrow, repay, isPending, isConfirmed, txHash, error } =
     useInsteadLending(selectedAsset);
+
+  const lastAuditedHash = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isConfirmed && txHash && address && lastAuditedHash.current !== txHash) {
+      lastAuditedHash.current = txHash;
+      
+      const numAmount = parseFloat(amount || "0");
+
+      // 1. Log Audit
+      insertAudit({
+        user_wallet: address,
+        action: tab.toUpperCase(),
+        metadata: {
+          asset: selectedAsset,
+          amount: amount,
+          tx_hash: txHash,
+        }
+      }).catch(console.error);
+
+      // 2. Persist Position (Only for Deposit and Borrow for now)
+      if (tab === "deposit" || tab === "borrow") {
+        upsertLendingPosition({
+          wallet_address: address,
+          collateral_asset: colAsset,
+          borrow_asset: selectedAsset,
+          collateral_amount: tab === "deposit" ? numAmount : 0, // Simplificado: Idealmente lido do contrato
+          borrowed_amount: tab === "borrow" ? numAmount : 0,
+          health_factor: tab === "deposit" ? 999 : 1.5, // Mock seguro para UI
+          chain_id: chainId,
+        }).catch(console.error);
+      }
+    }
+  }, [isConfirmed, txHash, address, tab, selectedAsset, amount, colAsset, chainId]);
 
   function handleAction() {
     if (!amount) return;

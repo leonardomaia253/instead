@@ -6,7 +6,12 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatEther, parseUnits } from "viem";
 import Link from "next/link";
 import { CHAIN_META, TOKEN_FACTORY_ABI, SUPPORTED_CHAINS } from "@/lib/wagmi";
-import { insertGeneratedToken } from "@/lib/supabase";
+import { 
+  insertGeneratedToken, 
+  insertAudit,
+  type GeneratedToken 
+} from "@/lib/supabase";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type TokenForm = {
@@ -486,6 +491,7 @@ export default function FactoryPage() {
   const chainId = useChainId();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 42161 });
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const factoryAddress = (CHAIN_META[form.chainId]?.factoryAddress || "0x0") as `0x${string}`;
 
@@ -503,6 +509,13 @@ export default function FactoryPage() {
   useEffect(() => {
     if (chainId && CHAIN_META[chainId]) setForm((f) => ({ ...f, chainId }));
   }, [chainId]);
+
+  // Trigger onboarding on confirmation
+  useEffect(() => {
+    if (isConfirmed) {
+      setShowOnboarding(true);
+    }
+  }, [isConfirmed]);
 
   function canProceed(): boolean {
     if (step === 1) return true;
@@ -544,6 +557,18 @@ export default function FactoryPage() {
         mintable: form.mintable,
         tx_hash: hash,
         chain_id: form.chainId,
+      });
+
+      // Registra Auditoria
+      await insertAudit({
+        user_wallet: address,
+        action: "CREATE_TOKEN",
+        metadata: {
+          name: form.name,
+          symbol: form.symbol,
+          tx_hash: hash,
+          chain_id: form.chainId
+        }
       });
     } catch (e) {
       // Erro exposto via writeError
@@ -640,6 +665,14 @@ export default function FactoryPage() {
             </div>
           )}
         </div>
+
+        {/* Onboarding Wizard */}
+        <OnboardingWizard 
+          isOpen={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+          tokenName={form.name}
+          tokenSymbol={form.symbol}
+        />
 
         {/* Fee banner */}
         {feeInEth && step < 5 && (
