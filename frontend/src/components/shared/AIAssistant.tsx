@@ -10,7 +10,7 @@ interface AIAssistantProps {
   contextData: any;
 }
 
-export const AIAssistant = ({ type, contextData }: AIAssistantProps) => {
+export const AIAssistant: React.FC<AIAssistantProps> = ({ type, contextData }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tips, setTips] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
