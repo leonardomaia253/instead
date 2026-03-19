@@ -3,11 +3,18 @@ import { Providers } from '../providers';
 import '../globals.css';
 import { NextIntlClientProvider, useMessages } from 'next-intl';
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
+// No Next.js 15, o params é uma Promise que deve ser tipada e aguardada
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params; // Aguarda a resolução dos parâmetros
+
   return {
     title: locale === 'pt' ? 'Instead DeFi | Empréstimos e Tokenização' : 'Instead DeFi | Lending and Tokenization',
-    description: locale === 'pt' 
-      ? 'A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code.' 
+    description: locale === 'pt'
+      ? 'A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code.'
       : 'Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation.',
     keywords: 'defi, crypto lending, token factory, ethereum, arbitrum, polygon, web3',
     openGraph: {
@@ -38,13 +45,15 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   };
 }
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
-  params: { locale }
+  params
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>; // Tipagem corrigida para Promise
 }) {
+  // É necessário aguardar o params antes de usar o valor de locale
+  const { locale } = await params;
   const messages = useMessages();
 
   const jsonLd = {
