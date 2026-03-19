@@ -25,7 +25,8 @@
     "three": "^0.183.2",
     "valtio": "^2.3.1",
     "viem": "^2.47.5",
-    "wagmi": "^2.10.5"
+    "wagmi": "^2.10.5",
+    "ethers": "^6.11.1"
   },
   "devDependencies": {
     "@types/next": "^8.0.7",

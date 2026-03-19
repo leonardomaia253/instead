@@ -8,7 +8,7 @@ import {
   optimism,
   mainnet,
   avalanche,
-} from "viem/chains";
+} from "wagmi/chains";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
 
@@ -168,6 +168,12 @@ export const STAKING_ABI = [
   { name: "claimReward",   type: "function", stateMutability: "nonpayable", inputs: [], outputs: [] },
   { name: "pendingReward", type: "function", stateMutability: "view", inputs: [{ name: "_user", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
   { name: "userInfo",      type: "function", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ name: "amount", type: "uint256" }, { name: "rewardDebt", type: "uint256" }] },
+] as const;
+
+export const ERC20_ABI = [
+  { name: "approve", type: "function", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
+  { name: "transfer", type: "function", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
+  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
 ] as const;
 
 export const CONTRACTS = {

@@ -1,8 +1,7 @@
 "use client";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
-import { parseEther, parseUnits } from "viem";
+import { parseEther, parseUnits } from "ethers";
 import { CONTRACTS, STAKING_ABI } from "@/lib/wagmi";
-import { erc20Abi } from "viem";
 
 /**
  * Hook para interagir com o InsteadStaking.

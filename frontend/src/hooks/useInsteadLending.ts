@@ -1,8 +1,7 @@
 "use client";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
-import { parseEther, parseUnits } from "viem";
-import { CONTRACTS, LENDING_POOL_ABI } from "@/lib/wagmi";
-import { erc20Abi } from "viem";
+import { parseEther, parseUnits } from "ethers";
+import { CONTRACTS, LENDING_POOL_ABI, ERC20_ABI } from "@/lib/wagmi";
 
 /**
  * Hook principal do Lending Pool.
@@ -33,7 +32,7 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
       // 1. Aprovar o LendingPool
       const approveHash = await writeContractAsync({
         address: asset,
-        abi: erc20Abi,
+        abi: ERC20_ABI,
         functionName: "approve",
         args: [CONTRACTS.LENDING_POOL, amountBN],
       });

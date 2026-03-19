@@ -1,6 +1,6 @@
 "use client";
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther } from "viem";
+import { parseEther } from "ethers";
 import { CONTRACTS, TOKEN_FACTORY_ABI } from "@/lib/wagmi";
 import { insertGeneratedToken } from "@/lib/supabase";
 
@@ -45,15 +45,18 @@ export function useTokenFactory() {
     // Aguarda o recibo para extrair o endereço real do token
     let tokenAddress = "pending";
     try {
-      const { parseEventLogs } = await import("viem");
+      const { Interface } = await import("ethers");
+      const iface = new Interface(TOKEN_FACTORY_ABI as any);
       const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-      const logs = parseEventLogs({
-        abi: TOKEN_FACTORY_ABI,
-        eventName: "TokenCreated",
-        logs: receipt.logs,
-      });
-      if (logs.length > 0) {
-        tokenAddress = (logs[0].args as any).tokenAddress;
+      
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog(log as any);
+          if (parsed && parsed.name === "TokenCreated") {
+            tokenAddress = parsed.args.tokenAddress;
+            break;
+          }
+        } catch (e) { /* continue */ }
       }
     } catch (err) {
       console.error("Error parsing token address:", err);
