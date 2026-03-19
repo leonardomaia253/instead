@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { Providers } from '../providers';
 import '../globals.css';
-import { NextIntlClientProvider, useMessages } from 'next-intl';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 // No Next.js 15, o params é uma Promise que deve ser tipada e aguardada
 export async function generateMetadata({
@@ -54,7 +55,7 @@ export default async function LocaleLayout({
 }) {
   // É necessário aguardar o params antes de usar o valor de locale
   const { locale } = await params;
-  const messages = useMessages();
+  const messages = await getMessages();
 
   const jsonLd = {
     '@context': 'https://schema.org',
