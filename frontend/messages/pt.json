@@ -1,7 +1,18 @@
 {
   "Index": {
     "title": "Instead DeFi | Empréstimos e Tokenização em uma Plataforma",
-    "description": "A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code em mais de 7 redes EVM."
+    "description": "A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code em mais de 7 redes EVM.",
+    "hero_title": "O Futuro das Finanças Descentralizadas",
+    "hero_subtitle": "Empréstimos, capital e tokenização com segurança institucional e simplicidade para o usuário.",
+    "get_started": "Começar Agora",
+    "view_docs": "Ver Documentação",
+    "lending_title": "Lending Líquido",
+    "lending_desc": "Maximize a eficiência do seu capital. Deposite colateral e tome empréstimos com liquidez instantânea.",
+    "factory_title": "Fábrica de Tokens No-Code",
+    "factory_desc": "Lance seu próprio token ERC-20 em minutos. Sem código, pronto para auditoria e suporte multi-chain.",
+    "stats_users": "Usuários Ativos",
+    "stats_tvl": "Valor Total Bloqueado",
+    "stats_tokens": "Tokens Criados"
   },
   "Common": {
     "lending": "Lending",

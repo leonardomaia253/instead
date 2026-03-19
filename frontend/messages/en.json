@@ -1,7 +1,18 @@
 {
   "Index": {
     "title": "Instead DeFi | Lending and Tokenization in one Platform",
-    "description": "Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation across 7+ EVM networks."
+    "description": "Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation across 7+ EVM networks.",
+    "hero_title": "The Future of DeFi is Here",
+    "hero_subtitle": "Lend, borrow, and tokenize with institutional-grade security and consumer-grade simplicity.",
+    "get_started": "Get Started",
+    "view_docs": "View Documentation",
+    "lending_title": "Liquid Lending",
+    "lending_desc": "Maximize your capital efficiency. Deposit collateral and borrow against it with instant liquidity.",
+    "factory_title": "No-Code Token Factory",
+    "factory_desc": "Launch your own ERC-20 token in minutes. No coding required, audit-ready, and multi-chain support.",
+    "stats_users": "Active Users",
+    "stats_tvl": "Total Value Locked",
+    "stats_tokens": "Tokens Created"
   },
   "Common": {
     "lending": "Lending",
