@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 // CORREÇÃO: Importação ajustada para garantir compatibilidade com versões recentes da viem
-import { formatEther, parseUnits } from "viem";
+import { formatEther, parseUnits } from "ethers";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { CHAIN_META, TOKEN_FACTORY_ABI, SUPPORTED_CHAINS } from "@/lib/wagmi";
