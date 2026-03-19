@@ -28,7 +28,12 @@ export default function LoginPage() {
     try {
       const nonce = Math.random().toString(36).slice(2, 12);
       const message = SIWE_MESSAGE(address, nonce);
-      const signature = await signMessageAsync({ message });
+
+      // CORREÇÃO: Adicionado o parâmetro 'account' exigido pelo wagmi
+      const signature = await signMessageAsync({
+        account: address,
+        message
+      });
 
       // Chama a edge function SIWE
       const res = await fetch(
@@ -56,6 +61,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
@@ -63,14 +70,14 @@ export default function LoginPage() {
           .select("is_admin")
           .eq("id", user.id)
           .single();
-        
+
         if (profile?.is_admin) {
           toast.success("Bem-vindo, Administrador! 🎉");
           router.push("/admin");
           return;
         }
       }
-      
+
       toast.success("Login realizado com sucesso! 🎉");
       router.push("/dashboard");
     } catch (e: any) {
