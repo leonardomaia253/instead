@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { formatEther, parseUnits } from "viem";
+import { formatEther, parseUnits } from "ethers";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { CHAIN_META, TOKEN_FACTORY_ABI, SUPPORTED_CHAINS } from "@/lib/wagmi";
-import { 
-  insertGeneratedToken, 
+import {
+  insertGeneratedToken,
   insertAudit,
-  type GeneratedToken 
+  type GeneratedToken
 } from "@/lib/supabase";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { AIAssistant } from "@/components/shared/AIAssistant";
@@ -36,11 +36,11 @@ type TokenForm = {
 };
 
 const STEPS = [
-  { id: 1, label: "Rede",         icon: "🌐" },
-  { id: 2, label: "Identidade",   icon: "🏷️" },
-  { id: 3, label: "Supply",       icon: "💰" },
-  { id: 4, label: "Funções",      icon: "⚙️" },
-  { id: 5, label: "Revisão",      icon: "✅" },
+  { id: 1, label: "Rede", icon: "🌐" },
+  { id: 2, label: "Identidade", icon: "🏷️" },
+  { id: 3, label: "Supply", icon: "💰" },
+  { id: 4, label: "Funções", icon: "⚙️" },
+  { id: 5, label: "Revisão", icon: "✅" },
 ];
 
 const INITIAL_FORM: TokenForm = {
@@ -355,15 +355,15 @@ function StepReview({
 }) {
   const chainMeta = CHAIN_META[form.chainId];
   const rows = [
-    ["Rede",             `${chainMeta?.icon} ${chainMeta?.name}`],
-    ["Nome",             form.name || "—"],
-    ["Símbolo",         `$${form.symbol || "—"}`],
-    ["Descrição",        form.description || "(nenhuma)"],
-    ["Supply Inicial",   formatNumber(form.initialSupply)],
-    ["Supply Máximo",    formatNumber(form.maxSupply)],
-    ["Decimais",         `${form.decimals}`],
-    ["Mintável",         form.mintable ? "✅ Sim" : "❌ Não"],
-    ["Queimável",        form.burnable ? "✅ Sim" : "❌ Não"],
+    ["Rede", `${chainMeta?.icon} ${chainMeta?.name}`],
+    ["Nome", form.name || "—"],
+    ["Símbolo", `$${form.symbol || "—"}`],
+    ["Descrição", form.description || "(nenhuma)"],
+    ["Supply Inicial", formatNumber(form.initialSupply)],
+    ["Supply Máximo", formatNumber(form.maxSupply)],
+    ["Decimais", `${form.decimals}`],
+    ["Mintável", form.mintable ? "✅ Sim" : "❌ Não"],
+    ["Queimável", form.burnable ? "✅ Sim" : "❌ Não"],
     ["Taxa Transferência", form.taxable ? `✅ ${form.taxPercent}%` : "❌ Não"],
   ];
 
@@ -427,10 +427,10 @@ function StepReview({
         disabled={isPending || isConfirming || isConfirmed}
         style={{ width: "100%", marginTop: 24, fontSize: 17, padding: "16px 0" }}
       >
-        {isPending   ? "⏳ Aguardando carteira..." :
-         isConfirming ? "⛓️ Confirmando na blockchain..." :
-         isConfirmed  ? "✅ Token Lançado!" :
-         "🚀 Fazer Deploy do Token"}
+        {isPending ? "⏳ Aguardando carteira..." :
+          isConfirming ? "⛓️ Confirmando na blockchain..." :
+            isConfirmed ? "✅ Token Lançado!" :
+              "🚀 Fazer Deploy do Token"}
       </button>
     </div>
   );
@@ -484,7 +484,7 @@ function formatNumber(val: string) {
 
 const styles = {
   stepTitle: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, marginBottom: 8 } as React.CSSProperties,
-  stepDesc:  { fontSize: 15, color: "var(--text-muted)", lineHeight: 1.65, marginBottom: 8 } as React.CSSProperties,
+  stepDesc: { fontSize: 15, color: "var(--text-muted)", lineHeight: 1.65, marginBottom: 8 } as React.CSSProperties,
 };
 
 // ─── Página Principal ─────────────────────────────────────────────────────────
@@ -669,7 +669,7 @@ export default function FactoryPage() {
         </div>
 
         {/* Onboarding Wizard */}
-        <OnboardingWizard 
+        <OnboardingWizard
           isOpen={showOnboarding}
           onClose={() => setShowOnboarding(false)}
           tokenName={form.name}
@@ -688,14 +688,14 @@ export default function FactoryPage() {
         )}
       </div>
 
-      <AIAssistant 
-        type="token" 
+      <AIAssistant
+        type="token"
         contextData={{
           name: form.name,
           symbol: form.symbol,
           description: form.description,
           step: step
-        }} 
+        }}
       />
     </main>
   );
