@@ -1,8 +1,13 @@
+import { routing } from '@/navigation';
 import { Metadata } from 'next';
 import { Providers } from '../providers';
 import '../globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 // No Next.js 15, o params é uma Promise que deve ser tipada e aguardada
 export async function generateMetadata({
