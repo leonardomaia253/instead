@@ -25,6 +25,7 @@ import {
   type PlatformStat 
 } from "@/lib/supabase";
 import { useInsteadStaking } from "@/hooks/useInsteadStaking";
+import { ROICalculator } from "@/components/ROICalculator";
 
 // Mapper para ícones do Lucide baseado no banco de dados
 const IconMapper: Record<string, React.ReactNode> = {
@@ -144,7 +145,7 @@ export default function StakingPage() {
           {/* Pools Sidebar */}
           <section style={{ gridColumn: pools.length > 0 ? "span 2" : "span 3" }}>
             <h3 style={styles.sectionTitle}>Escolha seu Pool</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
               {pools.map((pool) => (
                 <button 
                   key={pool.id}
@@ -177,6 +178,14 @@ export default function StakingPage() {
                 </button>
               ))}
             </div>
+
+            {/* ROI Calculator integrated below pools */}
+            {selectedPool && (
+              <ROICalculator 
+                defaultApr={parseFloat(selectedPool.apr)} 
+                tokenSymbol={selectedPool.symbol} 
+              />
+            )}
           </section>
 
           {/* Staking Form */}
