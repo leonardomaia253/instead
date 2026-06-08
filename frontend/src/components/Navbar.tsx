@@ -4,6 +4,7 @@ import { Link, usePathname } from "@/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { useTranslations } from "next-intl";
+import { useSettings } from "@/hooks/useSettings";
 
 const Logo = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
@@ -24,6 +25,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const { disable3D, toggle3D } = useSettings();
 
   const NAV_LINKS = [
     { href: "/lending",   label: t("lending"),   icon: "🏦" },
@@ -93,6 +95,22 @@ export function Navbar() {
 
         {/* Right Side */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }} className="hide-mobile">
+          {/* Performance Toggle (3D) */}
+          <button 
+            onClick={toggle3D} 
+            title={disable3D ? "Ativar Efeitos 3D" : "Desativar Efeitos 3D (Modo Performance)"}
+            style={{
+              background: disable3D ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", 
+              border: `1px solid ${disable3D ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)"}`,
+              borderRadius: 10, width: 36, height: 36, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
+              color: disable3D ? "#ef4444" : "#10b981",
+              transition: "all 0.2s"
+            }}
+          >
+            ⚡
+          </button>
+
           {/* Theme Toggle */}
           <button onClick={toggleTheme} style={{
             background: "var(--bg-card)", border: "1px solid var(--border)",
@@ -142,6 +160,14 @@ export function Navbar() {
               borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontSize: 16,
             }}>
               {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+            <button onClick={toggle3D} style={{
+              background: disable3D ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", 
+              border: `1px solid ${disable3D ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)"}`,
+              borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontSize: 16,
+              color: disable3D ? "#ef4444" : "#10b981",
+            }}>
+              ⚡ 3D
             </button>
           </div>
         </div>

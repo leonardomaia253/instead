@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { CHAIN_META } from "@/lib/wagmi";
 import { getPlatformStats, type PlatformStat } from "@/lib/supabase";
 import { useTranslations } from "next-intl";
+import { useSettings } from "@/hooks/useSettings";
 
 const HealthGauge = dynamic(() => import("@/components/HealthGauge").then(mod => mod.HealthGauge), { ssr: false });
 const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
@@ -42,6 +43,7 @@ export default function Home() {
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const [platformStats, setPlatformStats] = React.useState<PlatformStat[]>([]);
+  const { disable3D } = useSettings();
 
   useEffect(() => {
     async function loadStats() {
@@ -90,7 +92,15 @@ export default function Home() {
           display: "flex",
           alignItems: "center"
         }}>
-          <Scene3D />
+          {!disable3D ? (
+            <Scene3D />
+          ) : (
+            <div style={{
+              position: "absolute", inset: 0, zIndex: 0,
+              background: "radial-gradient(circle at 50% 50%, rgba(124,58,237,0.15) 0%, transparent 70%)",
+              pointerEvents: "none"
+            }} />
+          )}
           
           <motion.div 
             className="container" 

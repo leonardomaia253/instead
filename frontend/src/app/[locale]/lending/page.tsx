@@ -69,6 +69,25 @@ export default function LendingPage() {
     else repay(selectedAsset, amount);
   }
 
+  // Função para aplicar presets rápidos de quantidade
+  const applyPreset = (percent: number) => {
+    let baseBalance = 0n;
+    if (tab === "deposit") {
+      // Para depósito, simula com base em um saldo fictício ou colateral atual
+      baseBalance = 10000000000000000000n; // 10 tokens padrão para demo
+    } else if (tab === "borrow") {
+      // Empréstimo máximo é 70% do colateral
+      baseBalance = (collateralBalance * 70n) / 100n;
+    } else {
+      // Repagar com base no saldo devedor
+      baseBalance = borrowBalance;
+    }
+
+    const calculated = (baseBalance * BigInt(percent)) / 100n;
+    const formatted = (Number(calculated) / 1e18).toFixed(4);
+    setAmount(formatted);
+  };
+
   return (
     <main style={{ minHeight: "100vh", padding: "40px 24px" }}>
       {/* Header */}
@@ -132,9 +151,40 @@ export default function LendingPage() {
               )}
 
               <div style={{ marginBottom: 24 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--text-muted)", marginBottom: 8 }}>
-                  Quantidade
-                </label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>
+                    Quantidade
+                  </label>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {[25, 50, 75, 100].map((pct) => (
+                      <button
+                        key={pct}
+                        onClick={() => applyPreset(pct)}
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid var(--border)",
+                          borderRadius: 6,
+                          padding: "2px 8px",
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "var(--text-muted)",
+                          cursor: "pointer",
+                          transition: "all 0.15s"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "var(--accent-1)";
+                          e.currentTarget.style.color = "var(--text-primary)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "var(--border)";
+                          e.currentTarget.style.color = "var(--text-muted)";
+                        }}
+                      >
+                        {pct === 100 ? "MAX" : `${pct}%`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <input
                   type="number"
                   placeholder="0.00"
