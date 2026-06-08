@@ -4,13 +4,14 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useInsteadLending } from "@/hooks/useInsteadLending";
 import { Link } from "@/navigation";
-import { insertAudit, upsertLendingPosition, supabase, type GeneratedToken } from "@/lib/supabase";
+import { insertAudit, upsertLendingPosition, supabase } from "@/lib/supabase";
 import { useChainId } from "wagmi";
 import { AIAssistant } from "@/components/shared/AIAssistant";
 import { useTranslations } from "next-intl";
 import { HealthGauge } from "@/components/HealthGauge";
-import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
+import { PositionCardSkeleton } from "@/components/Skeleton";
 import { CHAIN_META } from "@/lib/wagmi";
+import { Shield, AlertTriangle, TrendingUp, Coins } from "lucide-react";
 
 // Tokens de exemplo
 const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as `0x${string}`;
@@ -36,8 +37,6 @@ export default function LendingPage() {
     if (isConfirmed && txHash && address && lastAuditedHash.current !== txHash) {
       lastAuditedHash.current = txHash;
       
-      const numAmount = parseFloat(amount || "0");
-
       // 1. Log Audit
       insertAudit({
         user_wallet: address,
@@ -54,7 +53,7 @@ export default function LendingPage() {
         wallet_address: address,
         collateral_asset: colAsset,
         borrow_asset: selectedAsset,
-        collateral_amount: Number(collateralBalance) / (10 ** 18), // Simplificado: Assume 18 decimais para tokens core
+        collateral_amount: Number(collateralBalance) / (10 ** 18), 
         borrowed_amount: Number(borrowBalance) / (10 ** 18),
         health_factor: Number(borrowBalance) > 0 ? (Number(collateralBalance) / Number(borrowBalance) * 0.8) : 999, 
         chain_id: chainId,
@@ -69,17 +68,13 @@ export default function LendingPage() {
     else repay(selectedAsset, amount);
   }
 
-  // Função para aplicar presets rápidos de quantidade
   const applyPreset = (percent: number) => {
     let baseBalance = 0n;
     if (tab === "deposit") {
-      // Para depósito, simula com base em um saldo fictício ou colateral atual
       baseBalance = 10000000000000000000n; // 10 tokens padrão para demo
     } else if (tab === "borrow") {
-      // Empréstimo máximo é 70% do colateral
       baseBalance = (collateralBalance * 70n) / 100n;
     } else {
-      // Repagar com base no saldo devedor
       baseBalance = borrowBalance;
     }
 
@@ -88,15 +83,19 @@ export default function LendingPage() {
     setAmount(formatted);
   };
 
+  const liveCollateral = Number(collateralBalance) / 1e18;
+  const liveBorrow = Number(borrowBalance) / 1e18;
+  const liveHF = liveBorrow > 0 ? (liveCollateral / liveBorrow) * 0.8 : 999;
+
   return (
     <main style={{ minHeight: "100vh", padding: "40px 24px" }}>
-      {/* Header */}
-      <div style={{ maxWidth: 780, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
           <div>
             <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar</Link>
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700, marginTop: 8 }}>
-              🏦 <span className="gradient-text">{t("lending")}</span>
+              🏦 <span className="gradient-text">{t("lending")} Hub</span>
             </h1>
             <p style={{ color: "var(--text-muted)", marginTop: 8 }}>
               Deposite colateral e tome empréstimos com LTV de até 70%. Juros calculados dinamicamente.
@@ -105,139 +104,171 @@ export default function LendingPage() {
           <ConnectButton />
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, background: "var(--bg-surface)", padding: 6, borderRadius: 14, marginBottom: 28, width: "fit-content" }}>
-          {(["deposit", "borrow", "repay"] as Tab[]).map((tBtn) => (
-            <button key={tBtn} onClick={() => setTab(tBtn)} style={{
-              background: tab === tBtn ? "var(--accent-grad)" : "transparent",
-              color: tab === tBtn ? "white" : "var(--text-muted)",
-              border: "none", borderRadius: 10, padding: "10px 24px",
-              fontWeight: 600, cursor: "pointer", textTransform: "capitalize", transition: "all 0.15s",
-            }}>{tBtn === "deposit" ? "Depositar" : tBtn === "borrow" ? "Tomar Empréstimo" : "Repagar"}</button>
-          ))}
-        </div>
-
-        {/* Main Card */}
-        <div className="card" style={{ maxWidth: 540 }}>
-          {!isConnected ? (
-            <div style={{ textAlign: "center", padding: "32px 0" }}>
-              <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: 16 }}>
-                Conecte sua carteira para interagir com o protocolo.
-              </p>
-              <ConnectButton />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32, alignItems: "start" }}>
+          {/* Left Column: Action Form */}
+          <div className="card" style={{ padding: 32 }}>
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: 4, background: "var(--bg-surface)", padding: 4, borderRadius: 12, marginBottom: 28 }}>
+              {(["deposit", "borrow", "repay"] as Tab[]).map((tBtn) => (
+                <button key={tBtn} onClick={() => setTab(tBtn)} style={{
+                  flex: 1,
+                  background: tab === tBtn ? "var(--accent-grad)" : "transparent",
+                  color: tab === tBtn ? "white" : "var(--text-muted)",
+                  border: "none", borderRadius: 10, padding: "10px 12px",
+                  fontWeight: 600, cursor: "pointer", textTransform: "capitalize", transition: "all 0.15s",
+                  fontSize: 13
+                }}>{tBtn === "deposit" ? "Depositar" : tBtn === "borrow" ? "Tomar" : "Repagar"}</button>
+              ))}
             </div>
-          ) : (
-            <>
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--text-muted)", marginBottom: 8 }}>
-                  {tab === "borrow" ? "Ativo para Tomar Emprestado" : "Ativo"}
-                </label>
-                <select value={selectedAsset} onChange={(e) => setSelectedAsset(e.target.value as `0x${string}`)}>
-                  <option value={USDC_ADDRESS}>USDC</option>
-                  <option value={WETH_ADDRESS}>WETH</option>
-                </select>
-              </div>
 
-              {tab === "borrow" && (
+            {!isConnected ? (
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: 15 }}>
+                  Conecte sua carteira para interagir com o protocolo.
+                </p>
+                <ConnectButton />
+              </div>
+            ) : (
+              <>
                 <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--text-muted)", marginBottom: 8 }}>
-                    Colateral Depositado
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    {tab === "borrow" ? "Ativo para Tomar Emprestado" : "Ativo"}
                   </label>
-                  <select value={colAsset} onChange={(e) => setColAsset(e.target.value as `0x${string}`)}>
-                    <option value={WETH_ADDRESS}>WETH</option>
+                  <select value={selectedAsset} onChange={(e) => setSelectedAsset(e.target.value as `0x${string}`)}>
                     <option value={USDC_ADDRESS}>USDC</option>
+                    <option value={WETH_ADDRESS}>WETH</option>
                   </select>
                 </div>
-              )}
 
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <label style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>
-                    Quantidade
-                  </label>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {[25, 50, 75, 100].map((pct) => (
-                      <button
-                        key={pct}
-                        onClick={() => applyPreset(pct)}
-                        style={{
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid var(--border)",
-                          borderRadius: 6,
-                          padding: "2px 8px",
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: "var(--text-muted)",
-                          cursor: "pointer",
-                          transition: "all 0.15s"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = "var(--accent-1)";
-                          e.currentTarget.style.color = "var(--text-primary)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = "var(--border)";
-                          e.currentTarget.style.color = "var(--text-muted)";
-                        }}
-                      >
-                        {pct === 100 ? "MAX" : `${pct}%`}
-                      </button>
-                    ))}
+                {tab === "borrow" && (
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      Colateral Depositado
+                    </label>
+                    <select value={colAsset} onChange={(e) => setColAsset(e.target.value as `0x${string}`)}>
+                      <option value={WETH_ADDRESS}>WETH</option>
+                      <option value={USDC_ADDRESS}>USDC</option>
+                    </select>
                   </div>
+                )}
+
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      Quantidade
+                    </label>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {[25, 50, 75, 100].map((pct) => (
+                        <button
+                          key={pct}
+                          onClick={() => applyPreset(pct)}
+                          style={{
+                            background: "rgba(255,255,255,0.03)",
+                            border: "1px solid var(--border)",
+                            borderRadius: 6,
+                            padding: "2px 8px",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "var(--text-muted)",
+                            cursor: "pointer",
+                            transition: "all 0.15s"
+                          }}
+                        >
+                          {pct === 100 ? "MAX" : `${pct}%`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    min={0}
+                    style={{ fontSize: 16, padding: "14px 16px" }}
+                  />
                 </div>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min={0}
-                />
+
+                {isConfirmed && (
+                  <div style={{
+                    background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
+                    borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 14,
+                    color: "var(--green)",
+                  }}>
+                    ✅ Transação confirmada com sucesso!
+                  </div>
+                )}
+
+                {error && (
+                  <div style={{
+                    background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+                    borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 13,
+                    color: "var(--red)",
+                  }}>
+                    ❌ {error.message?.split("\n")[0]}
+                  </div>
+                )}
+
+                <button
+                  className="btn-primary"
+                  style={{ width: "100%", padding: "14px 0", fontSize: 16 }}
+                  onClick={handleAction}
+                  disabled={isPending || !amount}
+                >
+                  {isPending ? "Aguardando carteira..." : tab === "deposit"
+                    ? "Depositar"
+                    : tab === "borrow"
+                    ? "Tomar Empréstimo"
+                    : "Repagar"}
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Right Column: Live Position Monitor */}
+          {isConnected && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {/* Health Factor Card */}
+              <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 32 }}>
+                <div>
+                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+                    Fator de Saúde
+                  </h3>
+                  <p style={{ color: "var(--text-muted)", fontSize: 13, maxWidth: 200, lineHeight: 1.5 }}>
+                    Mantenha seu fator acima de 1.2 para evitar liquidação automática.
+                  </p>
+                </div>
+                <HealthGauge healthFactor={liveHF} size={130} />
               </div>
 
-              {/* Info box */}
-              {tab === "borrow" && (
-                <div style={{
-                  background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)",
-                  borderRadius: 12, padding: 16, marginBottom: 24, fontSize: 13,
-                  color: "var(--text-muted)", lineHeight: 1.7,
-                }}>
-                  ⚠️ O empréstimo máximo é <strong style={{ color: "var(--text-primary)" }}>70% do valor do colateral</strong>. Caso o Health Factor caia abaixo de 80%, sua posição será liquidada.
-                </div>
-              )}
+              {/* Position Details Card */}
+              <div className="card" style={{ padding: 28 }}>
+                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Shield size={18} className="text-purple-500" /> Sua Posição On-Chain
+                </h3>
 
-              {isConfirmed && (
-                <div style={{
-                  background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
-                  borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 14,
-                  color: "var(--green)",
-                }}>
-                  ✅ Transação confirmada com sucesso!
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                    <span style={{ color: "var(--text-muted)" }}>Colateral Depositado:</span>
+                    <span style={{ fontWeight: 600, color: "white" }}>{liveCollateral.toFixed(4)} WETH</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                    <span style={{ color: "var(--text-muted)" }}>Dívida Ativa:</span>
+                    <span style={{ fontWeight: 600, color: "white" }}>{liveBorrow.toFixed(4)} USDC</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+                    <span style={{ color: "var(--text-muted)" }}>LTV Atual:</span>
+                    <span style={{ fontWeight: 600, color: liveHF < 1.5 ? "var(--red)" : "var(--green)" }}>
+                      {liveBorrow > 0 ? ((liveBorrow / (liveCollateral || 1)) * 100).toFixed(1) : "0.0"}%
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                    <span style={{ color: "var(--text-muted)" }}>Limite de Liquidação:</span>
+                    <span style={{ fontWeight: 600, color: "white" }}>80%</span>
+                  </div>
                 </div>
-              )}
-
-              {error && (
-                <div style={{
-                  background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-                  borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 13,
-                  color: "var(--red)",
-                }}>
-                  ❌ {error.message?.split("\n")[0]}
-                </div>
-              )}
-
-              <button
-                className="btn-primary"
-                style={{ width: "100%" }}
-                onClick={handleAction}
-                disabled={isPending || !amount}
-              >
-                {isPending ? "Aguardando carteira..." : tab === "deposit"
-                  ? "Depositar"
-                  : tab === "borrow"
-                  ? "Tomar Empréstimo"
-                  : "Repagar"}
-              </button>
-            </>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -246,10 +277,10 @@ export default function LendingPage() {
         type="lending" 
         contextData={{
           collateral: colAsset === WETH_ADDRESS ? "WETH" : "USDC",
-          collateralAmount: Number(collateralBalance) / (10 ** 18),
+          collateralAmount: liveCollateral,
           borrow: selectedAsset === USDC_ADDRESS ? "USDC" : "WETH",
           borrowAmount: parseFloat(amount || "0"),
-          healthFactor: Number(borrowBalance) > 0 ? (Number(collateralBalance) / Number(borrowBalance) * 0.8) : 999,
+          healthFactor: liveHF,
         }} 
       />
     </main>
