@@ -30,9 +30,10 @@ export function Navbar() {
   const NAV_LINKS = [
     { href: "/lending",   label: t("lending"),   icon: "🏦" },
     { href: "/factory",   label: t("factory"),   icon: "🏭" },
+    { href: "/tokens",    label: "Explorer",     icon: "🪙" },
     { href: "/staking",   label: t("staking"),   icon: "💎" },
-    { href: "/simulator", label: "Simulador", icon: "🧮" },
-    { href: "/dashboard", label: "Dashboard", icon: "📊" },
+    { href: "/simulator", label: "Simulador",    icon: "🧮" },
+    { href: "/dashboard", label: "Dashboard",    icon: "📊" },
   ];
 
   useEffect(() => {
