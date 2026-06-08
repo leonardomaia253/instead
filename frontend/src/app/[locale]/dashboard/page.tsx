@@ -5,7 +5,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Link } from "@/navigation";
 import { HealthGauge } from "@/components/HealthGauge";
 import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
-import { supabase, type GeneratedToken } from "@/lib/supabase";
+import { supabase, getAuditsByWallet, type GeneratedToken, type Audit } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { useTranslations } from "next-intl";
 
@@ -23,7 +23,9 @@ export default function DashboardPage() {
   const { isConnected, address } = useAccount();
   const [positions, setPositions] = useState<LendingPosition[]>([]);
   const [tokens, setTokens] = useState<GeneratedToken[]>([]);
+  const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [auditFilter, setAuditFilter] = useState<"all" | "lending" | "staking" | "tokens">("all");
 
   useEffect(() => {
     if (!address) { setLoading(false); return; }
@@ -32,9 +34,11 @@ export default function DashboardPage() {
     Promise.all([
       supabase.from("lending_positions").select("*").eq("wallet_address", wallet),
       supabase.from("generated_tokens").select("*").eq("creator_wallet", wallet).order("created_at", { ascending: false }).limit(6),
-    ]).then(([{ data: pos }, { data: tok }]) => {
+      getAuditsByWallet(wallet)
+    ]).then(([{ data: pos }, { data: tok }, auditData]) => {
       setPositions((pos ?? []) as LendingPosition[]);
       setTokens((tok ?? []) as GeneratedToken[]);
+      setAudits(auditData ?? []);
       setLoading(false);
     });
 
@@ -58,6 +62,14 @@ export default function DashboardPage() {
 
   const lowestHF = positions.reduce((min, p) => Math.min(min, p.health_factor ?? 999), 999);
   const totalTokens = tokens.length;
+
+  const filteredAudits = audits.filter(audit => {
+    if (auditFilter === "all") return true;
+    if (auditFilter === "lending") return ["DEPOSIT", "BORROW", "REPAY"].includes(audit.action);
+    if (auditFilter === "staking") return ["STAKE", "UNSTAKE", "CLAIM"].includes(audit.action);
+    if (auditFilter === "tokens") return ["CREATE_TOKEN"].includes(audit.action);
+    return true;
+  });
 
   if (!isConnected) {
     return (
@@ -108,7 +120,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 40 }}>
           {/* Posições de Lending */}
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -216,6 +228,99 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Histórico de Atividades e Auditoria */}
+        <div className="card" style={{ padding: 32 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700 }}>🛡️ Histórico de Atividades & Auditoria</h2>
+              <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>Todas as suas ações on-chain registradas e auditadas com segurança.</p>
+            </div>
+            
+            {/* Filtros */}
+            <div style={{ display: "flex", gap: 8, background: "var(--bg-surface)", padding: 4, borderRadius: 10 }}>
+              {[
+                { id: "all", label: "Todos" },
+                { id: "lending", label: "Lending" },
+                { id: "staking", label: "Staking" },
+                { id: "tokens", label: "Tokens" }
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setAuditFilter(f.id as any)}
+                  style={{
+                    background: auditFilter === f.id ? "var(--accent-grad)" : "transparent",
+                    color: auditFilter === f.id ? "white" : "var(--text-muted)",
+                    border: "none", borderRadius: 8, padding: "6px 14px",
+                    fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s"
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <PositionCardSkeleton />
+            </div>
+          ) : filteredAudits.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: 14 }}>
+              Nenhuma atividade registrada para este filtro.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {filteredAudits.map((audit) => {
+                const date = new Date(audit.created_at).toLocaleString("pt-BR");
+                const isLending = ["DEPOSIT", "BORROW", "REPAY"].includes(audit.action);
+                const isStaking = ["STAKE", "UNSTAKE", "CLAIM"].includes(audit.action);
+                const actionColor = isLending ? "#3b82f6" : isStaking ? "#10b981" : "#7c3aed";
+
+                return (
+                  <div key={audit.id} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "16px 20px", background: "rgba(255,255,255,0.015)",
+                    border: "1px solid var(--border)", borderRadius: 12, flexWrap: "wrap", gap: 12
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 6,
+                        background: `${actionColor}15`, color: actionColor, textTransform: "uppercase"
+                      }}>
+                        {audit.action}
+                      </span>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>
+                          {audit.action === "CREATE_TOKEN" ? `Criou o token ${audit.metadata?.name || ""}` : 
+                           audit.action === "STAKE" ? `Realizou stake de ${audit.metadata?.amount || ""} INST` :
+                           `${audit.action === "DEPOSIT" ? "Depositou" : "Tomou"} ${audit.metadata?.amount || ""} no Lending`}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{date}</div>
+                      </div>
+                    </div>
+
+                    {audit.metadata?.tx_hash && (
+                      <a
+                        href={`https://arbiscan.io/tx/${audit.metadata.tx_hash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          fontSize: 12, color: "var(--accent-1)", textDecoration: "none",
+                          fontWeight: 600, background: "rgba(124,58,237,0.08)",
+                          padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(124,58,237,0.15)"
+                        }}
+                      >
+                        Ver Transação ↗
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   );

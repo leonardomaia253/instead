@@ -114,6 +114,17 @@ export async function insertAudit(audit: Omit<Audit, "id" | "created_at">) {
   return data as Audit;
 }
 
+export async function getAuditsByWallet(walletAddress: string) {
+  const { data, error } = await supabase
+    .from("audits")
+    .select("*")
+    .eq("user_wallet", walletAddress.toLowerCase())
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data as Audit[];
+}
+
 export async function getStakingPools() {
   const { data, error } = await supabase
     .from("staking_pools")
