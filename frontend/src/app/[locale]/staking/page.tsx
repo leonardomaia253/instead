@@ -97,7 +97,7 @@ export default function StakingPage() {
     } catch (error: any) {
       console.error("Erro ao realizar stake:", error);
       alert(`Erro ao realizar stake: ${error.message || "Verifique o console."}`);
-      setIsSubmittingS(false);
+      setIsSubmitting(false);
     }
   };
 

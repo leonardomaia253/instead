@@ -7,6 +7,7 @@ import { WagmiProvider } from "wagmi";
 import { useState, useEffect } from "react";
 import { ToastProvider } from "@/components/Toast";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
+import { Observability } from "@/components/Observability";
 import "@rainbow-me/rainbowkit/styles.css";
 
 function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
@@ -94,6 +95,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           })}
         >
           {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
+          <Observability />
           <KeyboardShortcuts />
           {children}
           <ToastProvider />

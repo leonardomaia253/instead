@@ -1,44 +1,75 @@
 "use client";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSignMessage } from "wagmi";
+import { setWalletAccessToken } from "@/lib/supabase";
 import Link from "next/link";
 
 export default function AdminLoginPage() {
   const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const locale = pathname.split("/")[1] || "en";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const attemptedAddress = useRef<string | null>(null);
+  const nextPath = searchParams.get("next") ?? `/${locale}/admin`;
 
   useEffect(() => {
-    async function checkAdmin() {
-      if (isConnected && address) {
-        setLoading(true);
-        try {
-          const { data, error: dbError } = await supabase
-            .from("users")
-            .select("is_admin")
-            .eq("wallet_address", address.toLowerCase())
-            .single();
+    async function authenticateAdmin() {
+      if (!isConnected || !address || attemptedAddress.current === address) return;
 
-          if (dbError || !data?.is_admin) {
-            setError("Access denied. This wallet is not registered as an administrator.");
-            setLoading(false);
-            return;
-          }
+      attemptedAddress.current = address;
+      setLoading(true);
+      setError(null);
 
-          router.push("/admin");
-        } catch (err) {
-          setError("An unexpected error occurred during admin verification.");
-          setLoading(false);
+      try {
+        const nonceResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "nonce", address }),
+        });
+        const nonceData = await nonceResponse.json();
+        if (!nonceResponse.ok) throw new Error(nonceData.error ?? "Could not start admin authentication.");
+
+        const signature = await signMessageAsync({
+          account: address,
+          message: nonceData.message,
+        });
+
+        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "verify",
+            address,
+            nonce: nonceData.nonce,
+            message: nonceData.message,
+            signature,
+          }),
+        });
+        const sessionData = await verifyResponse.json();
+        if (!verifyResponse.ok) throw new Error(sessionData.error ?? "Admin authentication failed.");
+        if (!sessionData.user?.is_admin) {
+          throw new Error("Access denied. This wallet is not registered as an administrator.");
         }
+
+        setWalletAccessToken(sessionData.access_token);
+        router.push(nextPath.startsWith(`/${locale}/admin`) ? nextPath : `/${locale}/admin`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An unexpected error occurred during admin verification.");
+        attemptedAddress.current = null;
+      } finally {
+        setLoading(false);
       }
     }
 
-    checkAdmin();
-  }, [isConnected, address, router]);
+    authenticateAdmin();
+  }, [address, isConnected, locale, nextPath, router, signMessageAsync]);
 
   return (
     <main style={{
@@ -89,7 +120,7 @@ export default function AdminLoginPage() {
         </div>
 
         <div style={{ marginTop: "32px" }}>
-          <Link href="/" style={{ color: "var(--text-muted)", fontSize: "14px", textDecoration: "none" }}>
+          <Link href={`/${locale}`} style={{ color: "var(--text-muted)", fontSize: "14px", textDecoration: "none" }}>
             ← Back to Main Platform
           </Link>
         </div>

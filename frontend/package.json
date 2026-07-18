@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start"
   },
   "dependencies": {
@@ -14,10 +14,14 @@
     "@supabase/supabase-js": "^2.43.4",
     "@tanstack/react-query": "^5.40.0",
     "@types/three": "^0.183.1",
+    "@x402/core": "^2.18.0",
+    "@x402/evm": "^2.18.0",
+    "@x402/svm": "^2.18.0",
+    "ethers": "^6.11.1",
     "framer-motion": "^12.37.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.383.0",
-    "next": "^16.1.6",
+    "next": "^16.2.10",
     "next-intl": "^4.8.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -25,11 +29,9 @@
     "three": "^0.183.2",
     "valtio": "^2.3.1",
     "viem": "^2.47.5",
-    "wagmi": "^2.10.5",
-    "ethers": "^6.11.1"
+    "wagmi": "^2.10.5"
   },
   "devDependencies": {
-    "@types/next": "^8.0.7",
     "@types/node": "^20",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",

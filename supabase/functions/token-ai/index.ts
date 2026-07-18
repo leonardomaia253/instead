@@ -1,20 +1,31 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { cleanNumber, cleanText, json, preflight, rateLimit, readJsonBody, requireBearer } from "../_shared/security.ts"
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function requireConfiguredGemini() {
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured')
+  }
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const methodResponse = preflight(req)
+  if (methodResponse) return methodResponse
 
   try {
-    const { name, symbol, description, step } = await req.json()
+    requireConfiguredGemini()
+    const unauthorized = requireBearer(req)
+    if (unauthorized) return unauthorized
+    const limited = rateLimit(req, "token-ai")
+    if (limited) return limited
+
+    const body = await readJsonBody(req)
+    const name = cleanText(body.name, 80)
+    const symbol = cleanText(body.symbol, 16).toUpperCase()
+    const description = cleanText(body.description, 500)
+    const step = cleanNumber(body.step)
 
     let prompt = `
       Você é o Arquiteto de Tokens da Instead Finance. Seu objetivo é ajudar o usuário a criar o melhor ativo digital possível.
@@ -55,13 +66,9 @@ serve(async (req) => {
     const data = await response.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Arquiteto online. Como posso ajudar no seu deploy hoje?"
 
-    return new Response(JSON.stringify({ tips: text }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ tips: text })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    const message = error instanceof Error ? error.message : "Unexpected error"
+    return json({ error: message }, message === "Payload too large" ? 413 : 500)
   }
 })

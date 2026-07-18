@@ -1,9 +1,39 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const WALLET_SESSION_KEY = "instead_wallet_access_token";
+const WALLET_SESSION_COOKIE = "instead_wallet_session";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+function requiredPublicEnv(name: string) {
+  const value = process.env[name];
+  if (!value || value.includes("your-") || value === "0x...") {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+const supabaseUrl = requiredPublicEnv("NEXT_PUBLIC_SUPABASE_URL");
+const supabaseAnonKey = requiredPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+
+function getStoredWalletAccessToken() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(WALLET_SESSION_KEY);
+}
+
+export function setWalletAccessToken(token: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(WALLET_SESSION_KEY, token);
+  document.cookie = `${WALLET_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=3600; SameSite=Lax; Secure`;
+}
+
+export function clearWalletAccessToken() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(WALLET_SESSION_KEY);
+  document.cookie = `${WALLET_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  accessToken: async () => getStoredWalletAccessToken(),
+});
 
 // ─── Tipos do Banco de Dados ──────────────────────────────────────────────────
 export type UserProfile = {

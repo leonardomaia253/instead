@@ -10,6 +10,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const locale = pathname.split("/")[1] || "en";
+  const adminBase = `/${locale}/admin`;
+  const adminLoginPath = `${adminBase}/login`;
 
   useEffect(() => {
     async function checkAdmin() {
@@ -40,10 +43,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isConnected, address]);
 
   useEffect(() => {
-    if (isAdmin === false && pathname !== "/admin/login") {
-      router.push("/admin/login");
+    if (isAdmin === false && pathname !== adminLoginPath) {
+      router.push(adminLoginPath);
     }
-  }, [isAdmin, router, pathname]);
+  }, [adminLoginPath, isAdmin, router, pathname]);
 
   if (isAdmin === null) {
     return (
@@ -54,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // If not admin and not on login page, we'll be redirected anyway, but let's return null to avoid flicker
-  if (!isAdmin && pathname !== "/admin/login") {
+  if (!isAdmin && pathname !== adminLoginPath) {
     return null;
   }
 
@@ -70,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         padding: "32px 20px"
       }}>
         <div style={{ marginBottom: "40px", paddingLeft: "12px" }}>
-          <Link href="/" style={{ textDecoration: "none" }}>
+          <Link href={`/${locale}`} style={{ textDecoration: "none" }}>
             <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 800 }}>
               <span className="gradient-text">Instead</span> Admin
             </div>
@@ -78,11 +81,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-          <SidebarLink href="/admin" icon="📊" label="Dashboard" active={pathname === "/admin"} />
-          <SidebarLink href="/admin/users" icon="👥" label="Users" active={pathname === "/admin/users"} />
-          <SidebarLink href="/admin/tokens" icon="🪙" label="Tokens" active={pathname === "/admin/tokens"} />
-          <SidebarLink href="/admin/lending" icon="📈" label="Lending" active={pathname === "/admin/lending"} />
-          <SidebarLink href="/admin/settings" icon="⚙️" label="Settings" active={pathname === "/admin/settings"} />
+          <SidebarLink href={adminBase} icon="📊" label="Dashboard" active={pathname === adminBase} />
+          <SidebarLink href={`${adminBase}/users`} icon="👥" label="Users" active={pathname === `${adminBase}/users`} />
+          <SidebarLink href={`${adminBase}/tokens`} icon="🪙" label="Tokens" active={pathname === `${adminBase}/tokens`} />
+          <SidebarLink href={`${adminBase}/lending`} icon="📈" label="Lending" active={pathname === `${adminBase}/lending`} />
+          <SidebarLink href={`${adminBase}/settings`} icon="⚙️" label="Settings" active={pathname === `${adminBase}/settings`} />
         </nav>
 
         <div style={{ marginTop: "auto", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px solid var(--border)" }}>
@@ -91,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {address}
           </div>
           <button 
-            onClick={() => router.push("/login")}
+            onClick={() => router.push(`/${locale}/login`)}
             style={{ 
               marginTop: "12px", 
               width: "100%", 

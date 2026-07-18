@@ -1,7 +1,6 @@
 import { routing } from '@/navigation';
 import { Metadata } from 'next';
 import { Providers } from '../providers';
-import '../globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
@@ -18,6 +17,7 @@ export async function generateMetadata({
   const { locale } = await params; // Aguarda a resolução dos parâmetros
 
   return {
+    metadataBase: new URL('https://instead.finance'),
     title: locale === 'pt' ? 'Instead DeFi | Empréstimos e Tokenização' : 'Instead DeFi | Lending and Tokenization',
     description: locale === 'pt'
       ? 'A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code.'
@@ -77,18 +77,14 @@ export default async function LocaleLayout({
   };
 
   return (
-    <html lang={locale}>
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </head>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>{children}</Providers>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <Providers>{children}</Providers>
+      </NextIntlClientProvider>
+    </>
   );
 }

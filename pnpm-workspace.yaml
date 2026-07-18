@@ -374,5 +374,5 @@ allowBuilds:
   # dyad-default-allow-builds end
 
 packages:
-  - .
+  - frontend
 minimumReleaseAge: 1440

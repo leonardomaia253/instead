@@ -11,6 +11,7 @@ import {
 } from "wagmi/chains";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
+const isBrowser = typeof window !== "undefined";
 
 export const SUPPORTED_CHAINS = [
   arbitrum,
@@ -25,10 +26,10 @@ export const SUPPORTED_CHAINS = [
 export const wagmiConfig = createConfig({
   chains: SUPPORTED_CHAINS,
   ssr: true,
-  connectors: [
+  connectors: isBrowser ? [
     injected(),
-    walletConnect({ projectId }),
-  ],
+    ...(projectId ? [walletConnect({ projectId })] : []),
+  ] : [],
   transports: {
     [arbitrum.id]:  http(),
     [polygon.id]:   http(),

@@ -1,21 +1,20 @@
 "use client";
+
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useRouter } from "next/navigation";
 import { Link } from "@/navigation";
-import { useTranslations } from "next-intl";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
-
-const SIWE_MESSAGE = (address: string, nonce: string) =>
-  `instead.finance wants you to sign in with your Ethereum account:\n${address}\n\nSign in to Instead DeFi\n\nNonce: ${nonce}\nIssued At: ${new Date().toISOString()}`;
+import { setWalletAccessToken, supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const router = useRouter();
   const toast = useToast();
+  const params = useParams<{ locale: string }>();
+  const locale = params.locale ?? "en";
 
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"wallet" | "email">("wallet");
@@ -25,45 +24,57 @@ export default function LoginPage() {
   async function handleWalletLogin() {
     if (!address) return;
     setLoading(true);
-    try {
-      const nonce = Math.random().toString(36).slice(2, 12);
-      const message = SIWE_MESSAGE(address, nonce);
 
-      // CORREÇÃO: Adicionado o parâmetro 'account' exigido pelo wagmi
+    try {
+      const nonceResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "nonce", address }),
+      });
+      const nonceData = await nonceResponse.json();
+      if (!nonceResponse.ok) throw new Error(nonceData.error ?? "Could not start wallet login");
+
       const signature = await signMessageAsync({
         account: address,
-        message
+        message: nonceData.message,
       });
 
-      // Chama a edge function SIWE
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, signature, address }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Auth failed");
+      const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify",
+          address,
+          nonce: nonceData.nonce,
+          message: nonceData.message,
+          signature,
+        }),
+      });
+      const sessionData = await verifyResponse.json();
+      if (!verifyResponse.ok) throw new Error(sessionData.error ?? "Wallet authentication failed");
 
-      toast.success("Conectado com sucesso! 🎉");
-      router.push("/dashboard");
-    } catch (e: any) {
-      toast.error(e.message ?? "Erro ao conectar. Tente novamente.");
+      setWalletAccessToken(sessionData.access_token);
+      toast.success("Conectado com sucesso.");
+      router.push(`/${locale}/dashboard`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao conectar. Tente novamente.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleEmailLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleEmailLogin(event: React.FormEvent) {
+    event.preventDefault();
     setLoading(true);
+
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (user) {
         const { data: profile } = await supabase
           .from("users")
@@ -72,137 +83,103 @@ export default function LoginPage() {
           .single();
 
         if (profile?.is_admin) {
-          toast.success("Bem-vindo, Administrador! 🎉");
-          router.push("/admin");
+          toast.success("Bem-vindo, administrador.");
+          router.push(`/${locale}/admin`);
           return;
         }
       }
 
-      toast.success("Login realizado com sucesso! 🎉");
-      router.push("/dashboard");
-    } catch (e: any) {
-      toast.error(e.message ?? "Credenciais inválidas.");
+      toast.success("Login realizado com sucesso.");
+      router.push(`/${locale}/dashboard`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Credenciais invalidas.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "24px", position: "relative", overflow: "hidden",
-    }}>
-      {/* BG Glow */}
-      <div style={{
-        position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)",
-        width: 600, height: 400, pointerEvents: "none",
-        background: "radial-gradient(ellipse, rgba(124,58,237,0.12) 0%, transparent 70%)",
-      }} />
-
-      <div style={{ width: "100%", maxWidth: 420, position: "relative" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
+    <main className="auth-shell">
+      <section className="auth-panel">
+        <div className="auth-header">
           <Link href="/" style={{ textDecoration: "none" }}>
-            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
+            <div className="auth-brand">
               <span className="gradient-text">Instead</span>
             </div>
           </Link>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Entrar na plataforma</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-            Use sua wallet ou email para acessar
-          </p>
+          <h1>Entrar na plataforma</h1>
+          <p>Use sua wallet ou email para acessar sua conta.</p>
         </div>
 
-        {/* Mode Toggle */}
-        <div style={{
-          display: "flex", background: "var(--bg-surface)", borderRadius: 12,
-          padding: 4, marginBottom: 24, gap: 4,
-        }}>
-          {(["wallet", "email"] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              flex: 1, padding: "10px 0", borderRadius: 9, border: "none",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-              background: mode === m ? "var(--accent-grad)" : "transparent",
-              color: mode === m ? "white" : "var(--text-muted)",
-              transition: "all 0.15s",
-            }}>
-              {m === "wallet" ? "🦊 Wallet" : "📧 E-mail"}
+        <div className="auth-toggle" role="tablist" aria-label="Modo de login">
+          {(["wallet", "email"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              role="tab"
+              aria-selected={mode === item}
+              onClick={() => setMode(item)}
+            >
+              {item === "wallet" ? "Wallet" : "E-mail"}
             </button>
           ))}
         </div>
 
-        <div className="card" style={{ padding: 28 }}>
+        <div className="card auth-card">
           {mode === "wallet" ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.65, textAlign: "center" }}>
-                Conecte sua wallet Ethereum para assinar uma mensagem de autenticação segura (SIWE).
-                <strong style={{ color: "var(--text-primary)" }}> Nenhuma transação é enviada.</strong>
+            <div className="auth-stack">
+              <p>
+                Conecte sua wallet para assinar uma mensagem SIWE. Nenhuma transacao e enviada.
               </p>
 
               {!isConnected ? (
-                <div style={{ display: "flex", justifyContent: "center" }}>
+                <div className="auth-connect">
                   <ConnectButton />
                 </div>
               ) : (
                 <>
-                  <div style={{
-                    background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)",
-                    borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "var(--text-muted)",
-                    fontFamily: "monospace",
-                  }}>
+                  <div className="wallet-preview">
                     {address?.slice(0, 18)}...{address?.slice(-6)}
                   </div>
-                  <button
-                    className="btn-primary"
-                    onClick={handleWalletLogin}
-                    disabled={loading}
-                    style={{ width: "100%" }}
-                  >
-                    {loading ? "⏳ Aguardando assinatura..." : "✍️ Assinar e Entrar"}
+                  <button className="btn-primary" onClick={handleWalletLogin} disabled={loading}>
+                    {loading ? "Aguardando assinatura..." : "Assinar e entrar"}
                   </button>
                 </>
               )}
-
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Redes suportadas</span>
-                <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "center", gap: 12, fontSize: 20 }}>
-                {["🔵", "🟣", "🟡", "🔷", "🔴", "⟠", "🔺"].map((icon, i) => (
-                  <span key={i} title="Rede suportada" style={{ cursor: "default" }}>{icon}</span>
-                ))}
-              </div>
             </div>
           ) : (
-            <form onSubmit={handleEmailLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, color: "var(--text-muted)", marginBottom: 8, fontWeight: 500 }}>E-mail</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, color: "var(--text-muted)", marginBottom: 8, fontWeight: 500 }}>Senha</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Link href="/forgot-password" style={{ fontSize: 13, color: "var(--accent-1)", textDecoration: "none" }}>
-                  Esqueceu a senha?
-                </Link>
-              </div>
-              <button type="submit" className="btn-primary" disabled={loading} style={{ width: "100%" }}>
-                {loading ? "⏳ Entrando..." : "Entrar"}
+            <form onSubmit={handleEmailLogin} className="auth-stack">
+              <label>
+                E-mail
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="seu@email.com"
+                  required
+                />
+              </label>
+              <label>
+                Senha
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </label>
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? "Entrando..." : "Entrar"}
               </button>
             </form>
           )}
         </div>
 
-        <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: "var(--text-muted)" }}>
-          Não tem conta?{" "}
-          <Link href="/register" style={{ color: "var(--accent-1)", fontWeight: 600, textDecoration: "none" }}>
-            Criar conta
-          </Link>
+        <p className="auth-footer">
+          Nao tem conta? <Link href="/register">Criar conta</Link>
         </p>
-      </div>
+      </section>
     </main>
   );
 }
