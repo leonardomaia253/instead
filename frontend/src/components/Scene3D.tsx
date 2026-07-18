@@ -1,101 +1,106 @@
 "use client";
 
-import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Sphere, MeshDistortMaterial, PerspectiveCamera } from '@react-three/drei';
-import * as THREE from 'three';
-
-function AnimatedSphere() {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!meshRef.current) return;
-    const { clock } = state;
-    meshRef.current.rotation.x = clock.getElapsedTime() * 0.2;
-    meshRef.current.rotation.y = clock.getElapsedTime() * 0.3;
-  });
-
-  return (
-    <Float speed={2} rotationIntensity={1} floatIntensity={1}>
-      <Sphere ref={meshRef} args={[1, 64, 64]} scale={1.5}>
-        <MeshDistortMaterial
-          color="#7c3aed"
-          speed={3}
-          distort={0.4}
-          radius={1}
-          emissive="#2563eb"
-          emissiveIntensity={0.2}
-          roughness={0.1}
-          metalness={0.8}
-        />
-      </Sphere>
-    </Float>
-  );
-}
-
-function MovingGrid() {
-  const gridRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!gridRef.current) return;
-    gridRef.current.position.z = (state.clock.getElapsedTime() * 0.5) % 1;
-  });
-
-  return (
-    <group ref={gridRef}>
-      <gridHelper args={[20, 20, "#7c3aed", "#1e1b4b"]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -5]} />
-    </group>
-  );
-}
-
-function Particles({ count = 100 }) {
-  const points = useMemo(() => {
-    const p = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      p[i * 3] = (Math.random() - 0.5) * 10;
-      p[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      p[i * 3 + 2] = (Math.random() - 0.5) * 10;
-    }
-    return p;
-  }, [count]);
-
-  const pointsRef = useRef<THREE.Points>(null);
-
-  useFrame((state) => {
-    if (!pointsRef.current) return;
-    pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.05;
-  });
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={points.length / 3}
-          array={points}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial size={0.02} color="#f1f5f9" transparent opacity={0.6} sizeAttenuation />
-    </points>
-  );
-}
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 export default function Scene3D() {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const currentHost = host;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog("#080b14", 5, 15);
+
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(0, 0, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    currentHost.appendChild(renderer.domElement);
+
+    const sphereGeometry = new THREE.SphereGeometry(1.5, 64, 64);
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+      color: "#7c3aed",
+      emissive: "#2563eb",
+      emissiveIntensity: 0.22,
+      roughness: 0.18,
+      metalness: 0.78,
+    });
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    scene.add(sphere);
+
+    const particleCount = 200;
+    const particlePositions = new Float32Array(particleCount * 3);
+    for (let index = 0; index < particleCount; index += 1) {
+      particlePositions[index * 3] = (Math.random() - 0.5) * 10;
+      particlePositions[index * 3 + 1] = (Math.random() - 0.5) * 10;
+      particlePositions[index * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({ size: 0.02, color: "#f1f5f9", transparent: true, opacity: 0.6 }),
+    );
+    scene.add(particles);
+
+    scene.add(new THREE.AmbientLight("#ffffff", 0.5));
+    const pointLight = new THREE.PointLight("#ffffff", 1.5);
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
+
+    const spotLight = new THREE.SpotLight("#ffffff", 1);
+    spotLight.position.set(-10, 10, 5);
+    spotLight.angle = 0.15;
+    spotLight.penumbra = 1;
+    scene.add(spotLight);
+
+    let frameId = 0;
+    const clock = new THREE.Clock();
+
+    function resize() {
+      const width = currentHost.clientWidth || 1;
+      const height = currentHost.clientHeight || 1;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height, false);
+    }
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      sphere.rotation.x = elapsed * 0.2;
+      sphere.rotation.y = elapsed * 0.3;
+      sphere.position.y = Math.sin(elapsed * 1.6) * 0.08;
+      particles.rotation.y = elapsed * 0.05;
+      renderer.render(scene, camera);
+      frameId = requestAnimationFrame(animate);
+    }
+
+    resize();
+    animate();
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(currentHost);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+      renderer.dispose();
+      sphereGeometry.dispose();
+      sphereMaterial.dispose();
+      particleGeometry.dispose();
+      currentHost.removeChild(renderer.domElement);
+    };
+  }, []);
+
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
-      <Canvas shadows gl={{ antialias: true, alpha: true }}>
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1.5} />
-        <spotLight position={[-10, 10, 5]} angle={0.15} penumbra={1} intensity={1} castShadow />
-        
-        <AnimatedSphere />
-        <Particles count={200} />
-        {/* <MovingGrid /> */}
-        
-        <fog attach="fog" args={['#080b14', 5, 15]} />
-      </Canvas>
-    </div>
+    <div
+      ref={hostRef}
+      aria-hidden="true"
+      style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
+    />
   );
 }

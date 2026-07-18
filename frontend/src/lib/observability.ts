@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type ObservabilitySeverity = "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -21,6 +21,8 @@ function sanitizeMetadata(metadata: Record<string, unknown> = {}) {
 }
 
 export async function trackEvent(event: ObservabilityEvent) {
+  if (!isSupabaseConfigured) return;
+
   try {
     await supabase.from("observability_events").insert({
       event_type: event.event_type,

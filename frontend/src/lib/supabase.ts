@@ -25,6 +25,56 @@ export function getSupabaseFunctionUrl(functionName: string) {
   return `${supabaseUrl}/functions/v1/${functionName}`;
 }
 
+function disabledSupabaseError() {
+  return new Error("Supabase nao esta configurado neste build.");
+}
+
+function createDisabledQuery() {
+  const response = () => Promise.resolve({ data: null, error: disabledSupabaseError() });
+  const builder: Record<string, unknown> = {
+    then: response().then.bind(response()),
+    catch: response().catch.bind(response()),
+    finally: response().finally.bind(response()),
+  };
+  const passthroughMethods = [
+    "select",
+    "insert",
+    "upsert",
+    "update",
+    "delete",
+    "eq",
+    "neq",
+    "order",
+    "range",
+    "limit",
+    "is",
+  ];
+  for (const method of passthroughMethods) builder[method] = () => builder;
+  builder.single = response;
+  builder.maybeSingle = response;
+  return builder;
+}
+
+function createDisabledSupabaseClient() {
+  return {
+    from: () => createDisabledQuery(),
+    removeChannel: () => "ok",
+    channel: () => ({
+      on: () => ({
+        subscribe: () => ({ unsubscribe: () => undefined }),
+      }),
+      subscribe: () => ({ unsubscribe: () => undefined }),
+    }),
+    auth: {
+      signInWithPassword: async () => ({ data: null, error: disabledSupabaseError() }),
+      getUser: async () => ({ data: { user: null }, error: disabledSupabaseError() }),
+    },
+    functions: {
+      invoke: async () => ({ data: null, error: disabledSupabaseError() }),
+    },
+  } as unknown as ReturnType<typeof createClient>;
+}
+
 function getStoredWalletAccessToken() {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(WALLET_SESSION_KEY);
@@ -42,12 +92,11 @@ export function clearWalletAccessToken() {
   document.cookie = `${WALLET_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
 }
 
-export const supabase = createClient(
-  supabaseUrl ?? "https://placeholder.supabase.co",
-  supabaseAnonKey ?? "placeholder-anon-key",
-{
-  accessToken: async () => getStoredWalletAccessToken(),
-});
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+      accessToken: async () => getStoredWalletAccessToken(),
+    })
+  : createDisabledSupabaseClient();
 
 // ─── Tipos do Banco de Dados ──────────────────────────────────────────────────
 export type UserProfile = {
