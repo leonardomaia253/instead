@@ -3,16 +3,27 @@ import { createClient } from "@supabase/supabase-js";
 const WALLET_SESSION_KEY = "instead_wallet_access_token";
 const WALLET_SESSION_COOKIE = "instead_wallet_session";
 
-function requiredPublicEnv(name: string) {
+function validPublicEnv(name: string) {
   const value = process.env[name];
-  if (!value || value.includes("your-") || value === "0x...") {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
+  if (!value || value.includes("your-") || value === "0x...") return null;
   return value;
 }
 
-const supabaseUrl = requiredPublicEnv("NEXT_PUBLIC_SUPABASE_URL");
-const supabaseAnonKey = requiredPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+const supabaseUrl = validPublicEnv("NEXT_PUBLIC_SUPABASE_URL");
+const supabaseAnonKey = validPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+export function assertSupabaseConfigured() {
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase nao esta configurado neste build. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY e gere um novo deploy.");
+  }
+}
+
+export function getSupabaseFunctionUrl(functionName: string) {
+  assertSupabaseConfigured();
+  return `${supabaseUrl}/functions/v1/${functionName}`;
+}
 
 function getStoredWalletAccessToken() {
   if (typeof window === "undefined") return null;
@@ -31,7 +42,10 @@ export function clearWalletAccessToken() {
   document.cookie = `${WALLET_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(
+  supabaseUrl ?? "https://placeholder.supabase.co",
+  supabaseAnonKey ?? "placeholder-anon-key",
+{
   accessToken: async () => getStoredWalletAccessToken(),
 });
 
@@ -90,6 +104,7 @@ export type PlatformStat = {
 // ─── Funções de acesso ao banco ───────────────────────────────────────────────
 
 export async function getGeneratedTokens(page = 0, limit = 20) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("generated_tokens")
     .select("*")
@@ -101,6 +116,7 @@ export async function getGeneratedTokens(page = 0, limit = 20) {
 }
 
 export async function getTokensByCreator(walletAddress: string) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("generated_tokens")
     .select("*")
@@ -112,6 +128,7 @@ export async function getTokensByCreator(walletAddress: string) {
 }
 
 export async function insertGeneratedToken(token: Omit<GeneratedToken, "id" | "created_at">) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("generated_tokens")
     .insert({ ...token, creator_wallet: token.creator_wallet.toLowerCase() })
@@ -123,6 +140,7 @@ export async function insertGeneratedToken(token: Omit<GeneratedToken, "id" | "c
 }
 
 export async function upsertUserProfile(profile: Omit<UserProfile, "id" | "created_at">) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("users")
     .upsert({ ...profile, wallet_address: profile.wallet_address.toLowerCase() }, { onConflict: "wallet_address" })
@@ -134,6 +152,7 @@ export async function upsertUserProfile(profile: Omit<UserProfile, "id" | "creat
 }
 
 export async function insertAudit(audit: Omit<Audit, "id" | "created_at">) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("audits")
     .insert({ ...audit, user_wallet: audit.user_wallet.toLowerCase() })
@@ -145,6 +164,7 @@ export async function insertAudit(audit: Omit<Audit, "id" | "created_at">) {
 }
 
 export async function getAuditsByWallet(walletAddress: string) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("audits")
     .select("*")
@@ -156,6 +176,7 @@ export async function getAuditsByWallet(walletAddress: string) {
 }
 
 export async function getStakingPools() {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("staking_pools")
     .select("*")
@@ -167,6 +188,7 @@ export async function getStakingPools() {
 }
 
 export async function getPlatformStats() {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("platform_stats")
     .select("*");
@@ -176,6 +198,7 @@ export async function getPlatformStats() {
 }
 
 export async function upsertLendingPosition(position: any) {
+  assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("lending_positions")
     .upsert({ 

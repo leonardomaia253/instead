@@ -4,7 +4,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSignMessage } from "wagmi";
-import { setWalletAccessToken } from "@/lib/supabase";
+import { getSupabaseFunctionUrl, setWalletAccessToken } from "@/lib/supabase";
 import Link from "next/link";
 
 export default function AdminLoginPage() {
@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       setError(null);
 
       try {
-        const nonceResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+        const nonceResponse = await fetch(getSupabaseFunctionUrl("siwe-auth"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "nonce", address }),
@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
           message: nonceData.message,
         });
 
-        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+        const verifyResponse = await fetch(getSupabaseFunctionUrl("siwe-auth"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

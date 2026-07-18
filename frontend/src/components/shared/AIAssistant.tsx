@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, Brain, MessageCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { assertSupabaseConfigured, supabase } from "@/lib/supabase";
 
 interface AIAssistantProps {
   type: "lending" | "token";
@@ -18,6 +18,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ type, contextData }) =
   const fetchTips = async () => {
     setLoading(true);
     try {
+      assertSupabaseConfigured();
       const { data, error } = await supabase.functions.invoke(
         type === "lending" ? "lending-ai" : "token-ai",
         {

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { Link } from "@/navigation";
 import { useToast } from "@/components/Toast";
-import { setWalletAccessToken, supabase } from "@/lib/supabase";
+import { assertSupabaseConfigured, getSupabaseFunctionUrl, setWalletAccessToken, supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const { address, isConnected } = useAccount();
@@ -26,7 +26,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const nonceResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+      const nonceResponse = await fetch(getSupabaseFunctionUrl("siwe-auth"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "nonce", address }),
@@ -39,7 +39,7 @@ export default function LoginPage() {
         message: nonceData.message,
       });
 
-      const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/siwe-auth`, {
+      const verifyResponse = await fetch(getSupabaseFunctionUrl("siwe-auth"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -68,6 +68,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      assertSupabaseConfigured();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
