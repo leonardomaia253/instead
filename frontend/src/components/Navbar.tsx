@@ -1,39 +1,34 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
-import { useTranslations } from "next-intl";
+import { Activity, Gauge, Menu, Moon, Sun, Zap, X } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 
 const Logo = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-    <path d="M10 6L22 6L22 10L18 10L18 22L22 22L22 26L10 26L10 22L14 22L14 10L10 10L10 6Z" fill="url(#logo_grad)" />
-    <defs>
-      <linearGradient id="logo_grad" x1="10" y1="6" x2="22" y2="26" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#7c3aed" />
-        <stop offset="1" stopColor="#2563eb" />
-      </linearGradient>
-    </defs>
+  <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="1" y="1" width="36" height="36" fill="#050604" stroke="#dcff45" strokeWidth="2" />
+    <path d="M10 8H28V13H22V25H28V30H10V25H16V13H10V8Z" fill="#dcff45" />
+    <path d="M6 6L12 6L6 12V6Z" fill="#55f0c0" />
+    <path d="M32 32H26L32 26V32Z" fill="#55f0c0" />
   </svg>
 );
 
 export function Navbar() {
-  const t = useTranslations("Common");
   const pathname = usePathname();
-  const { isConnected } = useAccount();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const { disable3D, toggle3D } = useSettings();
 
-  const NAV_LINKS = [
-    { href: "/lending",   label: t("lending"),   icon: "🏦" },
-    { href: "/factory",   label: t("factory"),   icon: "🏭" },
-    { href: "/tokens",    label: "Explorer",     icon: "🪙" },
-    { href: "/staking",   label: t("staking"),   icon: "💎" },
-    { href: "/simulator", label: "Simulador",    icon: "🧮" },
-    { href: "/dashboard", label: "Dashboard",    icon: "📊" },
+  const navLinks = [
+    { href: "/lending", label: "Lending" },
+    { href: "/factory", label: "Factory" },
+    { href: "/tokens", label: "Explorer" },
+    { href: "/staking", label: "Staking" },
+    { href: "/simulator", label: "Risk" },
+    { href: "/dashboard", label: "Desk" },
   ];
 
   useEffect(() => {
@@ -49,127 +44,50 @@ export function Navbar() {
   }
 
   return (
-    <nav style={{
-      position: "sticky", top: 0, zIndex: 1000,
-      background: scrolled ? "rgba(8,11,20,0.85)" : "transparent",
-      backdropFilter: scrolled ? "blur(12px)" : "none",
-      borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
-      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      padding: "0 24px",
-    }}>
-      <div className="container" style={{
-        display: "flex", alignItems: "center",
-        height: 72, gap: 32,
-      }}>
-        {/* Logo */}
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
+    <nav className={`proto-nav ${scrolled ? "proto-nav--scrolled" : ""}`}>
+      <div className="container proto-nav__inner">
+        <Link href="/" className="proto-brand" aria-label="Instead home">
           <Logo />
-          <span style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: 24, fontWeight: 800, letterSpacing: -0.8,
-            display: "flex", alignItems: "baseline"
-          }}>
-            <span className="gradient-text">Instead</span>
-            <span style={{ color: "var(--text-muted)", fontSize: 10, marginLeft: 6, fontWeight: 500, letterSpacing: 1.5, textTransform: "uppercase" }}>
-              DeFi
-            </span>
+          <span>
+            <strong>Instead</strong>
+            <em>Liquidity OS</em>
           </span>
         </Link>
 
-        {/* Desktop Links */}
-        <div style={{ display: "flex", gap: 4, flex: 1, alignItems: "center" }} className="hide-mobile">
-          {NAV_LINKS.map(({ href, label }) => {
-            const active = pathname === href;
-            return (
-              <Link key={href} href={href} style={{
-                padding: "6px 14px", borderRadius: 10, fontSize: 14, fontWeight: active ? 600 : 400,
-                color: active ? "var(--text-primary)" : "var(--text-muted)",
-                background: active ? "rgba(124,58,237,0.12)" : "transparent",
-                textDecoration: "none", transition: "all 0.18s",
-                border: active ? "1px solid rgba(124,58,237,0.25)" : "1px solid transparent",
-              }}>
-                {label}
-              </Link>
-            );
-          })}
+        <div className="proto-nav__links hide-mobile">
+          {navLinks.map(({ href, label }) => (
+            <Link key={href} href={href} className={pathname === href ? "active" : ""}>
+              {label}
+            </Link>
+          ))}
         </div>
 
-        {/* Right Side */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }} className="hide-mobile">
-          {/* Performance Toggle (3D) */}
-          <button 
-            onClick={toggle3D} 
-            title={disable3D ? "Ativar Efeitos 3D" : "Desativar Efeitos 3D (Modo Performance)"}
-            style={{
-              background: disable3D ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", 
-              border: `1px solid ${disable3D ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)"}`,
-              borderRadius: 10, width: 36, height: 36, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
-              color: disable3D ? "#ef4444" : "#10b981",
-              transition: "all 0.2s"
-            }}
-          >
-            ⚡
+        <div className="proto-nav__actions hide-mobile">
+          <button onClick={toggle3D} title={disable3D ? "Ativar globe" : "Modo performance"} aria-label="Toggle 3D">
+            {disable3D ? <Activity size={16} /> : <Gauge size={16} />}
           </button>
-
-          {/* Theme Toggle */}
-          <button onClick={toggleTheme} style={{
-            background: "var(--bg-card)", border: "1px solid var(--border)",
-            borderRadius: 10, width: 36, height: 36, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
-          }}>
-            {theme === "dark" ? "☀️" : "🌙"}
+          <button onClick={toggleTheme} aria-label="Toggle theme">
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <ConnectButton />
         </div>
 
-        {/* Mobile Hamburger */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="show-mobile"
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: 22, color: "var(--text-primary)", marginLeft: "auto",
-          }}
-        >
-          {open ? "✕" : "☰"}
+        <button className="show-mobile proto-menu-button" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu">
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {open && (
-        <div style={{
-          position: "absolute", top: 64, left: 0, right: 0,
-          background: "var(--bg-surface)", borderBottom: "1px solid var(--border)",
-          padding: "16px 24px", display: "flex", flexDirection: "column", gap: 4,
-        }}>
-          {NAV_LINKS.map(({ href, label, icon }) => (
-            <Link key={href} href={href} onClick={() => setOpen(false)} style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "12px 16px", borderRadius: 10, fontSize: 15, fontWeight: 500,
-              color: pathname === href ? "var(--text-primary)" : "var(--text-muted)",
-              background: pathname === href ? "rgba(124,58,237,0.1)" : "transparent",
-              textDecoration: "none",
-            }}>
-              <span>{icon}</span><span>{label}</span>
+        <div className="proto-mobile-menu">
+          {navLinks.map(({ href, label }) => (
+            <Link key={href} href={href} onClick={() => setOpen(false)} className={pathname === href ? "active" : ""}>
+              {label}
             </Link>
           ))}
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)", display: "flex", gap: 10 }}>
+          <div className="proto-mobile-menu__actions">
+            <button onClick={toggle3D}><Zap size={16} /> 3D</button>
+            <button onClick={toggleTheme}>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />} Theme</button>
             <ConnectButton />
-            <button onClick={toggleTheme} style={{
-              background: "var(--bg-card)", border: "1px solid var(--border)",
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontSize: 16,
-            }}>
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-            <button onClick={toggle3D} style={{
-              background: disable3D ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", 
-              border: `1px solid ${disable3D ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)"}`,
-              borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontSize: 16,
-              color: disable3D ? "#ef4444" : "#10b981",
-            }}>
-              ⚡ 3D
-            </button>
           </div>
         </div>
       )}

@@ -1,0 +1,11 @@
+
+> instead-frontend@0.1.0 dev C:\Users\Administrator\instead\frontend
+> next dev "-p" "3220"
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3220
+- Network:       http://172.31.39.15:3220
+- Environments: .env.local
+✓ Ready in 23.4s
+○ Compiling proxy ...
+

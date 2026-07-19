@@ -1,47 +1,52 @@
 "use client";
 
-import React from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
 
 export default function SecurityPage() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
+    <div className="site-shell">
       <Navbar />
-      <main className="container" style={{ flex: 1, padding: "120px 24px" }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="gradient-text" style={{ fontSize: "40px", fontWeight: 800, marginBottom: "32px", fontFamily: "'Space Grotesk', sans-serif" }}>
-            Segurança do Protocolo
-          </h1>
-          
-          <div className="card" style={{ padding: "40px", lineHeight: "1.8" }}>
-            <h2 style={{ fontSize: "24px", marginBottom: "20px" }}>Compromisso com a Segurança</h2>
-            <p style={{ color: "var(--text-muted)", marginBottom: "24px" }}>
-              Nossos contratos são auditados por empresas líderes do setor e protegidos por mecanismos de governança multicamadas.
+      <main className="doc-shell">
+        <div className="container">
+          <header className="doc-hero">
+            <span>SECURITY / THREAT SURFACE</span>
+            <h1>Seguranca como arquitetura, nao selo.</h1>
+            <p>
+              A Instead prioriza controles verificaveis: autenticacao por assinatura, isolamento de dados, edge functions restritas e deploy de contratos somente depois da fase de auditoria.
             </p>
-            
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "24px" }}>
-              <div className="card" style={{ borderLeft: "4px solid var(--green)" }}>
-                <h4>Auditado por Certik</h4>
-                <p style={{ fontSize: "14px", color: "var(--text-muted)" }}>Templates de tokens validados on-chain.</p>
-              </div>
-              <div className="card" style={{ borderLeft: "4px solid var(--accent-1)" }}>
-                <h4>Gnosis Safe</h4>
-                <p style={{ fontSize: "14px", color: "var(--text-muted)" }}>Tesouraria protegida por multi-sig.</p>
-              </div>
-              <div className="card" style={{ borderLeft: "4px solid var(--accent-2)" }}>
-                <h4>Bug Bounty</h4>
-                <p style={{ fontSize: "14px", color: "var(--text-muted)" }}>Programa aberto para caçadores de bugs.</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          </header>
+
+          <section className="doc-grid">
+            <article className="doc-panel">
+              <code>AUTH</code>
+              <h3>SIWE nonce</h3>
+              <p>Nonce persistido, consumo unico, expiracao curta e JWT com claims operacionais.</p>
+            </article>
+            <article className="doc-panel">
+              <code>RLS</code>
+              <h3>Data boundary</h3>
+              <p>Politicas por tabela para reduzir leitura publica indevida e proteger posicoes de lending.</p>
+            </article>
+            <article className="doc-panel">
+              <code>EDGE</code>
+              <h3>AI guardrails</h3>
+              <p>CORS restrito, bearer token, payload limit, sanitizacao e rate limit nas funcoes de IA.</p>
+            </article>
+            <article className="doc-panel doc-panel--wide">
+              <code>CONTRACTS</code>
+              <h3>Deploy fica por ultimo</h3>
+              <p>
+                O contrato de lending ainda exige refatoracao de isolamento de posicoes, testes unitarios, fuzz/invariant e auditoria externa antes de mainnet.
+              </p>
+            </article>
+            <article className="doc-panel">
+              <code>OPS</code>
+              <h3>Alerting</h3>
+              <p>Web Vitals e erros client-side ja entram na base; Sentry/OpenTelemetry e uptime checks seguem como proxima camada.</p>
+            </article>
+          </section>
+        </div>
       </main>
       <Footer />
     </div>
