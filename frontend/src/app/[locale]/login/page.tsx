@@ -14,7 +14,7 @@ export default function LoginPage() {
   const router = useRouter();
   const toast = useToast();
   const params = useParams<{ locale: string }>();
-  const locale = params.locale ?? "en";
+  const locale = params.locale ?? "pt";
 
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"wallet" | "email">("wallet");
@@ -93,7 +93,7 @@ export default function LoginPage() {
       toast.success("Login realizado com sucesso.");
       router.push(`/${locale}/dashboard`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Credenciais invalidas.");
+      toast.error(error instanceof Error ? error.message : "Credenciais inválidas.");
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ export default function LoginPage() {
           {mode === "wallet" ? (
             <div className="auth-stack">
               <p>
-                Conecte sua wallet para assinar uma mensagem SIWE. Nenhuma transacao e enviada.
+                Conecte sua wallet para assinar uma mensagem SIWE. Nenhuma transação é enviada.
               </p>
 
               {!isConnected ? (
@@ -178,7 +178,7 @@ export default function LoginPage() {
         </div>
 
         <p className="auth-footer">
-          Nao tem conta? <Link href="/register">Criar conta</Link>
+          Não tem conta? <Link href="/register">Criar conta</Link>
         </p>
       </section>
     </main>

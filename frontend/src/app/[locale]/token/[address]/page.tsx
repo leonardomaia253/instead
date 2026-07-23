@@ -39,7 +39,7 @@ export default function TokenPage() {
   }
 
   if (loading) return (
-    <main style={{ minHeight: "100vh", padding: "40px 24px" }}>
+    <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <Skeleton height={32} width="60%" style={{ marginBottom: 16 }} />
         <Skeleton height={20} width="40%" style={{ marginBottom: 32 }} />
@@ -51,7 +51,7 @@ export default function TokenPage() {
   );
 
   if (!token) return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: "32px 16px", textAlign: "center" }}>
       <div style={{ fontSize: 48 }}>🔍</div>
       <h2>Token não encontrado</h2>
       <p style={{ color: "var(--text-muted)" }}>Esse token pode não ter sido indexado ainda.</p>
@@ -62,16 +62,16 @@ export default function TokenPage() {
   const explorerUrl = chain?.explorer ? `${chain.explorer}/address/${token.token_address}` : "#";
 
   return (
-    <main style={{ minHeight: "100vh", padding: "40px 24px" }}>
+    <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <Link href="/factory" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Token Factory</Link>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 12, marginBottom: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 12, marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 800, marginBottom: 4 }}>
               {token.name}
             </h1>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ color: "var(--accent-1)", fontWeight: 700, fontSize: 18 }}>${token.symbol}</span>
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{chain?.icon} {chain?.name}</span>
             </div>
@@ -85,7 +85,7 @@ export default function TokenPage() {
         </div>
 
         <div className="card" style={{ marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 20 }}>
             {[
               ["Endereço", `${token.token_address.slice(0, 10)}...${token.token_address.slice(-6)}`],
               ["Criador",  `${token.creator_wallet.slice(0, 10)}...${token.creator_wallet.slice(-6)}`],

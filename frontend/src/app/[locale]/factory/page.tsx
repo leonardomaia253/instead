@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { formatEther, parseUnits } from "ethers";
+import { formatEther } from "ethers";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { CHAIN_META, TOKEN_FACTORY_ABI, SUPPORTED_CHAINS } from "@/lib/wagmi";
 import {
   insertGeneratedToken,
   insertAudit,
+  enqueueReconciliation,
   type GeneratedToken
 } from "@/lib/supabase";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
@@ -482,6 +483,20 @@ function formatNumber(val: string) {
   return n.toLocaleString();
 }
 
+function toWholeTokenUnits(value: string) {
+  const normalized = value.replace(/[,_\s]/g, "");
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error("O contrato atual aceita supply apenas em unidades inteiras.");
+  }
+  return BigInt(normalized);
+}
+
+function taxPercentToBps(value: string) {
+  const percent = Number(value);
+  if (!Number.isFinite(percent) || percent < 0) return 0n;
+  return BigInt(Math.round(percent * 100));
+}
+
 const styles = {
   stepTitle: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, marginBottom: 8 } as React.CSSProperties,
   stepDesc: { fontSize: 15, color: "var(--text-muted)", lineHeight: 1.65, marginBottom: 8 } as React.CSSProperties,
@@ -506,6 +521,7 @@ export default function FactoryPage() {
 
   const { writeContractAsync, data: txHash, isPending, error: writeError } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
+  const publicClient = usePublicClient();
 
   // Sincroniza chainId da carteira com o form
   useEffect(() => {
@@ -534,6 +550,10 @@ export default function FactoryPage() {
     if (!address || !feeInEth) return;
     const feeWithSlippage = (feeInEth * 105n) / 100n;
     try {
+      const initialSupply = toWholeTokenUnits(form.initialSupply);
+      const maxSupply = toWholeTokenUnits(form.maxSupply);
+      const taxBPS = form.taxable ? taxPercentToBps(form.taxPercent) : 0n;
+
       const hash = await writeContractAsync({
         address: factoryAddress,
         abi: TOKEN_FACTORY_ABI,
@@ -541,36 +561,86 @@ export default function FactoryPage() {
         args: [
           form.name,
           form.symbol,
-          parseUnits(form.initialSupply, form.decimals),
-          parseUnits(form.maxSupply, form.decimals),
+          initialSupply,
+          maxSupply,
           form.mintable,
+          form.taxable,
+          taxBPS,
+          false,
         ],
         value: feeWithSlippage,
       });
 
+      let tokenAddress = "pending";
+      try {
+        const { Interface } = await import("ethers");
+        const iface = new Interface(TOKEN_FACTORY_ABI as any);
+        const receipt = publicClient ? await publicClient.waitForTransactionReceipt({ hash }) : null;
+        for (const log of receipt?.logs ?? []) {
+          try {
+            const parsed = iface.parseLog(log as any);
+            if (parsed?.name === "TokenCreated") {
+              tokenAddress = String(parsed.args.tokenAddress);
+              break;
+            }
+          } catch {
+            // Ignore unrelated logs from the same transaction.
+          }
+        }
+      } catch (eventError) {
+        console.error("Erro ao extrair endereço do token:", eventError);
+      }
+
       // Salva metadados no Supabase
       await insertGeneratedToken({
-        token_address: "pending",
+        token_address: tokenAddress,
         creator_wallet: address,
         name: form.name,
         symbol: form.symbol,
-        initial_supply: parseFloat(form.initialSupply),
-        max_supply: parseFloat(form.maxSupply),
+        initial_supply: Number(initialSupply),
+        max_supply: Number(maxSupply),
         mintable: form.mintable,
         tx_hash: hash,
         chain_id: form.chainId,
       });
 
       // Registra Auditoria
+      const operationId = `${address.toLowerCase()}:CREATE_TOKEN:${hash.toLowerCase()}`;
       await insertAudit({
         user_wallet: address,
         action: "CREATE_TOKEN",
+        operation_id: operationId,
+        tx_hash: hash,
+        chain_id: form.chainId,
+        status: "confirmed",
         metadata: {
           name: form.name,
           symbol: form.symbol,
           tx_hash: hash,
-          chain_id: form.chainId
+          chain_id: form.chainId,
+          token_address: tokenAddress,
+          taxable: form.taxable,
+          tax_bps: Number(taxBPS),
         }
+      });
+
+      await enqueueReconciliation({
+        operation_id: operationId,
+        user_wallet: address,
+        vertical: "token_factory",
+        action: "CREATE_TOKEN",
+        tx_hash: hash,
+        chain_id: form.chainId,
+        expected_state: {
+          token_address: tokenAddress,
+          name: form.name,
+          symbol: form.symbol,
+          initial_supply: initialSupply.toString(),
+          max_supply: maxSupply.toString(),
+          mintable: form.mintable,
+          taxable: form.taxable,
+          tax_bps: taxBPS.toString(),
+        },
       });
     } catch (e) {
       // Erro exposto via writeError

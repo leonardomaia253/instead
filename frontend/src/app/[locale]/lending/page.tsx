@@ -4,7 +4,7 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useInsteadLending } from "@/hooks/useInsteadLending";
 import { Link } from "@/navigation";
-import { insertAudit, upsertLendingPosition, supabase } from "@/lib/supabase";
+import { enqueueReconciliation, insertAudit, upsertLendingPosition, supabase } from "@/lib/supabase";
 import { useChainId } from "wagmi";
 import { AIAssistant } from "@/components/shared/AIAssistant";
 import { useTranslations } from "next-intl";
@@ -36,16 +36,38 @@ export default function LendingPage() {
   useEffect(() => {
     if (isConfirmed && txHash && address && lastAuditedHash.current !== txHash) {
       lastAuditedHash.current = txHash;
+      const operationId = `${address.toLowerCase()}:${tab.toUpperCase()}:${txHash.toLowerCase()}`;
       
       // 1. Log Audit
       insertAudit({
         user_wallet: address,
         action: tab.toUpperCase(),
+        operation_id: operationId,
+        tx_hash: txHash,
+        chain_id: chainId,
+        status: "confirmed",
         metadata: {
           asset: selectedAsset,
           amount: amount,
           tx_hash: txHash,
+          chain_id: chainId,
         }
+      }).catch(console.error);
+
+      enqueueReconciliation({
+        operation_id: operationId,
+        user_wallet: address,
+        vertical: "lending",
+        action: tab.toUpperCase(),
+        tx_hash: txHash,
+        chain_id: chainId,
+        expected_state: {
+          asset: selectedAsset,
+          collateral_asset: colAsset,
+          amount,
+          collateral_balance: collateralBalance.toString(),
+          borrow_balance: borrowBalance.toString(),
+        },
       }).catch(console.error);
 
       // 2. Persist Position with real contract data
@@ -57,6 +79,8 @@ export default function LendingPage() {
         borrowed_amount: Number(borrowBalance) / (10 ** 18),
         health_factor: Number(borrowBalance) > 0 ? (Number(collateralBalance) / Number(borrowBalance) * 0.8) : 999, 
         chain_id: chainId,
+        last_tx_hash: txHash,
+        operation_status: "confirmed",
       }).catch(console.error);
     }
   }, [isConfirmed, txHash, address, tab, selectedAsset, amount, colAsset, chainId, collateralBalance, borrowBalance]);
@@ -88,10 +112,10 @@ export default function LendingPage() {
   const liveHF = liveBorrow > 0 ? (liveCollateral / liveBorrow) * 0.8 : 999;
 
   return (
-    <main style={{ minHeight: "100vh", padding: "40px 24px" }}>
+    <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40, gap: 16, flexWrap: "wrap" }}>
           <div>
             <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar</Link>
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700, marginTop: 8 }}>
@@ -104,9 +128,9 @@ export default function LendingPage() {
           <ConnectButton />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 32, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 24, alignItems: "start" }}>
           {/* Left Column: Action Form */}
-          <div className="card" style={{ padding: 32 }}>
+          <div className="card" style={{ padding: "clamp(20px, 5vw, 32px)" }}>
             {/* Tabs */}
             <div style={{ display: "flex", gap: 4, background: "var(--bg-surface)", padding: 4, borderRadius: 12, marginBottom: 28 }}>
               {(["deposit", "borrow", "repay"] as Tab[]).map((tBtn) => (
@@ -153,11 +177,11 @@ export default function LendingPage() {
                 )}
 
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>
                       Quantidade
                     </label>
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {[25, 50, 75, 100].map((pct) => (
                         <button
                           key={pct}
@@ -229,7 +253,7 @@ export default function LendingPage() {
           {isConnected && (
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               {/* Health Factor Card */}
-              <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 32 }}>
+              <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "clamp(20px, 5vw, 32px)", gap: 16, flexWrap: "wrap" }}>
                 <div>
                   <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
                     Fator de Saúde
@@ -242,27 +266,27 @@ export default function LendingPage() {
               </div>
 
               {/* Position Details Card */}
-              <div className="card" style={{ padding: 28 }}>
+              <div className="card" style={{ padding: "clamp(20px, 5vw, 28px)" }}>
                 <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
                   <Shield size={18} className="text-purple-500" /> Sua Posição On-Chain
                 </h3>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12, flexWrap: "wrap" }}>
                     <span style={{ color: "var(--text-muted)" }}>Colateral Depositado:</span>
                     <span style={{ fontWeight: 600, color: "white" }}>{liveCollateral.toFixed(4)} WETH</span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12, flexWrap: "wrap" }}>
                     <span style={{ color: "var(--text-muted)" }}>Dívida Ativa:</span>
                     <span style={{ fontWeight: 600, color: "white" }}>{liveBorrow.toFixed(4)} USDC</span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, borderTop: "1px solid var(--border)", paddingTop: 16, gap: 12, flexWrap: "wrap" }}>
                     <span style={{ color: "var(--text-muted)" }}>LTV Atual:</span>
                     <span style={{ fontWeight: 600, color: liveHF < 1.5 ? "var(--red)" : "var(--green)" }}>
                       {liveBorrow > 0 ? ((liveBorrow / (liveCollateral || 1)) * 100).toFixed(1) : "0.0"}%
                     </span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12, flexWrap: "wrap" }}>
                     <span style={{ color: "var(--text-muted)" }}>Limite de Liquidação:</span>
                     <span style={{ fontWeight: 600, color: "white" }}>80%</span>
                   </div>

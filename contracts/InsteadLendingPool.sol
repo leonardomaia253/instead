@@ -62,6 +62,9 @@ contract InsteadLendingPool is
     // mapping to track user positions locally (mirrored from Aave for UI/fee calculation)
     mapping(address => mapping(address => UserPosition)) public userPositions;
     mapping(address => bool) public supportedAssets;
+    mapping(address => uint256) public totalCollateralByAsset;
+    mapping(address => uint256) public totalBorrowedByAsset;
+    mapping(address => uint256) public totalFeesByAsset;
 
     // ─── Events ───────────────────────────────────────────────────────────────
     event CollateralDeposited(address indexed user, address indexed asset, uint256 amount);
@@ -69,6 +72,15 @@ contract InsteadLendingPool is
     event Borrowed(address indexed user, address indexed asset, uint256 amount, uint256 fee);
     event Repaid(address indexed user, address indexed asset, uint256 amount);
     event FeeCollected(address indexed asset, uint256 amount);
+    event OperationAccounted(
+        address indexed user,
+        address indexed asset,
+        bytes32 indexed operation,
+        uint256 userCollateral,
+        uint256 userBorrow,
+        uint256 totalCollateral,
+        uint256 totalBorrowed
+    );
 
     // ─── Initializer (UUPS) ───────────────────────────────────────────────────
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -117,19 +129,25 @@ contract InsteadLendingPool is
         pool.supply(asset, amount, address(this), 0);
 
         userPositions[msg.sender][asset].collateralBalance += amount;
+        totalCollateralByAsset[asset] += amount;
         
         emit CollateralDeposited(msg.sender, asset, amount);
+        _emitAccounting(msg.sender, asset, "DEPOSIT");
     }
 
     function withdrawCollateral(address asset, uint256 amount) external nonReentrant whenNotPaused {
+        require(supportedAssets[asset], "Asset not supported");
+        require(amount > 0, "Amount must be > 0");
         require(userPositions[msg.sender][asset].collateralBalance >= amount, "Insufficient balance");
         
         IPool pool = getAavePool();
         uint256 withdrawn = pool.withdraw(asset, amount, msg.sender);
         
         userPositions[msg.sender][asset].collateralBalance -= withdrawn;
+        totalCollateralByAsset[asset] -= withdrawn;
         
         emit CollateralWithdrawn(msg.sender, asset, withdrawn);
+        _emitAccounting(msg.sender, asset, "WITHDRAW");
     }
 
     function borrow(address asset, uint256 amount) external nonReentrant whenNotPaused {
@@ -148,26 +166,33 @@ contract InsteadLendingPool is
 
         if (fee > 0) {
             IERC20(asset).safeTransfer(treasury, fee);
+            totalFeesByAsset[asset] += fee;
             emit FeeCollected(asset, fee);
         }
 
         IERC20(asset).safeTransfer(msg.sender, amountToUser);
         
         userPositions[msg.sender][asset].borrowBalance += amount;
+        totalBorrowedByAsset[asset] += amount;
         
         emit Borrowed(msg.sender, asset, amount, fee);
+        _emitAccounting(msg.sender, asset, "BORROW");
     }
 
     function repay(address asset, uint256 amount) external nonReentrant whenNotPaused {
+        require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
+        uint256 userDebt = userPositions[msg.sender][asset].borrowBalance;
+        require(userDebt > 0, "No tracked debt");
+        uint256 repayAmount = amount > userDebt ? userDebt : amount;
         
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), repayAmount);
         
         IPool pool = getAavePool();
-        IERC20(asset).approve(address(pool), amount);
+        IERC20(asset).approve(address(pool), repayAmount);
         
         // Repay to Aave
-        uint256 repaid = pool.repay(asset, amount, 2, address(this));
+        uint256 repaid = pool.repay(asset, repayAmount, 2, address(this));
         
         // Update local tracking (simplified)
         if (userPositions[msg.sender][asset].borrowBalance > repaid) {
@@ -175,8 +200,27 @@ contract InsteadLendingPool is
         } else {
             userPositions[msg.sender][asset].borrowBalance = 0;
         }
+        if (totalBorrowedByAsset[asset] > repaid) {
+            totalBorrowedByAsset[asset] -= repaid;
+        } else {
+            totalBorrowedByAsset[asset] = 0;
+        }
 
         emit Repaid(msg.sender, asset, repaid);
+        _emitAccounting(msg.sender, asset, "REPAY");
+    }
+
+    function _emitAccounting(address user, address asset, string memory operation) internal {
+        UserPosition storage position = userPositions[user][asset];
+        emit OperationAccounted(
+            user,
+            asset,
+            keccak256(bytes(operation)),
+            position.collateralBalance,
+            position.borrowBalance,
+            totalCollateralByAsset[asset],
+            totalBorrowedByAsset[asset]
+        );
     }
 
     // ─── View Functions ───────────────────────────────────────────────────────

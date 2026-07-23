@@ -11,9 +11,9 @@ export default function DocsPage() {
         <div className="container">
           <header className="doc-hero">
             <span>DOCS / OPERATOR MANUAL</span>
-            <h1>Manual de operacao do protocolo.</h1>
+            <h1>Manual de operação do protocolo.</h1>
             <p>
-              A documentacao da Instead foi organizada como mesa de comando: arquitetura, fluxos, riscos e integracoes separados por decisao operacional.
+              A documentação da Instead foi organizada como mesa de comando: arquitetura, fluxos, riscos e integrações separados por decisão operacional.
             </p>
           </header>
 
@@ -22,28 +22,28 @@ export default function DocsPage() {
               <code>01 / LENDING</code>
               <h3>Borrow sem perder leitura de risco</h3>
               <p>
-                Entenda colateral, LTV, juros dinamicos, health factor e liquidacao antes de assinar uma transacao. O objetivo da interface e tornar o risco visivel, nao decorativo.
+                Entenda colateral, LTV, juros dinâmicos, health factor e liquidação antes de assinar uma transação. O objetivo da interface é tornar o risco visível, não decorativo.
               </p>
             </article>
             <article className="doc-panel">
               <code>02 / FACTORY</code>
               <h3>Token launch</h3>
-              <p>Crie ativos com supply, mint, burn e taxa sem escrever Solidity. Deploy de contratos fica bloqueado ate auditoria e testes.</p>
+              <p>Crie ativos com supply, mint, burn e taxa sem escrever Solidity. Deploy de contratos fica bloqueado até auditoria e testes.</p>
             </article>
             <article className="doc-panel">
               <code>03 / AUTH</code>
               <h3>Wallet session</h3>
-              <p>SIWE emite nonce, verifica assinatura e cria sessao curta para RLS e areas protegidas.</p>
+              <p>SIWE emite nonce, verifica assinatura e cria sessão curta para RLS e áreas protegidas.</p>
             </article>
             <article className="doc-panel">
               <code>04 / OBS</code>
               <h3>Observability</h3>
-              <p>Eventos leves para Web Vitals e erros client-side, com envio desativado quando Supabase nao existe no build.</p>
+              <p>Eventos leves para Web Vitals e erros client-side, com envio desativado quando Supabase não existe no build.</p>
             </article>
             <article className="doc-panel">
               <code>05 / CHAINS</code>
               <h3>Network map</h3>
-              <p>Arbitrum, Base, Polygon, Ethereum e outras redes aparecem como rotas de liquidez, nao apenas badges esteticos.</p>
+              <p>Arbitrum, Base, Polygon, Ethereum e outras redes aparecem como rotas de liquidez, não apenas badges estéticos.</p>
             </article>
           </section>
         </div>

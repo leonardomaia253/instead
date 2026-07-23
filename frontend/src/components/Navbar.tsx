@@ -24,11 +24,11 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/lending", label: "Lending" },
-    { href: "/factory", label: "Factory" },
-    { href: "/tokens", label: "Explorer" },
+    { href: "/factory", label: "Fábrica" },
+    { href: "/tokens", label: "Explorar" },
     { href: "/staking", label: "Staking" },
-    { href: "/simulator", label: "Risk" },
-    { href: "/dashboard", label: "Desk" },
+    { href: "/simulator", label: "Risco" },
+    { href: "/dashboard", label: "Painel" },
   ];
 
   useEffect(() => {
@@ -66,13 +66,13 @@ export function Navbar() {
           <button onClick={toggle3D} title={disable3D ? "Ativar globe" : "Modo performance"} aria-label="Toggle 3D">
             {disable3D ? <Activity size={16} /> : <Gauge size={16} />}
           </button>
-          <button onClick={toggleTheme} aria-label="Toggle theme">
+          <button onClick={toggleTheme} aria-label="Alternar tema">
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <ConnectButton />
         </div>
 
-        <button className="show-mobile proto-menu-button" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu">
+        <button className="show-mobile proto-menu-button" onClick={() => setOpen((value) => !value)} aria-label="Alternar menu">
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
@@ -86,7 +86,7 @@ export function Navbar() {
           ))}
           <div className="proto-mobile-menu__actions">
             <button onClick={toggle3D}><Zap size={16} /> 3D</button>
-            <button onClick={toggleTheme}>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />} Theme</button>
+            <button onClick={toggleTheme}>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />} Tema</button>
             <ConnectButton />
           </div>
         </div>

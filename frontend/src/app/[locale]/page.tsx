@@ -11,6 +11,7 @@ import { getPlatformStats, type PlatformStat } from "@/lib/supabase";
 import { useSettings } from "@/hooks/useSettings";
 
 const HealthGauge = dynamic(() => import("@/components/HealthGauge").then((mod) => mod.HealthGauge), { ssr: false });
+const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
 
 const fallbackStats = {
   total_value_locked: "$4.2M+",
@@ -38,10 +39,10 @@ export default function Home() {
 
   const stats = useMemo(
     () => [
-      { label: "Total value locked", key: "total_value_locked", value: fallbackStats.total_value_locked },
-      { label: "Assets launched", key: "tokens_created", value: fallbackStats.tokens_created },
-      { label: "Gas routed", key: "fees_saved", value: fallbackStats.fees_saved },
-      { label: "Live networks", key: "active_networks", value: fallbackStats.active_networks },
+      { label: "Valor total bloqueado", key: "total_value_locked", value: fallbackStats.total_value_locked },
+      { label: "Ativos lançados", key: "tokens_created", value: fallbackStats.tokens_created },
+      { label: "Gas roteado", key: "fees_saved", value: fallbackStats.fees_saved },
+      { label: "Redes ativas", key: "active_networks", value: fallbackStats.active_networks },
     ],
     [],
   );
@@ -55,6 +56,7 @@ export default function Home() {
       <main>
         <section className="proto-hero">
           <div className="proto-hero__grid" />
+          {!disable3D && <Scene3D />}
           <div className="container proto-hero__inner">
             <div className="proto-hero__copy">
               <div className="terminal-kicker">
@@ -62,10 +64,10 @@ export default function Home() {
                 <strong>MAINNET READY INTERFACE</strong>
               </div>
               <h1>
-                Liquidez cripto para quem constroi mercado, nao vitrine.
+                Liquidez cripto para quem constrói mercado, não vitrine.
               </h1>
               <p>
-                Um front-end DeFi mais direto: lending, token factory, staking e inteligencia operacional no mesmo painel. Brutal no visual, cuidadoso na execucao.
+                Um front-end DeFi mais direto: lending, token factory, staking e inteligência operacional no mesmo painel. Brutal no visual, cuidadoso na execução.
               </p>
               <div className="hero-actions">
                 <Link href="/lending" className="btn-primary brutal-button">Abrir lending</Link>
@@ -90,7 +92,7 @@ export default function Home() {
                 ) : (
                   <div className="globe-disabled">
                     <span>3D DISABLED</span>
-                    <strong>Performance mode</strong>
+                    <strong>Modo performance</strong>
                   </div>
                 )}
                 <div className="globe-frame__footer">
@@ -119,33 +121,33 @@ export default function Home() {
           <div className="container">
             <div className="section-ledger">
               <span>01 / PRODUCT SURFACE</span>
-              <h2>Quatro maquinas, uma linguagem.</h2>
+              <h2>Quatro máquinas, uma linguagem.</h2>
             </div>
 
             <div className="brutal-grid">
               <Link href="/lending" className="brutal-panel brutal-panel--large">
                 <span className="panel-index">LND</span>
                 <h3>Lending hub</h3>
-                <p>Deposito, borrow e health factor com leitura de risco clara antes da assinatura.</p>
+                <p>Depósito, borrow e health factor com leitura de risco clara antes da assinatura.</p>
                 <div className="panel-meter"><HealthGauge healthFactor={1.85} size={112} /></div>
               </Link>
 
               <Link href="/factory" className="brutal-panel">
                 <span className="panel-index">TKN</span>
                 <h3>Token factory</h3>
-                <p>Launchpad sem codigo para ativos ERC-20 com supply, mint, burn e taxas configuraveis.</p>
+                <p>Launchpad sem código para ativos ERC-20 com supply, mint, burn e taxas configuráveis.</p>
               </Link>
 
               <Link href="/staking" className="brutal-panel">
                 <span className="panel-index">STK</span>
                 <h3>Staking vaults</h3>
-                <p>APR, lock period e TVL em uma tela preparada para decisao rapida.</p>
+                <p>APR, lock period e TVL em uma tela preparada para decisão rápida.</p>
               </Link>
 
               <Link href="/simulator" className="brutal-panel brutal-panel--lime">
                 <span className="panel-index">SIM</span>
                 <h3>Risk simulator</h3>
-                <p>Simule liquidacao e eficiencia de capital antes de colocar patrimonio em jogo.</p>
+                <p>Simule liquidação e eficiência de capital antes de colocar patrimônio em jogo.</p>
               </Link>
             </div>
           </div>
@@ -155,14 +157,14 @@ export default function Home() {
           <div className="container split-proof">
             <div className="section-ledger">
               <span>02 / SECURITY ARCHITECTURE</span>
-              <h2>Menos promessa, mais controle verificavel.</h2>
+              <h2>Menos promessa, mais controle verificável.</h2>
             </div>
             <div className="proof-stack">
               {[
-                ["AUTH", "SIWE com nonce persistido e sessao JWT curta."],
-                ["DATA", "RLS para usuarios, lending positions, auditorias e eventos."],
+                ["AUTH", "SIWE com nonce persistido e sessão JWT curta."],
+                ["DATA", "RLS para usuários, lending positions, auditorias e eventos."],
                 ["EDGE", "CORS por origem, bearer token, payload limit e rate limit."],
-                ["FRONT", "Sem crash global quando Supabase nao esta configurado."],
+                ["FRONT", "Sem crash global quando Supabase não está configurado."],
               ].map(([code, text]) => (
                 <div className="proof-row" key={code}>
                   <strong>{code}</strong>

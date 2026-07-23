@@ -10,9 +10,9 @@ export function Footer() {
       <div className="container proto-footer__inner">
         <div className="proto-footer__manifesto">
           <span>INSTEAD / PROTOCOL FOOTER</span>
-          <h2>Interface cripto nao precisa parecer banco antigo.</h2>
+          <h2>Interface cripto não precisa parecer banco antigo.</h2>
           <p>
-            Lending, tokenizacao e operacao multichain em uma superficie mais honesta: informacao densa, controle visivel e menos decoracao vazia.
+            Lending, tokenização e operação multichain em uma superfície mais honesta: informação densa, controle visível e menos decoração vazia.
           </p>
         </div>
 

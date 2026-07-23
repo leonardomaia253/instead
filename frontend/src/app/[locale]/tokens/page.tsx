@@ -60,7 +60,7 @@ export default function TokenExplorerPage() {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
       <Navbar />
 
-      <main className="container" style={{ flex: 1, padding: "120px 24px" }}>
+      <main className="container" style={{ flex: 1, paddingTop: 96, paddingBottom: 72 }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 60 }}>
           <span style={{ 
@@ -96,7 +96,7 @@ export default function TokenExplorerPage() {
           background: "var(--bg-surface)"
         }}>
           {/* Search Input */}
-          <div style={{ flex: 1, minWidth: 260, position: "relative" }}>
+          <div style={{ flex: "1 1 220px", minWidth: 0, position: "relative" }}>
             <Search size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
@@ -108,7 +108,7 @@ export default function TokenExplorerPage() {
           </div>
 
           {/* Chain Filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 180 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 180px", minWidth: 0 }}>
             <Filter size={16} style={{ color: "var(--text-muted)" }} />
             <select 
               value={selectedChain} 
@@ -123,7 +123,7 @@ export default function TokenExplorerPage() {
           </div>
 
           {/* Sort Select */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 180 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 180px", minWidth: 0 }}>
             <ArrowUpDown size={16} style={{ color: "var(--text-muted)" }} />
             <select 
               value={sortBy} 
@@ -138,7 +138,7 @@ export default function TokenExplorerPage() {
 
         {/* Tokens Grid */}
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 20 }}>
             {[...Array(6)].map((_, i) => (
               <TokenCardSkeleton key={i} />
             ))}
@@ -153,7 +153,7 @@ export default function TokenExplorerPage() {
             </Link>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 20 }}>
             {filteredTokens.map((token) => {
               const chain = CHAIN_META[token.chain_id];
               return (
@@ -165,7 +165,7 @@ export default function TokenExplorerPage() {
                   <div className="card" style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                     <div>
                       {/* Card Header */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
                         <div>
                           <h3 style={{ fontSize: 18, fontWeight: 700, color: "white", marginBottom: 4 }}>{token.name}</h3>
                           <span style={{ color: "var(--accent-1)", fontWeight: 700, fontSize: 14 }}>${token.symbol}</span>
@@ -177,19 +177,19 @@ export default function TokenExplorerPage() {
 
                       {/* Token Info */}
                       <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                           <span>Contrato:</span>
                           <span style={{ fontFamily: "monospace", color: "var(--text-primary)" }}>
                             {token.token_address.slice(0, 6)}...{token.token_address.slice(-4)}
                           </span>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                           <span>Supply Inicial:</span>
                           <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
                             {token.initial_supply.toLocaleString()}
                           </span>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                           <span>Rede:</span>
                           <span style={{ color: "var(--text-primary)" }}>{chain?.name || `Chain ${token.chain_id}`}</span>
                         </div>
@@ -200,7 +200,9 @@ export default function TokenExplorerPage() {
                     <div style={{ 
                       display: "flex", 
                       justifyContent: "space-between", 
-                      alignItems: "center", 
+                      alignItems: "center",
+                      gap: 12,
+                      flexWrap: "wrap",
                       paddingTop: 16, 
                       borderTop: "1px solid var(--border)" 
                     }}>

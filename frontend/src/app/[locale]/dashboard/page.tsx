@@ -83,11 +83,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", padding: "32px 24px" }}>
+    <main style={{ minHeight: "100vh", padding: "32px clamp(16px, 5vw, 24px)" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36, flexWrap: "wrap", gap: 16 }}>
           <div>
             <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Início</Link>
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 700, marginTop: 8 }}>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 36 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16, marginBottom: 36 }}>
           {[
             { label: "Posições Abertas", value: positions.length, icon: "🏦" },
             { label: "Tokens Criados", value: totalTokens, icon: "🏭" },
@@ -120,7 +120,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 40 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, marginBottom: 40 }}>
           {/* Posições de Lending */}
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                           🚨 RISCO DE LIQUIDAÇÃO
                         </div>
                       )}
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 700 }}>
                             {chain?.icon} {chain?.name}
@@ -205,7 +205,7 @@ export default function DashboardPage() {
                   return (
                     <Link key={t.id} href={`/token/${t.token_address}?chain=${t.chain_id}`} style={{ textDecoration: "none" }}>
                       <div className="card" style={{ cursor: "pointer" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
                           <div>
                             <div style={{ fontWeight: 700, fontSize: 16 }}>{t.name}</div>
                             <div style={{ color: "var(--accent-1)", fontSize: 13, fontWeight: 600 }}>${t.symbol}</div>
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             </div>
             
             {/* Filtros */}
-            <div style={{ display: "flex", gap: 8, background: "var(--bg-surface)", padding: 4, borderRadius: 10 }}>
+            <div style={{ display: "flex", gap: 8, background: "var(--bg-surface)", padding: 4, borderRadius: 10, flexWrap: "wrap", width: "min(100%, max-content)" }}>
               {[
                 { id: "all", label: "Todos" },
                 { id: "lending", label: "Lending" },
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                     padding: "16px 20px", background: "rgba(255,255,255,0.015)",
                     border: "1px solid var(--border)", borderRadius: 12, flexWrap: "wrap", gap: 12
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", minWidth: 0 }}>
                       <span style={{
                         fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 6,
                         background: `${actionColor}15`, color: actionColor, textTransform: "uppercase"

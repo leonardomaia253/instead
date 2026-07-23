@@ -40,7 +40,7 @@ export function PositionCardSkeleton() {
   return (
     <div className="card">
       <Skeleton height={18} width="50%" style={{ marginBottom: 16 }} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 12 }}>
         {[...Array(4)].map((_, i) => (
           <div key={i}>
             <Skeleton height={12} width="60%" style={{ marginBottom: 6 }} />

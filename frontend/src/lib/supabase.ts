@@ -16,7 +16,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export function assertSupabaseConfigured() {
   if (!isSupabaseConfigured) {
-    throw new Error("Supabase nao esta configurado neste build. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY e gere um novo deploy.");
+    throw new Error("Supabase não está configurado neste build. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY e gere um novo deploy.");
   }
 }
 
@@ -26,7 +26,7 @@ export function getSupabaseFunctionUrl(functionName: string) {
 }
 
 function disabledSupabaseError() {
-  return new Error("Supabase nao esta configurado neste build.");
+  return new Error("Supabase não está configurado neste build.");
 }
 
 function createDisabledQuery() {
@@ -126,6 +126,10 @@ export type Audit = {
   id: string;
   user_wallet: string;
   action: string;
+  operation_id?: string | null;
+  tx_hash?: string | null;
+  chain_id?: number | null;
+  status?: "pending" | "confirmed" | "mismatch" | "failed" | "ignored";
   metadata: any;
   created_at: string;
 };
@@ -149,6 +153,25 @@ export type PlatformStat = {
   value: string;
   updated_at: string;
 };
+
+export type ReconciliationOperation = {
+  operation_id: string;
+  user_wallet: string;
+  vertical: "lending" | "token_factory" | "staking";
+  action: string;
+  tx_hash: string;
+  chain_id: number;
+  expected_state?: Record<string, unknown>;
+  status?: "pending" | "confirmed" | "mismatch" | "failed" | "ignored";
+};
+
+function normalizeTxHash(value: unknown) {
+  return typeof value === "string" && value.length > 0 ? value.toLowerCase() : null;
+}
+
+function buildOperationId(userWallet: string, action: string, txHash?: string | null) {
+  return `${userWallet.toLowerCase()}:${action}:${txHash?.toLowerCase() ?? crypto.randomUUID()}`;
+}
 
 // ─── Funções de acesso ao banco ───────────────────────────────────────────────
 
@@ -180,7 +203,15 @@ export async function insertGeneratedToken(token: Omit<GeneratedToken, "id" | "c
   assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("generated_tokens")
-    .insert({ ...token, creator_wallet: token.creator_wallet.toLowerCase() })
+    .upsert(
+      {
+        ...token,
+        creator_wallet: token.creator_wallet.toLowerCase(),
+        tx_hash: token.tx_hash.toLowerCase(),
+        status: "confirmed",
+      },
+      { onConflict: "tx_hash,chain_id" },
+    )
     .select()
     .single();
 
@@ -202,9 +233,21 @@ export async function upsertUserProfile(profile: Omit<UserProfile, "id" | "creat
 
 export async function insertAudit(audit: Omit<Audit, "id" | "created_at">) {
   assertSupabaseConfigured();
+  const txHash = normalizeTxHash(audit.tx_hash ?? audit.metadata?.tx_hash);
+  const operationId = audit.operation_id ?? buildOperationId(audit.user_wallet, audit.action, txHash);
   const { data, error } = await supabase
     .from("audits")
-    .insert({ ...audit, user_wallet: audit.user_wallet.toLowerCase() })
+    .upsert(
+      {
+        ...audit,
+        user_wallet: audit.user_wallet.toLowerCase(),
+        operation_id: operationId,
+        tx_hash: txHash,
+        chain_id: audit.chain_id ?? audit.metadata?.chain_id ?? null,
+        status: audit.status ?? "confirmed",
+      },
+      { onConflict: "operation_id" },
+    )
     .select()
     .single();
 
@@ -253,10 +296,34 @@ export async function upsertLendingPosition(position: any) {
     .upsert({ 
       ...position, 
       wallet_address: position.wallet_address.toLowerCase(),
+      last_tx_hash: normalizeTxHash(position.last_tx_hash ?? position.tx_hash),
+      operation_status: position.operation_status ?? "confirmed",
       updated_at: new Date().toISOString()
     }, { 
       onConflict: "wallet_address,borrow_asset,chain_id" 
     })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function enqueueReconciliation(operation: ReconciliationOperation) {
+  assertSupabaseConfigured();
+  const { data, error } = await supabase
+    .from("operation_reconciliation_queue")
+    .upsert(
+      {
+        ...operation,
+        user_wallet: operation.user_wallet.toLowerCase(),
+        tx_hash: operation.tx_hash.toLowerCase(),
+        expected_state: operation.expected_state ?? {},
+        status: operation.status ?? "pending",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "operation_id" },
+    )
     .select()
     .single();
 

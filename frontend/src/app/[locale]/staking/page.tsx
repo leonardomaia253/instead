@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 import { 
   Zap, 
   Coins, 
@@ -21,6 +21,7 @@ import {
   getStakingPools, 
   getPlatformStats, 
   insertAudit, 
+  enqueueReconciliation,
   type StakingPool, 
   type PlatformStat 
 } from "@/lib/supabase";
@@ -36,6 +37,7 @@ const IconMapper: Record<string, React.ReactNode> = {
 
 export default function StakingPage() {
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const [pools, setPools] = useState<StakingPool[]>([]);
   const [stats, setStats] = useState<PlatformStat[]>([]);
   const [selectedPool, setSelectedPool] = useState<StakingPool | null>(null);
@@ -78,19 +80,39 @@ export default function StakingPage() {
     setIsSubmitting(true);
     try {
       // Transação real on-chain
-      await stake(amount);
+      const hash = await stake(amount);
+      const operationId = `${address.toLowerCase()}:STAKE:${hash.toLowerCase()}`;
       
       // Auditoria no Supabase
       await insertAudit({
         user_wallet: address,
         action: "STAKE",
+        operation_id: operationId,
+        tx_hash: hash,
+        chain_id: chainId,
+        status: "confirmed",
         metadata: {
           pool_id: selectedPool.id,
           pool_name: selectedPool.name,
           amount: amount,
           symbol: "INST",
-          tx_hash: txHash
+          tx_hash: hash,
+          chain_id: chainId
         }
+      });
+
+      await enqueueReconciliation({
+        operation_id: operationId,
+        user_wallet: address,
+        vertical: "staking",
+        action: "STAKE",
+        tx_hash: hash,
+        chain_id: chainId,
+        expected_state: {
+          pool_id: selectedPool.id,
+          amount,
+          symbol: "INST",
+        },
       });
       
       alert(`Solicitação de Stake de ${amount} INST enviada! (Auditada no Supabase)`);
@@ -115,7 +137,7 @@ export default function StakingPage() {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
       <Navbar />
       
-      <main className="container" style={{ flex: 1, padding: "120px 24px" }}>
+      <main className="container" style={{ flex: 1, paddingTop: 96, paddingBottom: 72 }}>
         {/* Hero Section */}
         <section style={{ textAlign: "center", marginBottom: 80 }}>
           <motion.div
@@ -156,14 +178,14 @@ export default function StakingPage() {
                     background: selectedPool?.id === pool.id ? `${pool.color}08` : "var(--bg-card)"
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 20, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 20, flex: "1 1 220px", minWidth: 0, flexWrap: "wrap" }}>
                     <div style={styles.poolIconWrapper}>{IconMapper[pool.icon_name] || <Coins className="w-8 h-8" />}</div>
                     <div style={{ textAlign: "left" }}>
                       <h4 style={styles.poolName}>{pool.name}</h4>
                       <p style={styles.poolDesc}>{pool.description}</p>
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "right", flex: "0 1 120px" }}>
                     <div style={{ ...styles.poolApr, color: pool.color }}>{pool.apr} APR</div>
                     <div style={styles.poolTvl}>TVL: {pool.tvl}</div>
                   </div>
@@ -302,7 +324,7 @@ const styles = {
   },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
     gap: 24,
     marginBottom: 60
   },
@@ -324,7 +346,7 @@ const styles = {
   },
   mainGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
     gap: 40,
     alignItems: "start"
   },
@@ -337,11 +359,13 @@ const styles = {
   },
   poolCard: {
     width: "100%",
-    padding: "24px",
+    padding: "clamp(18px, 5vw, 24px)",
     borderRadius: 20,
     border: "2px solid var(--border)",
     display: "flex",
     alignItems: "center",
+    gap: 16,
+    flexWrap: "wrap" as const,
     cursor: "pointer",
     transition: "all 0.2s ease"
   },
@@ -359,7 +383,7 @@ const styles = {
   poolApr: { fontSize: 20, fontWeight: 800, marginBottom: 4 },
   poolTvl: { fontSize: 12, color: "var(--text-muted)" },
   stakingCard: {
-    padding: 32,
+    padding: "clamp(20px, 5vw, 32px)",
     background: "var(--bg-surface)",
     position: "relative" as const
   },
@@ -413,6 +437,8 @@ const styles = {
   infoRow: {
     display: "flex",
     justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap" as const,
     fontSize: 13,
     color: "var(--text-muted)"
   }

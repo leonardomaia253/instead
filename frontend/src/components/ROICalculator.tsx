@@ -58,7 +58,7 @@ export function ROICalculator({ defaultApr, tokenSymbol }: ROICalculatorProps) {
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
           <div>
             <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
               Período (Anos)
@@ -91,19 +91,19 @@ export function ROICalculator({ defaultApr, tokenSymbol }: ROICalculatorProps) {
           borderRadius: 12,
           border: "1px solid var(--border)"
         }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Retorno Estimado:</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>
               {futureValue.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {tokenSymbol}
             </span>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Rendimento Total:</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: "var(--green)" }}>
               +{totalInterest.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {tokenSymbol}
             </span>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, color: "var(--text-muted)" }}>ROI Estimado:</span>
             <span style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-1)" }}>
               {roi.toFixed(2)}%

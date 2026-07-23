@@ -43,7 +43,7 @@ export default function SimulatorPage() {
   const ASSETS = Object.keys(ASSET_PRICES);
 
   return (
-    <main style={{ minHeight: "100vh", padding: "32px 24px" }}>
+    <main style={{ minHeight: "100vh", padding: "32px clamp(16px, 5vw, 24px)" }}>
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
         <Link href="/lending" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar ao Lending</Link>
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 700, marginTop: 10, marginBottom: 6 }}>
@@ -53,15 +53,15 @@ export default function SimulatorPage() {
           Calcule o impacto real de uma posição antes de confirmar na blockchain.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 24 }}>
           {/* Inputs */}
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <h3 style={{ fontWeight: 700, marginBottom: 0 }}>Parâmetros</h3>
 
             <Field label="Colateral">
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <input type="number" value={colAmount} onChange={(e) => setColAmount(e.target.value)} placeholder="1" style={{ flex: 1 }} />
-                <select value={colAsset} onChange={(e) => setColAsset(e.target.value)} style={{ width: 100 }}>
+                <select value={colAsset} onChange={(e) => setColAsset(e.target.value)} style={{ width: "min(100%, 100px)" }}>
                   {ASSETS.map(a => <option key={a}>{a}</option>)}
                 </select>
               </div>
@@ -145,7 +145,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{label}</span>
       <span style={{ fontWeight: accent ? 700 : 500, color: accent ? "var(--text-primary)" : "var(--text-muted)", fontSize: accent ? 15 : 13 }}>
         {value}
