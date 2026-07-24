@@ -24,7 +24,7 @@ interface OnboardingWizardProps {
 
 const steps = [
   {
-    title: "Parabéns, Guru!",
+    title: "Parabéns!",
     description: "Seu token acaba de nascer na blockchain. Este é o primeiro passo de uma jornada épica.",
     icon: <CheckCircle2 className="w-12 h-12 text-green-500" />,
     color: "var(--green)",
@@ -98,7 +98,7 @@ const steps = [
     description: "O próximo passo para o sucesso do seu token é a utilidade.",
     icon: <Coins className="w-12 h-12 text-purple-500" />,
     color: "var(--accent-1)",
-    content: () => (
+    content: (name: string, symbol: string, handleClose?: () => void) => (
       <div className="space-y-4">
         <p className="text-sm text-gray-300">
           Sabia que você pode usar o {`Instead Lending`} para permitir que holders usem seu token como colateral?
@@ -111,9 +111,13 @@ const steps = [
             <li>✓ Gera utilidade financeira real desde o dia 1.</li>
           </ul>
         </div>
-        <button className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 transition-colors font-bold text-sm">
+        <a
+          href="/lending"
+          onClick={handleClose}
+          className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 transition-colors font-bold text-sm block text-center text-white no-underline"
+        >
           Explorar Protocolo de Empréstimo
-        </button>
+        </a>
       </div>
     ),
   },
@@ -182,7 +186,7 @@ export function OnboardingWizard({ isOpen, onClose, tokenName, tokenSymbol }: On
               animate={{ opacity: 1, x: 0 }}
               className="min-h-[220px]"
             >
-              {step.content(tokenName, tokenSymbol)}
+              {step.content(tokenName, tokenSymbol, onClose)}
             </motion.div>
 
             {/* Footer Navigation */}

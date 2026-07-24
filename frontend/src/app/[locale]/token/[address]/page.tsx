@@ -17,6 +17,7 @@ export default function TokenPage() {
   const [token, setToken]     = useState<GeneratedToken | null>(null);
   const [loading, setLoading] = useState(true);
   const [favorited, setFavorited] = useState(false);
+  const [copied, setCopied]   = useState(false);
 
   const chain = CHAIN_META[chainId];
 
@@ -36,6 +37,13 @@ export default function TokenPage() {
       method: "wallet_watchAsset",
       params: { type: "ERC20", options: { address: token.token_address, symbol: token.symbol, decimals: 18 } },
     });
+  }
+
+  function handleCopy() {
+    if (!token) return;
+    navigator.clipboard.writeText(token.token_address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   if (loading) return (
@@ -119,9 +127,9 @@ export default function TokenPage() {
           <button
             className="btn-outline"
             style={{ fontSize: 14 }}
-            onClick={() => navigator.clipboard.writeText(token.token_address)}
+            onClick={handleCopy}
           >
-            📋 Copiar Endereço
+            {copied ? "✅ Endereço Copiado!" : "📋 Copiar Endereço"}
           </button>
         </div>
       </div>

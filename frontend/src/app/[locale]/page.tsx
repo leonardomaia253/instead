@@ -74,10 +74,10 @@ export default function Home() {
                 <Link href="/factory" className="btn-outline brutal-button">Criar token</Link>
               </div>
               <div className="signal-strip" aria-label="Protocol signals">
-                <span>SIWE AUTH</span>
-                <span>RLS HARDENED</span>
+                <span>AUTENTICAÇÃO SEGURA</span>
+                <span>DADOS ISOLADOS</span>
                 <span>MULTI-CHAIN</span>
-                <span>OBSERVABILITY</span>
+                <span>MONITORAMENTO 24/7</span>
               </div>
             </div>
 
