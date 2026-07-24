@@ -214,34 +214,39 @@ async function handleMessage(message: TelegramMessage) {
 
   // Token creation wizard
   if (text.startsWith("/token")) {
-    const draft = tokenDraftFromText(text);
-    const intentId = await storeIntent(message, "token", draft);
-    const link = buildFactoryLink(intentId, locale);
+    try {
+      const draft = tokenDraftFromText(text);
+      const intentId = await storeIntent(message, "token", draft);
+      const link = buildFactoryLink(intentId, locale);
 
-    const tokenMsg = isEnglish
-      ? [
-          "🚀 *Digital Asset Draft Created!*",
-          "",
-          `• *Name:* ${draft.name}`,
-          `• *Symbol:* $${draft.symbol}`,
-          `• *Suggested Network:* Base / Arbitrum`,
-          "",
-          "👇 *Next Step:* Click the button below to review your supply, custom fees, and launch safely with your wallet:",
-          `🔗 [Launch Asset in App](${link})`,
-        ].join("\n")
-      : [
-          "🚀 *Rascunho de Ativo Digital Criado!*",
-          "",
-          `• *Nome:* ${draft.name}`,
-          `• *Símbolo:* $${draft.symbol}`,
-          `• *Rede Sugerida:* Base / Arbitrum`,
-          "",
-          "👇 *Próximo Passo:* Clique no link abaixo para revisar o supply, funções e concluir o lançamento com sua carteira:",
-          `🔗 [Finalizar Lançamento no App](${link})`,
-        ].join("\n");
+      const tokenMsg = isEnglish
+        ? [
+            "🚀 *Digital Asset Draft Created!*",
+            "",
+            `• *Name:* ${draft.name}`,
+            `• *Symbol:* $${draft.symbol}`,
+            `• *Suggested Network:* Base / Arbitrum`,
+            "",
+            "👇 *Next Step:* Click the button below to review your supply, custom fees, and launch safely with your wallet:",
+            `🔗 [Launch Asset in App](${link})`,
+          ].join("\n")
+        : [
+            "🚀 *Rascunho de Ativo Digital Criado!*",
+            "",
+            `• *Nome:* ${draft.name}`,
+            `• *Símbolo:* $${draft.symbol}`,
+            `• *Rede Sugerida:* Base / Arbitrum`,
+            "",
+            "👇 *Próximo Passo:* Clique no link abaixo para revisar o supply, funções e concluir o lançamento com sua carteira:",
+            `🔗 [Finalizar Lançamento no App](${link})`,
+          ].join("\n");
 
-    await sendMessage(chatId, tokenMsg);
-    return;
+      await sendMessage(chatId, tokenMsg);
+      return;
+    } catch (err: any) {
+      console.error("Token intent error:", err);
+      throw new Error(`storeIntent failed: ${err?.message || err}`);
+    }
   }
 
   // Lending wizard
