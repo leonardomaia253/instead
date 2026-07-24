@@ -44,8 +44,7 @@ export default function AdminLendingPage() {
                 <strong>{protocol.name}</strong>
                 <span style={{ color: protocol.status === "active" ? "var(--green)" : "var(--text-muted)", fontSize: 12 }}>{protocol.status}</span>
               </div>
-              <div style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 8 }}>{protocol.runtime} / {protocol.adapterKind}</div>
-              <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>{protocol.notes}</p>
+              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>{protocol.runtime} / {protocol.adapterKind}</div>
             </article>
           ))}
         </div>

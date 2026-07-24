@@ -37,7 +37,7 @@ export default function PrivacyPage() {
             <article className="doc-panel">
               <code>04 / OBS</code>
               <h3>Telemetria técnica</h3>
-              <p>Web Vitals e erros client-side ajudam a manter disponibilidade. Quando Supabase não está configurado, o envio é desativado.</p>
+              <p>Web Vitals e relatórios anônimos de performance ajudam a manter a estabilidade e disponibilidade da aplicação.</p>
             </article>
             <article className="doc-panel">
               <code>05 / TERMS</code>

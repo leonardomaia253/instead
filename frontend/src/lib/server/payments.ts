@@ -17,26 +17,69 @@ export type CheckoutRequest = {
 const EVM_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const TOKEN_FACTORY_PRODUCTS: Record<string, { label: string; amountUsd: number; amountBrl: number }> = {
-  token_deploy_basic: { label: "Instead Token Deploy Basic", amountUsd: 9900, amountBrl: 49900 },
-  token_deploy_premium: { label: "Instead Token Deploy Premium", amountUsd: 29900, amountBrl: 149900 },
-  token_fair_launch_assisted: { label: "Instead Fair Launch Assistido", amountUsd: 49900, amountBrl: 249900 },
+// ─── Fallback hardcoded (usado se Supabase inacessível) ─────────────────────
+const FALLBACK_PRICES: Record<string, { label: string; amountUsd: number; amountBrl: number }> = {
+  token_deploy_basic:         { label: "Instead Token Deploy Basic",      amountUsd: 9900,  amountBrl: 49900  },
+  token_deploy_premium:       { label: "Instead Token Deploy Premium",     amountUsd: 29900, amountBrl: 149900 },
+  token_fair_launch_assisted: { label: "Instead Fair Launch Assistido",   amountUsd: 49900, amountBrl: 249900 },
 };
+
+// ─── Cache em memória com TTL 60s ────────────────────────────────────────────
+type PriceRow = { label: string; amountUsd: number; amountBrl: number };
+let _priceCache: Record<string, PriceRow> | null = null;
+let _priceCacheAt = 0;
+const PRICE_CACHE_TTL_MS = 60_000; // 60 segundos
+
+export function invalidatePriceCache() {
+  _priceCache = null;
+  _priceCacheAt = 0;
+}
+
+async function getPricesFromDb(): Promise<Record<string, PriceRow>> {
+  const now = Date.now();
+  if (_priceCache && now - _priceCacheAt < PRICE_CACHE_TTL_MS) return _priceCache;
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("platform_prices")
+      .select("product_code, label, amount_usd_cents, amount_brl_cents")
+      .eq("is_active", true);
+
+    if (error || !data?.length) throw new Error(error?.message ?? "No prices returned");
+
+    const map: Record<string, PriceRow> = {};
+    for (const row of data) {
+      map[row.product_code] = {
+        label:      row.label,
+        amountUsd:  row.amount_usd_cents,
+        amountBrl:  row.amount_brl_cents,
+      };
+    }
+    _priceCache = map;
+    _priceCacheAt = now;
+    return map;
+  } catch {
+    // Fallback silencioso — não derruba o checkout se o DB falhar
+    return FALLBACK_PRICES;
+  }
+}
 
 function appOrigin() {
   return process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3000";
 }
 
-export function validateCheckoutRequest(input: CheckoutRequest) {
+export async function validateCheckoutRequest(input: CheckoutRequest) {
   if (!input.walletAddress || !EVM_ADDRESS_RE.test(input.walletAddress)) throw new Error("Invalid wallet address");
   if (input.email && !EMAIL_RE.test(input.email)) throw new Error("Invalid email");
   if (JSON.stringify(input.metadata ?? {}).length > 2_000) throw new Error("Metadata is too large");
-  getPaymentProduct(input.vertical, input.productCode, input.provider);
+  await getPaymentProduct(input.vertical, input.productCode, input.provider);
 }
 
-export function getPaymentProduct(vertical: PaymentVertical, productCode: string, provider: PaymentProvider) {
+export async function getPaymentProduct(vertical: PaymentVertical, productCode: string, provider: PaymentProvider) {
   if (vertical !== "token_factory") throw new Error("Unsupported payment vertical");
-  const product = TOKEN_FACTORY_PRODUCTS[productCode];
+  const prices = await getPricesFromDb();
+  const product = prices[productCode] ?? FALLBACK_PRICES[productCode];
   if (!product) throw new Error("Unsupported token factory product");
   return {
     label: product.label,
@@ -128,7 +171,7 @@ export function getStripe() {
 }
 
 export async function createStripeCheckout(input: CheckoutRequest) {
-  const product = getPaymentProduct(input.vertical, input.productCode, "stripe");
+  const product = await getPaymentProduct(input.vertical, input.productCode, "stripe");
   const payment = await createPaymentIntentRecord({
     provider: "stripe",
     vertical: input.vertical,
@@ -181,7 +224,7 @@ function pagarmeAuthHeader() {
 }
 
 export async function createPagarmeCheckout(input: CheckoutRequest) {
-  const product = getPaymentProduct(input.vertical, input.productCode, "pagarme");
+  const product = await getPaymentProduct(input.vertical, input.productCode, "pagarme");
   const payment = await createPaymentIntentRecord({
     provider: "pagarme",
     vertical: input.vertical,

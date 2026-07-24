@@ -13,6 +13,8 @@ import {
   Target,
   TrendingUp,
   Users,
+  DollarSign,
+  Zap,
 } from "lucide-react";
 
 type RevenueLever = {
@@ -146,11 +148,41 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+// Margens líquidas por produto (gas + Stripe 2.9% + suporte humano + infra)
+const PRODUCT_MARGINS = {
+  onchain: 0.95,    // $5.00 on-chain — custo só gas ~$0.25
+  dashboard: 0.85,  // $49/mês — custo infra + CS ~$7
+  assisted: 0.70,   // $299 — ~2h suporte humano incluídas
+  premium: 0.65,    // $799 — multi-chain + auditoria automática
+  agency: 0.60,     // $1.500 — white-glove onboarding ~3h
+} as const;
+
 export default function AdminDashboard() {
   const [monthlyVisitors, setMonthlyVisitors] = useState(10000);
   const [leadConversion, setLeadConversion] = useState(0.18);
   const [salesConversion, setSalesConversion] = useState(0.22);
   const [averageTicket, setAverageTicket] = useState(420);
+
+  // Simulador $1.000/dia — mix mensal de produtos
+  const [qOnchain, setQOnchain] = useState(400);
+  const [qDashboard, setQDashboard] = useState(200);
+  const [qAssisted, setQAssisted] = useState(45);
+  const [qPremium, setQPremium] = useState(14);
+  const [qAgency, setQAgency] = useState(6);
+
+  const dailyProfitBreakdown = useMemo(() => {
+    const onchain   = { qty: qOnchain,   price: 5,    profit: qOnchain   * 5    * PRODUCT_MARGINS.onchain   };
+    const dashboard = { qty: qDashboard, price: 49,   profit: qDashboard * 49   * PRODUCT_MARGINS.dashboard };
+    const assisted  = { qty: qAssisted,  price: 299,  profit: qAssisted  * 299  * PRODUCT_MARGINS.assisted  };
+    const premium   = { qty: qPremium,   price: 799,  profit: qPremium   * 799  * PRODUCT_MARGINS.premium   };
+    const agency    = { qty: qAgency,    price: 1500, profit: qAgency    * 1500 * PRODUCT_MARGINS.agency    };
+    const totalMonthly = onchain.profit + dashboard.profit + assisted.profit + premium.profit + agency.profit;
+    const daily = totalMonthly / 30;
+    return { onchain, dashboard, assisted, premium, agency, totalMonthly, daily };
+  }, [qOnchain, qDashboard, qAssisted, qPremium, qAgency]);
+
+  const dailyGoal = 1000;
+  const dailyProgress = Math.min(100, Math.round((dailyProfitBreakdown.daily / dailyGoal) * 100));
 
   const monthlyTarget = 50000;
   const leverRevenue = useMemo(
@@ -174,10 +206,29 @@ export default function AdminDashboard() {
             metas, funil, canais, ofertas e rotina semanal em um so lugar.
           </p>
         </div>
-        <div style={styles.targetBox}>
-          <Target size={22} />
-          <span>Meta de 6 meses</span>
-          <strong>{currencyFormatter.format(monthlyTarget)}/mes</strong>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
+          <div style={styles.targetBox}>
+            <Target size={22} />
+            <span>Meta de 6 meses</span>
+            <strong>{currencyFormatter.format(monthlyTarget)}/mes</strong>
+          </div>
+          <a
+            href="../admin/prices"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 16px",
+              background: "rgba(220,255,69,0.08)",
+              border: "1px solid rgba(220,255,69,0.3)",
+              color: "var(--accent-1)",
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            💲 Gerenciar Preços
+          </a>
         </div>
       </header>
 
@@ -186,6 +237,83 @@ export default function AdminDashboard() {
         <MetricCard title="Leads qualificados" value={qualifiedLeads.toLocaleString("en-US")} note={`${Math.round(leadConversion * 100)}% dos visitantes`} icon={<Users size={20} />} />
         <MetricCard title="Clientes estimados" value={projectedCustomers.toLocaleString("en-US")} note={`${Math.round(salesConversion * 100)}% dos leads`} icon={<CheckCircle2 size={20} />} />
         <MetricCard title="Gap mensal" value={currencyFormatter.format(gap)} note="Ajuste trafego, conversao ou ticket" icon={<Activity size={20} />} />
+        <MetricCard
+          title="Lucro/dia simulado"
+          value={`$${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}`}
+          note={dailyProfitBreakdown.daily >= dailyGoal ? "✅ Meta $1.000/dia atingida" : `${dailyProgress}% da meta de $1.000/dia`}
+          icon={<DollarSign size={20} />}
+          highlight={dailyProfitBreakdown.daily >= dailyGoal}
+        />
+      </section>
+
+      {/* ===== SIMULADOR $1.000/DIA ===== */}
+      <section className="card" style={styles.fullSection}>
+        <div style={styles.sectionHeader}>
+          <div>
+            <h2 style={styles.sectionTitle}>Simulador — $1.000 de lucro por dia</h2>
+            <p style={styles.sectionNote}>
+              Ajuste o volume mensal de cada produto e veja em tempo real quantas conversões são necessárias para
+              atingir <strong style={{ color: "var(--accent-1)" }}>$1.000/dia líquido</strong>.
+            </p>
+          </div>
+          <Zap size={22} color="var(--accent-1)" />
+        </div>
+
+        <div style={styles.dailySimGrid}>
+          {/* Sliders da esquerda */}
+          <div style={{ display: "grid", gap: 20 }}>
+            <Slider label="Token Deploy On-chain ($5 × 95%)" value={qOnchain} min={0} max={2000} step={10} suffix=" deploys/mês" onChange={setQOnchain} />
+            <Slider label="Creator Dashboard ($49/mês × 85%)" value={qDashboard} min={0} max={1000} step={5} suffix=" assinaturas ativas" onChange={setQDashboard} />
+            <Slider label="Deploy Assistido ($299 × 70%)" value={qAssisted} min={0} max={200} step={1} suffix=" vendas/mês" onChange={setQAssisted} />
+            <Slider label="Premium Launch ($799 × 65%)" value={qPremium} min={0} max={100} step={1} suffix=" vendas/mês" onChange={setQPremium} />
+            <Slider label="Setup Agência ($1.500 × 60%)" value={qAgency} min={0} max={50} step={1} suffix=" agências/mês" onChange={setQAgency} />
+          </div>
+
+          {/* Painel de resultados da direita */}
+          <div style={styles.dailyResultPanel}>
+            <div style={styles.dailyBigNumber}>
+              <span style={styles.dailyLabel}>Lucro Líquido / Dia</span>
+              <strong style={{
+                ...styles.dailyValue,
+                color: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-1)"
+              }}>
+                ${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}
+              </strong>
+              <span style={styles.dailyMonthly}>
+                {currencyFormatter.format(Math.round(dailyProfitBreakdown.totalMonthly))}/mês
+              </span>
+            </div>
+
+            <div style={styles.progressTrack}>
+              <div style={{ ...styles.progressFill, width: `${dailyProgress}%`, background: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-grad)" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-muted)" }}>
+              <span>$0</span>
+              <span style={{ color: "var(--accent-1)", fontWeight: 700 }}>Meta: $1.000/dia</span>
+              <span>$2.000</span>
+            </div>
+
+            <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+              {([
+                { label: "On-chain",   profit: dailyProfitBreakdown.onchain.profit,   qty: dailyProfitBreakdown.onchain.qty,   unit: "deploys" },
+                { label: "Dashboard",  profit: dailyProfitBreakdown.dashboard.profit, qty: dailyProfitBreakdown.dashboard.qty, unit: "assin." },
+                { label: "Assistido",  profit: dailyProfitBreakdown.assisted.profit,  qty: dailyProfitBreakdown.assisted.qty,  unit: "vendas" },
+                { label: "Premium",    profit: dailyProfitBreakdown.premium.profit,   qty: dailyProfitBreakdown.premium.qty,   unit: "vendas" },
+                { label: "Agência",    profit: dailyProfitBreakdown.agency.profit,    qty: dailyProfitBreakdown.agency.qty,    unit: "setup" },
+              ] as const).map(({ label, profit, qty, unit }) => (
+                <div key={label} style={styles.breakdownRow}>
+                  <span>{label}</span>
+                  <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{qty} {unit}</span>
+                  <span style={{ color: "var(--green)", fontWeight: 700 }}>${Math.round(profit / 30).toLocaleString("en-US")}/dia</span>
+                </div>
+              ))}
+            </div>
+
+            {dailyProfitBreakdown.daily >= dailyGoal && (
+              <div style={styles.goalBadge}>🎯 $1.000/dia atingido com este mix!</div>
+            )}
+          </div>
+        </div>
       </section>
 
       <section style={styles.sectionGrid}>
@@ -319,12 +447,15 @@ export default function AdminDashboard() {
   );
 }
 
-function MetricCard({ title, value, note, icon }: { title: string; value: string; note: string; icon: ReactNode }) {
+function MetricCard({ title, value, note, icon, highlight = false }: { title: string; value: string; note: string; icon: ReactNode; highlight?: boolean }) {
   return (
-    <div className="card" style={styles.metricCard}>
-      <div style={styles.metricIcon}>{icon}</div>
+    <div className="card" style={{
+      ...styles.metricCard,
+      ...(highlight ? { border: "1px solid var(--green)", background: "rgba(85,240,192,0.06)" } : {})
+    }}>
+      <div style={{ ...styles.metricIcon, ...(highlight ? { background: "rgba(85,240,192,0.15)", color: "var(--green)", border: "1px solid rgba(85,240,192,0.3)" } : {}) }}>{icon}</div>
       <span style={styles.metricTitle}>{title}</span>
-      <strong style={styles.metricValue}>{value}</strong>
+      <strong style={{ ...styles.metricValue, ...(highlight ? { color: "var(--green)" } : {}) }}>{value}</strong>
       <small style={styles.metricNote}>{note}</small>
     </div>
   );
@@ -371,6 +502,59 @@ const styles: Record<string, CSSProperties> = {
     padding: "32px",
     display: "grid",
     gap: "24px",
+  },
+  dailySimGrid: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.2fr) minmax(280px, 1fr)",
+    gap: 32,
+    alignItems: "start",
+  },
+  dailyResultPanel: {
+    display: "grid",
+    gap: 14,
+    border: "1px solid var(--border)",
+    background: "var(--bg-surface)",
+    padding: 24,
+    alignContent: "start",
+  },
+  dailyBigNumber: {
+    display: "grid",
+    gap: 4,
+    textAlign: "center",
+  },
+  dailyLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    color: "var(--text-muted)",
+    letterSpacing: 1,
+  },
+  dailyValue: {
+    fontSize: 56,
+    lineHeight: 1,
+    fontFamily: "'Space Grotesk', sans-serif",
+  },
+  dailyMonthly: {
+    fontSize: 14,
+    color: "var(--text-muted)",
+  },
+  breakdownRow: {
+    display: "grid",
+    gridTemplateColumns: "80px 1fr auto",
+    gap: 8,
+    alignItems: "center",
+    fontSize: 13,
+    borderBottom: "1px solid var(--border)",
+    paddingBottom: 8,
+  },
+  goalBadge: {
+    background: "rgba(85,240,192,0.12)",
+    border: "1px solid rgba(85,240,192,0.3)",
+    color: "var(--green)",
+    padding: "10px 14px",
+    textAlign: "center" as const,
+    fontWeight: 700,
+    fontSize: 14,
   },
   header: {
     display: "grid",

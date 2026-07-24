@@ -115,7 +115,7 @@ export default function StakingPage() {
         },
       });
       
-      alert(`Solicitação de Stake de ${amount} INST enviada! (Auditada no Supabase)`);
+      alert(`Solicitação de Staking de ${amount} INST enviada com sucesso!`);
     } catch (error: any) {
       console.error("Erro ao realizar stake:", error);
       alert(`Erro ao realizar stake: ${error.message || "Verifique o console."}`);

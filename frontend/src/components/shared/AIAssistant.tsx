@@ -29,7 +29,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ type, contextData }) =
       setTips(data.tips);
     } catch (err) {
       console.error("AI Error:", err);
-      setTips("Erro ao conectar com o assistente. Verifique se a GEMINI_API_KEY está configurada.");
+      setTips("Não foi possível conectar ao assistente no momento. Tente novamente mais tarde.");
     } finally {
       setLoading(false);
     }
