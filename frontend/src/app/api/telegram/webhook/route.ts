@@ -35,6 +35,16 @@ function cleanText(text: string, maxLength: number): string {
   return (text || "").slice(0, maxLength).replace(/[<>{}]/g, "");
 }
 
+function detectIsEnglish(message: any, text: string): boolean {
+  if (text.startsWith("/en") || text.includes(" english")) return true;
+  if (text.startsWith("/pt") || text.includes(" portugues") || text.includes(" português")) return false;
+  const langCode = (message.from?.language_code || "").toLowerCase();
+  if (langCode.startsWith("pt")) return false;
+  if (langCode.startsWith("en")) return true;
+  if (/\b(hello|hi|help|token|create|start|how|loan|lending|thanks|thank)\b/i.test(text)) return true;
+  return false;
+}
+
 function tokenDraftFromText(text: string) {
   const normalized = text.replace(/^\/token/i, "").trim();
   const parts = normalized.split(/\s+/).filter(Boolean);
@@ -73,39 +83,83 @@ export async function POST(request: Request) {
     const text = cleanText(message.text || "", 600);
     const telegramUserId = String(message.from?.id || message.chat.id);
     const username = cleanText(message.from?.username || "", 64);
+    const firstName = cleanText(message.from?.first_name || "", 30);
+    const isEnglish = detectIsEnglish(message, text);
+    const locale: "en" | "pt" = isEnglish ? "en" : "pt";
 
+    // Handle explicit language switch
+    if (text === "/en") {
+      await sendMessage(chatId, "🇺🇸 Language set to English. Type `/help` or `/token` to begin!");
+      return NextResponse.json({ ok: true });
+    }
+    if (text === "/pt") {
+      await sendMessage(chatId, "🇧🇷 Idioma definido para Português. Digite `/help` ou `/token` para começar!");
+      return NextResponse.json({ ok: true });
+    }
+
+    // Welcome / Start
     if (!text || text === "/start") {
-      await sendMessage(
-        chatId,
-        [
-          "*Instead Bot - Assistente Financeiro*",
-          "",
-          "Crie moedas digitais e prepare operações de liquidez com segurança total.",
-          "",
-          "Comandos:",
-          "`/token NomeDoToken TICKER` - Criar intenção de lançamento",
-          "`/lending` - Preparar fluxo de empréstimo inteligente",
-          "`/status <id>` - Consultar status de uma solicitação pelo ID",
-          "`/help` - Regras de segurança e garantia de custódia",
-        ].join("\n")
-      );
+      const greeting = isEnglish
+        ? [
+            `👋 *Welcome to Instead Finance, ${firstName || "friend"}!*`,
+            "",
+            "I am your personal, guided assistant for Web3 finance.",
+            "Creating digital assets and accessing liquidity is simple and safe.",
+            "",
+            "✨ *Here is how to get started:*",
+            "1️⃣ `/token MyToken TKR` — Create a new custom digital asset",
+            "2️⃣ `/lending` — Explore smart collateralized credit",
+            "3️⃣ `/status <id>` — Check the status of your request",
+            "4️⃣ `/help` — Learn about security & safety rules",
+            "",
+            "🌐 _Type `/pt` for Portuguese or `/en` for English at any time._",
+          ].join("\n")
+        : [
+            `👋 *Seja muito bem-vindo à Instead Finance, ${firstName || "amigo(a)"}!*`,
+            "",
+            "Eu sou o seu assistente guiado para finanças descentralizadas.",
+            "Criar ativos digitais e acessar liquidez é muito simples e seguro.",
+            "",
+            "✨ *Como você gostaria de começar?*",
+            "1️⃣ `/token MeuToken TKR` — Criar uma nova moeda digital",
+            "2️⃣ `/lending` — Explorar empréstimos com garantia",
+            "3️⃣ `/status <id>` — Verificar o estado de uma solicitação",
+            "4️⃣ `/help` — Ver garantias e regras de segurança",
+            "",
+            "🌐 _Digite `/en` para Inglês ou `/pt` para Português a qualquer momento._",
+          ].join("\n");
+
+      await sendMessage(chatId, greeting);
       return NextResponse.json({ ok: true });
     }
 
+    // Help
     if (text === "/help") {
-      await sendMessage(
-        chatId,
-        [
-          "*Garantias de Segurança*",
-          "",
-          "• O assistente **nunca** solicita chaves privadas ou senhas.",
-          "• Operações terminam com assinatura na sua carteira Web3.",
-          "• Todas as solicitações possuem log de auditoria no protocolo.",
-        ].join("\n")
-      );
+      const helpMsg = isEnglish
+        ? [
+            "🛡️ *Security & Safety Guarantees*",
+            "",
+            "• *Zero Custody:* This assistant *never* asks for private keys, passwords, or recovery phrases.",
+            "• *You in Control:* Every transaction is reviewed and signed directly in your connected wallet.",
+            "• *Verifiable Audit:* All intents generate an automated audit log on the protocol.",
+            "",
+            "💡 *Need assistance?* Type `/token` or `/lending` to start a step-by-step wizard.",
+          ].join("\n")
+        : [
+            "🛡️ *Garantias de Segurança & Proteção*",
+            "",
+            "• *Custódia Própria:* Este assistente *nunca* solicita chaves privadas, senhas ou frases de recuperação.",
+            "• *Você no Controle:* Todas as transações são revisadas e assinadas diretamente na sua carteira Web3.",
+            "• *Auditoria Verificável:* Todas as solicitações geram registro automático de auditoria no protocolo.",
+            "",
+            "💡 *Precisa de ajuda?* Digite `/token` ou `/lending` para iniciar o assistente guiado.",
+          ].join("\n");
+
+      await sendMessage(chatId, helpMsg);
       return NextResponse.json({ ok: true });
     }
 
+    // Token creation
     if (text.startsWith("/token")) {
       const draft = tokenDraftFromText(text);
       let intentId = `temp_${Date.now()}`;
@@ -127,23 +181,34 @@ export async function POST(request: Request) {
         if (!error && data) intentId = String(data.id);
       }
 
-      const link = `${APP_URL}/en/factory?intent=${encodeURIComponent(intentId)}&source=telegram`;
-      await sendMessage(
-        chatId,
-        [
-          "*Rascunho de moeda preparado!*",
-          "",
-          `Nome: **${draft.name}**`,
-          `Ticker: **$${draft.symbol}**`,
-          `Rede sugerida: Arbitrum / Base`,
-          "",
-          "Acesse a plataforma para revisar a distribuição e finalizar com sua carteira:",
-          link,
-        ].join("\n")
-      );
+      const link = `${APP_URL}/${locale}/factory?intent=${encodeURIComponent(intentId)}&source=telegram`;
+      const tokenMsg = isEnglish
+        ? [
+            "🚀 *Digital Asset Draft Created!*",
+            "",
+            `• *Name:* ${draft.name}`,
+            `• *Symbol:* $${draft.symbol}`,
+            `• *Suggested Network:* Base / Arbitrum`,
+            "",
+            "👇 *Next Step:* Click the link below to review your supply, custom fees, and launch safely with your wallet:",
+            `🔗 [Launch Asset in App](${link})`,
+          ].join("\n")
+        : [
+            "🚀 *Rascunho de Ativo Digital Criado!*",
+            "",
+            `• *Nome:* ${draft.name}`,
+            `• *Símbolo:* $${draft.symbol}`,
+            `• *Rede Sugerida:* Base / Arbitrum`,
+            "",
+            "👇 *Próximo Passo:* Clique no link abaixo para revisar o supply, funções e concluir o lançamento com sua carteira:",
+            `🔗 [Finalizar Lançamento no App](${link})`,
+          ].join("\n");
+
+      await sendMessage(chatId, tokenMsg);
       return NextResponse.json({ ok: true });
     }
 
+    // Lending
     if (text.startsWith("/lending")) {
       let intentId = `lending_${Date.now()}`;
       if (supabase) {
@@ -163,23 +228,39 @@ export async function POST(request: Request) {
         if (!error && data) intentId = String(data.id);
       }
 
-      const link = `${APP_URL}/en/lending?intent=${encodeURIComponent(intentId)}&source=telegram`;
-      await sendMessage(
-        chatId,
-        [
-          "*Empréstimo Inteligente*",
-          "",
-          "O assistente preparou a rota de liquidez. A operação é finalizada com segurança usando sua carteira:",
-          link,
-        ].join("\n")
-      );
+      const link = `${APP_URL}/${locale}/lending?intent=${encodeURIComponent(intentId)}&source=telegram`;
+      const lendingMsg = isEnglish
+        ? [
+            "🏦 *Smart Liquidity Assistant*",
+            "",
+            "I have prepared your collateralized lending route.",
+            "Your collateral remains under your wallet's protection at all times.",
+            "",
+            "👇 *Next Step:* Tap the link below to view current rates and execute securely:",
+            `🔗 [Access Lending Hub](${link})`,
+          ].join("\n")
+        : [
+            "🏦 *Assistente de Empréstimos Inteligentes*",
+            "",
+            "Preparei a sua rota de liquidez com garantia.",
+            "O seu patrimônio permanece sob proteção da sua própria carteira o tempo todo.",
+            "",
+            "👇 *Próximo Passo:* Clique no link abaixo para conferir as taxas e operar com segurança:",
+            `🔗 [Acessar Hub de Empréstimos](${link})`,
+          ].join("\n");
+
+      await sendMessage(chatId, lendingMsg);
       return NextResponse.json({ ok: true });
     }
 
+    // Status
     if (text.startsWith("/status")) {
       const intentId = cleanText(text.replace(/^\/status\s*/i, "").trim(), 64);
       if (!intentId) {
-        await sendMessage(chatId, "Informe o ID da solicitação. Ex: `/status <id>`");
+        const promptId = isEnglish
+          ? "Please provide the request ID. Example: `/status <uuid>`"
+          : "Por favor, informe o ID da solicitação. Exemplo: `/status <uuid>`";
+        await sendMessage(chatId, promptId);
         return NextResponse.json({ ok: true });
       }
 
@@ -191,26 +272,64 @@ export async function POST(request: Request) {
           .single();
 
         if (intent) {
-          const statusEmoji = intent.status === "confirmed" ? "✅ Concluído" : "⏳ Pendente";
-          await sendMessage(
-            chatId,
-            [
-              `*Status da Solicitação*`,
-              "",
-              `ID: \`${intent.id}\``,
-              `Operação: ${intent.flow}`,
-              `Status: ${statusEmoji}`,
-            ].join("\n")
-          );
+          const statusText = intent.status === "confirmed"
+            ? (isEnglish ? "✅ Completed" : "✅ Concluído")
+            : (isEnglish ? "⏳ Pending Wallet Confirmation" : "⏳ Pendente de Confirmação");
+
+          const statusMsg = isEnglish
+            ? [
+                "📊 *Request Status*",
+                "",
+                `• *ID:* \`${intent.id}\``,
+                `• *Operation:* ${intent.flow}`,
+                `• *Status:* ${statusText}`,
+                `• *Created:* ${new Date(intent.created_at).toISOString().slice(0, 19).replace("T", " ")} UTC`,
+              ].join("\n")
+            : [
+                "📊 *Status da Solicitação*",
+                "",
+                `• *ID:* \`${intent.id}\``,
+                `• *Operação:* ${intent.flow}`,
+                `• *Status:* ${statusText}`,
+                `• *Criado em:* ${new Date(intent.created_at).toISOString().slice(0, 19).replace("T", " ")} UTC`,
+              ].join("\n");
+
+          await sendMessage(chatId, statusMsg);
           return NextResponse.json({ ok: true });
         }
       }
 
-      await sendMessage(chatId, "Solicitação não encontrada. Verifique o ID informado.");
+      const notFound = isEnglish
+        ? "🔍 Request not found. Please verify the ID and try again."
+        : "🔍 Solicitação não encontrada. Por favor, verifique o ID informado.";
+      await sendMessage(chatId, notFound);
       return NextResponse.json({ ok: true });
     }
 
-    await sendMessage(chatId, "Comando não reconhecido. Use `/token Nome TICKER`, `/lending` ou `/help`.");
+    // Friendly fallback
+    const fallback = isEnglish
+      ? [
+          `😊 *Hello ${firstName || "there"}! How can I help you today?*`,
+          "",
+          "Here are the most popular actions:",
+          "• `/token` — Launch a custom cryptocurrency",
+          "• `/lending` — Get liquidity using digital collateral",
+          "• `/help` — Read about security and wallet protection",
+          "",
+          "💡 *Tip:* Type `/token MyToken TKR` to quickly draft a new asset!",
+        ].join("\n")
+      : [
+          `😊 *Olá ${firstName || "amigo(a)"}! Como posso ajudar você hoje?*`,
+          "",
+          "Aqui estão as opções mais utilizadas:",
+          "• `/token` — Lançar uma nova moeda digital",
+          "• `/lending` — Obter empréstimo com garantia",
+          "• `/help` — Ler sobre segurança e proteção da carteira",
+          "",
+          "💡 *Dica:* Digite `/token MeuToken TKR` para preparar um lançamento rápido!",
+        ].join("\n");
+
+    await sendMessage(chatId, fallback);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Telegram webhook error:", error);
