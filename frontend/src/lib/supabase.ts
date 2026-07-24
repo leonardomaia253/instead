@@ -117,6 +117,15 @@ export type GeneratedToken = {
   initial_supply: number;
   max_supply: number;
   mintable: boolean;
+  token_template?: string | null;
+  launch_mode?: string | null;
+  taxable?: boolean | null;
+  tax_bps?: number | null;
+  burn_tax?: boolean | null;
+  max_wallet_bps?: number | null;
+  liquidity_eth?: string | number | null;
+  lp_recipient?: string | null;
+  lp_lock_status?: string | null;
   tx_hash: string;
   chain_id: number;
   created_at: string;

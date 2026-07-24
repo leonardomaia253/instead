@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { formatEther } from "ethers";
+import { formatEther, parseEther } from "ethers";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { CHAIN_META, TOKEN_FACTORY_ABI, SUPPORTED_CHAINS } from "@/lib/wagmi";
@@ -18,6 +18,7 @@ import { AIAssistant } from "@/components/shared/AIAssistant";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type TokenForm = {
+  template: "standard" | "ultimate" | "fair_launch" | "deflationary" | "superchain";
   // Passo 1 – Rede
   chainId: number;
   // Passo 2 – Identidade
@@ -33,6 +34,10 @@ type TokenForm = {
   burnable: boolean;
   taxable: boolean;
   taxPercent: string;
+  hasBlacklist: boolean;
+  burnTax: boolean;
+  maxWalletPercent: string;
+  fairLaunchLiquidityEth: string;
   // Passo 5 – Review
 };
 
@@ -45,6 +50,7 @@ const STEPS = [
 ];
 
 const INITIAL_FORM: TokenForm = {
+  template: "standard",
   chainId: 42161,
   name: "",
   symbol: "",
@@ -56,7 +62,87 @@ const INITIAL_FORM: TokenForm = {
   burnable: true,
   taxable: false,
   taxPercent: "2",
+  hasBlacklist: false,
+  burnTax: false,
+  maxWalletPercent: "0",
+  fairLaunchLiquidityEth: "0.1",
 };
+
+const TOKEN_PRESETS = [
+  {
+    id: "ultimate" as const,
+    title: "Ultimate Token",
+    tag: "Mais vendavel",
+    description: "Cap, mint opcional, burn, taxa opcional, blacklist/compliance e ownership em 2 etapas.",
+    apply: (form: TokenForm): TokenForm => ({
+      ...form,
+      template: "ultimate",
+      mintable: true,
+      burnable: true,
+      taxable: false,
+      taxPercent: "2",
+      hasBlacklist: true,
+      burnTax: false,
+      maxWalletPercent: "0",
+      fairLaunchLiquidityEth: form.fairLaunchLiquidityEth,
+    }),
+  },
+  {
+    id: "fair_launch" as const,
+    title: "Fair Launch Token",
+    tag: "Distribuicao limpa",
+    description: "Sem mint futuro, sem taxa e initial supply igual ao cap. Liquidez fica para execucao assistida apos deploy.",
+    apply: (form: TokenForm): TokenForm => ({
+      ...form,
+      template: "fair_launch",
+      maxSupply: form.initialSupply || "1000000",
+      mintable: false,
+      burnable: true,
+      taxable: false,
+      taxPercent: "0",
+      hasBlacklist: false,
+      burnTax: false,
+      maxWalletPercent: "0",
+      fairLaunchLiquidityEth: form.fairLaunchLiquidityEth || "0.1",
+    }),
+  },
+  {
+    id: "deflationary" as const,
+    title: "Deflationary Token",
+    tag: "Anti-whale",
+    description: "Taxa queimada a cada transferencia e limite maximo por carteira para reduzir concentracao.",
+    apply: (form: TokenForm): TokenForm => ({
+      ...form,
+      template: "deflationary",
+      mintable: false,
+      burnable: true,
+      taxable: true,
+      taxPercent: "2",
+      hasBlacklist: false,
+      burnTax: true,
+      maxWalletPercent: "2",
+      fairLaunchLiquidityEth: form.fairLaunchLiquidityEth,
+    }),
+  },
+  {
+    id: "superchain" as const,
+    title: "Superchain-ready ERC20",
+    tag: "Base/Optimism",
+    description: "Preset limpo para Base/Optimism, sem taxa e sem mint futuro, pronto para estrategia Superchain.",
+    apply: (form: TokenForm): TokenForm => ({
+      ...form,
+      template: "superchain",
+      mintable: false,
+      burnable: true,
+      taxable: false,
+      taxPercent: "0",
+      hasBlacklist: false,
+      burnTax: false,
+      maxWalletPercent: "0",
+      fairLaunchLiquidityEth: form.fairLaunchLiquidityEth,
+    }),
+  },
+];
 
 // ─── Componentes de cada passo ────────────────────────────────────────────────
 
@@ -235,6 +321,22 @@ function StepSupply({ form, setForm }: { form: TokenForm; setForm: (f: TokenForm
           Com {form.decimals} decimais: 1 token = 10<sup>{form.decimals}</sup> unidades mínimas.
         </div>
       </FieldGroup>
+
+      {form.template === "fair_launch" && (
+        <FieldGroup label="Liquidez inicial em ETH" hint="Valor em ETH que sera enviado junto com 100% do supply para o pool DEX no deploy.">
+          <input
+            type="number"
+            value={form.fairLaunchLiquidityEth}
+            onChange={(e) => setForm({ ...form, fairLaunchLiquidityEth: e.target.value })}
+            min={0.0001}
+            step={0.01}
+            placeholder="0.1"
+          />
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
+            No Fair Launch on-chain, o criador nao recebe tokens soltos no deploy; 100% do supply vai para liquidez.
+          </div>
+        </FieldGroup>
+      )}
     </div>
   );
 }
@@ -265,12 +367,52 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
       risk: "Alto",
       riskColor: "#ef4444",
     },
+    {
+      key: "hasBlacklist" as const,
+      icon: "🛡️",
+      title: "Blacklist/Compliance",
+      desc: "Permite ao owner bloquear enderecos. Use apenas quando houver motivo operacional ou regulatorio claro.",
+      risk: "Alto",
+      riskColor: "#ef4444",
+    },
+    {
+      key: "burnTax" as const,
+      icon: "🔥",
+      title: "Taxa de Queima Deflacionaria",
+      desc: "Quando a taxa estiver ativa, envia a taxa para burn em vez de treasury.",
+      risk: "Médio",
+      riskColor: "#f59e0b",
+    },
   ];
 
   return (
     <div>
       <h2 style={styles.stepTitle}>Funcionalidades do Token</h2>
       <p style={styles.stepDesc}>Ative as funcionalidades avançadas do seu token. Cada uma afeta o comportamento econômico e a percepção de confiança.</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 20 }}>
+        {TOKEN_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            onClick={() => setForm(preset.apply(form))}
+            style={{
+              textAlign: "left",
+              padding: 16,
+              borderRadius: 8,
+              border: `1px solid ${form.template === preset.id ? "var(--accent-1)" : "var(--border)"}`,
+              background: form.template === preset.id ? "rgba(124,58,237,0.1)" : "var(--bg-card)",
+              color: "var(--text-primary)",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+              <strong>{preset.title}</strong>
+              <span style={{ color: "var(--accent-1)", fontSize: 11, fontWeight: 700 }}>{preset.tag}</span>
+            </div>
+            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5 }}>{preset.description}</p>
+          </button>
+        ))}
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
         {features.map((f) => (
@@ -315,6 +457,11 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
                   </div>
                 </div>
               )}
+              {f.key === "burnTax" && form.burnTax && !form.taxable && (
+                <div style={{ marginTop: 8, color: "var(--red)", fontSize: 12 }}>
+                  Ative taxa por transferencia para usar queima deflacionaria.
+                </div>
+              )}
             </div>
             <div style={{
               width: 24, height: 24, borderRadius: 6, border: `2px solid ${form[f.key] ? "var(--accent-1)" : "var(--border)"}`,
@@ -327,6 +474,19 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
           </div>
         ))}
       </div>
+
+      <FieldGroup label="Anti-whale: maximo por carteira (%)" hint="0 desativa. Ex: 2 limita cada carteira a 2% do cap, exceto o owner inicial.">
+        <input
+          type="number"
+          value={form.maxWalletPercent}
+          onChange={(e) => setForm({ ...form, maxWalletPercent: e.target.value })}
+          min={0}
+          max={100}
+          step={0.1}
+          style={{ width: 140 }}
+          placeholder="0"
+        />
+      </FieldGroup>
 
       <InfoBox color="red">
         ⚠️ Tokens com taxa por transação (taxable) são frequentemente sinalizados como <strong>suspeitos</strong> em scanners como Token Sniffer. Certifique-se de que a utilidade é legítima.
@@ -344,6 +504,8 @@ function StepReview({
   isConfirmed,
   txHash,
   error,
+  onFiatCheckout,
+  fiatCheckoutStatus,
 }: {
   form: TokenForm;
   feeInEth?: bigint;
@@ -353,6 +515,8 @@ function StepReview({
   isConfirmed: boolean;
   txHash?: string;
   error: Error | null;
+  onFiatCheckout: (provider: "stripe" | "pagarme", productCode: string) => void;
+  fiatCheckoutStatus: "idle" | "loading" | "error";
 }) {
   const chainMeta = CHAIN_META[form.chainId];
   const rows = [
@@ -363,9 +527,13 @@ function StepReview({
     ["Supply Inicial", formatNumber(form.initialSupply)],
     ["Supply Máximo", formatNumber(form.maxSupply)],
     ["Decimais", `${form.decimals}`],
+    ["Template", form.template],
     ["Mintável", form.mintable ? "✅ Sim" : "❌ Não"],
     ["Queimável", form.burnable ? "✅ Sim" : "❌ Não"],
     ["Taxa Transferência", form.taxable ? `✅ ${form.taxPercent}%` : "❌ Não"],
+    ["Taxa queimada", form.burnTax ? "Sim" : "Nao"],
+    ["Anti-whale", Number(form.maxWalletPercent) > 0 ? `${form.maxWalletPercent}%` : "Desativado"],
+    ["Liquidez inicial", form.template === "fair_launch" ? `${form.fairLaunchLiquidityEth || "0"} ETH` : "n/a"],
   ];
 
   return (
@@ -433,6 +601,33 @@ function StepReview({
             isConfirmed ? "✅ Token Lançado!" :
               "🚀 Fazer Deploy do Token"}
       </button>
+      <div style={{ marginTop: 16, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Pagar sem crypto</div>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 12 }}>
+          Para clientes que preferem cartao ou PIX, gere um checkout fiat. A equipe comercial libera o deploy assistido apos confirmacao do webhook.
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+          <button
+            className="btn-outline"
+            onClick={() => onFiatCheckout("stripe", form.template === "fair_launch" ? "token_fair_launch_assisted" : "token_deploy_premium")}
+            disabled={fiatCheckoutStatus === "loading"}
+          >
+            Cartao global
+          </button>
+          <button
+            className="btn-outline"
+            onClick={() => onFiatCheckout("pagarme", form.template === "fair_launch" ? "token_fair_launch_assisted" : "token_deploy_premium")}
+            disabled={fiatCheckoutStatus === "loading"}
+          >
+            Brasil: cartao ou PIX
+          </button>
+        </div>
+        {fiatCheckoutStatus === "error" && (
+          <div style={{ color: "var(--red)", fontSize: 12, marginTop: 10 }}>
+            Nao foi possivel abrir o checkout agora.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -497,6 +692,12 @@ function taxPercentToBps(value: string) {
   return BigInt(Math.round(percent * 100));
 }
 
+function percentToBps(value: string) {
+  const percent = Number(value);
+  if (!Number.isFinite(percent) || percent <= 0) return 0n;
+  return BigInt(Math.round(percent * 100));
+}
+
 const styles = {
   stepTitle: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, marginBottom: 8 } as React.CSSProperties,
   stepDesc: { fontSize: 15, color: "var(--text-muted)", lineHeight: 1.65, marginBottom: 8 } as React.CSSProperties,
@@ -509,6 +710,7 @@ export default function FactoryPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 42161 });
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "error">("idle");
 
   const factoryAddress = (CHAIN_META[form.chainId]?.factoryAddress || "0x0") as `0x${string}`;
 
@@ -541,7 +743,8 @@ export default function FactoryPage() {
     if (step === 3) {
       const ini = parseFloat(form.initialSupply);
       const max = parseFloat(form.maxSupply);
-      return ini > 0 && max >= ini;
+      const liquidityOk = form.template !== "fair_launch" || Number(form.fairLaunchLiquidityEth) > 0;
+      return ini > 0 && max >= ini && liquidityOk;
     }
     return true;
   }
@@ -553,22 +756,38 @@ export default function FactoryPage() {
       const initialSupply = toWholeTokenUnits(form.initialSupply);
       const maxSupply = toWholeTokenUnits(form.maxSupply);
       const taxBPS = form.taxable ? taxPercentToBps(form.taxPercent) : 0n;
+      const maxWalletBPS = percentToBps(form.maxWalletPercent);
+      const fairLaunchLiquidity = form.template === "fair_launch" ? parseEther(form.fairLaunchLiquidityEth || "0") : 0n;
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
+      const isFairLaunch = form.template === "fair_launch";
 
       const hash = await writeContractAsync({
         address: factoryAddress,
         abi: TOKEN_FACTORY_ABI,
-        functionName: "createToken",
-        args: [
-          form.name,
-          form.symbol,
-          initialSupply,
-          maxSupply,
-          form.mintable,
-          form.taxable,
-          taxBPS,
-          false,
-        ],
-        value: feeWithSlippage,
+        functionName: isFairLaunch ? "createFairLaunchTokenETH" : "createTokenAdvanced",
+        args: isFairLaunch
+          ? [
+              form.name,
+              form.symbol,
+              initialSupply,
+              initialSupply,
+              fairLaunchLiquidity,
+              address,
+              deadline,
+            ]
+          : [
+              form.name,
+              form.symbol,
+              initialSupply,
+              maxSupply,
+              form.mintable,
+              form.taxable,
+              taxBPS,
+              form.hasBlacklist,
+              form.burnTax,
+              maxWalletBPS,
+            ],
+        value: isFairLaunch ? feeWithSlippage + fairLaunchLiquidity : feeWithSlippage,
       });
 
       let tokenAddress = "pending";
@@ -579,7 +798,7 @@ export default function FactoryPage() {
         for (const log of receipt?.logs ?? []) {
           try {
             const parsed = iface.parseLog(log as any);
-            if (parsed?.name === "TokenCreated") {
+            if (parsed?.name === "TokenCreated" || parsed?.name === "FairLaunchCreated") {
               tokenAddress = String(parsed.args.tokenAddress);
               break;
             }
@@ -600,6 +819,14 @@ export default function FactoryPage() {
         initial_supply: Number(initialSupply),
         max_supply: Number(maxSupply),
         mintable: form.mintable,
+        token_template: form.template,
+        launch_mode: form.template === "fair_launch" ? "fair_launch" : form.template === "superchain" ? "superchain" : "standard",
+        taxable: form.taxable,
+        tax_bps: Number(taxBPS),
+        burn_tax: form.burnTax,
+        max_wallet_bps: Number(maxWalletBPS),
+        liquidity_eth: form.template === "fair_launch" ? form.fairLaunchLiquidityEth : null,
+        lp_recipient: form.template === "fair_launch" ? address : null,
         tx_hash: hash,
         chain_id: form.chainId,
       });
@@ -619,8 +846,13 @@ export default function FactoryPage() {
           tx_hash: hash,
           chain_id: form.chainId,
           token_address: tokenAddress,
+          token_template: form.template,
           taxable: form.taxable,
           tax_bps: Number(taxBPS),
+          burn_tax: form.burnTax,
+          max_wallet_bps: Number(maxWalletBPS),
+          liquidity_eth: form.template === "fair_launch" ? form.fairLaunchLiquidityEth : null,
+          lp_recipient: form.template === "fair_launch" ? address : null,
         }
       });
 
@@ -633,6 +865,7 @@ export default function FactoryPage() {
         chain_id: form.chainId,
         expected_state: {
           token_address: tokenAddress,
+          token_template: form.template,
           name: form.name,
           symbol: form.symbol,
           initial_supply: initialSupply.toString(),
@@ -640,10 +873,44 @@ export default function FactoryPage() {
           mintable: form.mintable,
           taxable: form.taxable,
           tax_bps: taxBPS.toString(),
+          burn_tax: form.burnTax,
+          max_wallet_bps: maxWalletBPS.toString(),
+          liquidity_eth: form.template === "fair_launch" ? form.fairLaunchLiquidityEth : null,
+          lp_recipient: form.template === "fair_launch" ? address : null,
         },
       });
     } catch (e) {
       // Erro exposto via writeError
+    }
+  }
+
+  async function handleFiatCheckout(provider: "stripe" | "pagarme", productCode: string) {
+    if (!address) return;
+    setFiatCheckoutStatus("loading");
+    try {
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          vertical: "token_factory",
+          productCode,
+          walletAddress: address,
+          metadata: {
+            token_template: form.template,
+            name: form.name,
+            symbol: form.symbol,
+            chain_id: form.chainId,
+            liquidity_eth: form.template === "fair_launch" ? form.fairLaunchLiquidityEth : null,
+          },
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.url) throw new Error(body.error || "Checkout unavailable");
+      window.location.href = body.url;
+    } catch (checkoutError) {
+      console.error("Erro ao criar checkout fiat:", checkoutError);
+      setFiatCheckoutStatus("error");
     }
   }
 
@@ -712,6 +979,8 @@ export default function FactoryPage() {
               isConfirmed={isConfirmed}
               txHash={txHash}
               error={writeError as Error | null}
+              onFiatCheckout={handleFiatCheckout}
+              fiatCheckoutStatus={fiatCheckoutStatus}
             />
           )}
 

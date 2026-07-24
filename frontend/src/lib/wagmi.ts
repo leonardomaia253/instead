@@ -135,6 +135,42 @@ export const TOKEN_FACTORY_ABI = [
     outputs: [{ name: "", type: "address" }],
   },
   {
+    name: "createTokenAdvanced",
+    type: "function",
+    stateMutability: "payable",
+    inputs: [
+      { name: "name", type: "string" },
+      { name: "symbol", type: "string" },
+      { name: "initialSupply", type: "uint256" },
+      { name: "maxSupply", type: "uint256" },
+      { name: "isMintable", type: "bool" },
+      { name: "isTaxable", type: "bool" },
+      { name: "taxBPS", type: "uint256" },
+      { name: "hasBlacklist", type: "bool" },
+      { name: "burnTax", type: "bool" },
+      { name: "maxWalletBPS", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    name: "createFairLaunchTokenETH",
+    type: "function",
+    stateMutability: "payable",
+    inputs: [
+      { name: "name", type: "string" },
+      { name: "symbol", type: "string" },
+      { name: "supply", type: "uint256" },
+      { name: "minTokenAmount", type: "uint256" },
+      { name: "minEthAmount", type: "uint256" },
+      { name: "lpRecipient", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [
+      { name: "tokenAddr", type: "address" },
+      { name: "liquidity", type: "uint256" },
+    ],
+  },
+  {
     name: "getCreationFeeInEth",
     type: "function",
     stateMutability: "view",
@@ -154,7 +190,21 @@ export const TOKEN_FACTORY_ABI = [
       { name: "mintable", type: "bool", indexed: false },
       { name: "taxable", type: "bool", indexed: false },
       { name: "taxBPS", type: "uint256", indexed: false },
+      { name: "burnTax", type: "bool", indexed: false },
+      { name: "maxWalletBPS", type: "uint256", indexed: false },
       { name: "feePaid", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "FairLaunchCreated",
+    type: "event",
+    inputs: [
+      { name: "tokenAddress", type: "address", indexed: true },
+      { name: "creator", type: "address", indexed: true },
+      { name: "tokenAmount", type: "uint256", indexed: false },
+      { name: "ethAmount", type: "uint256", indexed: false },
+      { name: "liquidity", type: "uint256", indexed: false },
+      { name: "lpRecipient", type: "address", indexed: true },
     ],
   },
 ] as const;
@@ -175,6 +225,18 @@ export const LENDING_POOL_ABI = [
   { name: "supportedAssets",  type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "bool" }] },
   { name: "aTokenByAsset",    type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "address" }] },
   { name: "variableDebtTokenByAsset", type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "address" }] },
+] as const;
+
+export const LENDING_ROUTER_ABI = [
+  { name: "supply",   type: "function", stateMutability: "nonpayable", inputs: [{ name: "adapter", type: "address" }, { name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { name: "withdraw", type: "function", stateMutability: "nonpayable", inputs: [{ name: "adapter", type: "address" }, { name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "withdrawn", type: "uint256" }] },
+  { name: "borrow",   type: "function", stateMutability: "nonpayable", inputs: [{ name: "adapter", type: "address" }, { name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { name: "repay",    type: "function", stateMutability: "nonpayable", inputs: [{ name: "adapter", type: "address" }, { name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "repaid", type: "uint256" }] },
+  { name: "adapters", type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [
+    { name: "enabled", type: "bool" },
+    { name: "protocolId", type: "bytes32" },
+    { name: "riskTier", type: "uint256" },
+  ] },
 ] as const;
 
 export const STAKING_ABI = [
@@ -198,6 +260,7 @@ export const AAVE_VARIABLE_DEBT_TOKEN_ABI = [
 
 export const CONTRACTS = {
   LENDING_POOL:  process.env.NEXT_PUBLIC_LENDING_POOL_ADDRESS as `0x${string}`,
+  LENDING_ROUTER: process.env.NEXT_PUBLIC_LENDING_ROUTER_ADDRESS as `0x${string}`,
   STAKING:       process.env.NEXT_PUBLIC_STAKING_ADDRESS as `0x${string}`,
   TOKEN_FACTORY: (process.env.NEXT_PUBLIC_FACTORY_ARBITRUM || process.env.NEXT_PUBLIC_TOKEN_FACTORY_ADDRESS) as `0x${string}`,
 };

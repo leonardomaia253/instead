@@ -31,4 +31,5 @@ DROP POLICY IF EXISTS "Service role reads observability" ON public.observability
 CREATE POLICY "Service role reads observability"
   ON public.observability_events
   FOR SELECT
-  USING (auth.role() = 'service_role');
+  TO service_role
+  USING (true);

@@ -25,5 +25,6 @@ DROP POLICY IF EXISTS "Service role manages telegram bot intents" ON public.tele
 CREATE POLICY "Service role manages telegram bot intents"
   ON public.telegram_bot_intents
   FOR ALL
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+  TO service_role
+  USING (true)
+  WITH CHECK (true);

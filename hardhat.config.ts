@@ -2,6 +2,10 @@ import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 
 const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
+const HARDHAT_FORK_RPC_URL = process.env.HARDHAT_FORK_RPC_URL;
+const HARDHAT_FORK_BLOCK_NUMBER = process.env.HARDHAT_FORK_BLOCK_NUMBER
+  ? Number(process.env.HARDHAT_FORK_BLOCK_NUMBER)
+  : undefined;
 
 function network(urlEnv: string) {
   const url = process.env[urlEnv] ?? "";
@@ -18,8 +22,9 @@ const config: HardhatUserConfig = {
       evmVersion: "cancun",
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1,
       },
+      viaIR: true,
     },
   },
   paths: {
@@ -29,7 +34,14 @@ const config: HardhatUserConfig = {
     artifacts: "./artifacts",
   },
   networks: {
-    hardhat: {},
+    hardhat: HARDHAT_FORK_RPC_URL
+      ? {
+          forking: {
+            url: HARDHAT_FORK_RPC_URL,
+            blockNumber: HARDHAT_FORK_BLOCK_NUMBER,
+          },
+        }
+      : {},
     arbitrum: network("ARBITRUM_RPC_URL"),
     polygon: network("POLYGON_RPC_URL"),
     bsc: network("BSC_RPC_URL"),
@@ -37,6 +49,10 @@ const config: HardhatUserConfig = {
     optimism: network("OPTIMISM_RPC_URL"),
     mainnet: network("MAINNET_RPC_URL"),
     avalanche: network("AVALANCHE_RPC_URL"),
+    sepolia: network("SEPOLIA_RPC_URL"),
+    baseSepolia: network("BASE_SEPOLIA_RPC_URL"),
+    arbitrumSepolia: network("ARBITRUM_SEPOLIA_RPC_URL"),
+    optimismSepolia: network("OPTIMISM_SEPOLIA_RPC_URL"),
   },
   etherscan: {
     apiKey: {

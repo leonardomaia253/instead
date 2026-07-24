@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./interfaces/IInsteadLendingAdapter.sol";
 
 interface IPool {
     function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
@@ -49,6 +50,7 @@ interface IVariableDebtToken {
  * The adapter never borrows against a shared contract-level Aave account.
  */
 contract InsteadLendingPool is
+    IInsteadLendingAdapter,
     UUPSUpgradeable,
     OwnableUpgradeable,
     ReentrancyGuard,
@@ -58,6 +60,7 @@ contract InsteadLendingPool is
 
     uint256 public constant FEE_PRECISION = 10_000;
     uint256 public constant VARIABLE_RATE_MODE = 2;
+    bytes32 public constant override ADAPTER_ID = keccak256("AAVE_V3");
 
     IPoolAddressesProvider public addressesProvider;
     address public treasury;
@@ -79,6 +82,9 @@ contract InsteadLendingPool is
     event AssetConfigured(address indexed asset, address indexed aToken, address indexed variableDebtToken, bool supported);
     event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
     event ConvenienceFeeUpdated(uint256 oldFee, uint256 newFee);
+    event AuthorizedRouterUpdated(address indexed oldRouter, address indexed newRouter);
+
+    address public authorizedRouter;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -101,6 +107,24 @@ contract InsteadLendingPool is
 
     function getAavePool() public view returns (IPool) {
         return IPool(addressesProvider.getPool());
+    }
+
+    function adapterVersion() external pure override returns (uint256) {
+        return 1;
+    }
+
+    function supportsAsset(address asset) external view override returns (bool) {
+        return supportedAssets[asset];
+    }
+
+    modifier onlyRouter() {
+        require(msg.sender == authorizedRouter, "Router only");
+        _;
+    }
+
+    function setAuthorizedRouter(address newRouter) external onlyOwner {
+        emit AuthorizedRouterUpdated(authorizedRouter, newRouter);
+        authorizedRouter = newRouter;
     }
 
     function configureAsset(address asset, address aToken, address variableDebtToken, bool supported) external onlyOwner {
@@ -134,42 +158,66 @@ contract InsteadLendingPool is
     }
 
     function supply(address asset, uint256 amount) external nonReentrant whenNotPaused {
+        _supplyFor(msg.sender, asset, amount);
+    }
+
+    function supplyFor(address user, address asset, uint256 amount) external override nonReentrant whenNotPaused onlyRouter {
+        _supplyFor(user, asset, amount);
+    }
+
+    function _supplyFor(address user, address asset, uint256 amount) internal {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
         IERC20(asset).forceApprove(address(getAavePool()), amount);
-        getAavePool().supply(asset, amount, msg.sender, 0);
+        getAavePool().supply(asset, amount, user, 0);
 
         totalSuppliedByAsset[asset] += amount;
-        emit CollateralSupplied(msg.sender, asset, amount);
+        emit CollateralSupplied(user, asset, amount);
     }
 
     function withdraw(address asset, uint256 amount) external nonReentrant whenNotPaused returns (uint256 withdrawn) {
+        return _withdrawFor(msg.sender, asset, amount);
+    }
+
+    function withdrawFor(address user, address asset, uint256 amount) external override nonReentrant whenNotPaused onlyRouter returns (uint256 withdrawn) {
+        return _withdrawFor(user, asset, amount);
+    }
+
+    function _withdrawFor(address user, address asset, uint256 amount) internal returns (uint256 withdrawn) {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
 
         address aToken = aTokenByAsset[asset];
         require(aToken != address(0), "aToken not configured");
 
-        IERC20(aToken).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(aToken).safeTransferFrom(user, address(this), amount);
         IERC20(aToken).forceApprove(address(getAavePool()), amount);
-        withdrawn = getAavePool().withdraw(asset, amount, msg.sender);
+        withdrawn = getAavePool().withdraw(asset, amount, user);
 
-        emit CollateralWithdrawn(msg.sender, asset, withdrawn);
+        emit CollateralWithdrawn(user, asset, withdrawn);
     }
 
     function borrow(address asset, uint256 amount) external nonReentrant whenNotPaused {
+        _borrowFor(msg.sender, asset, amount);
+    }
+
+    function borrowFor(address user, address asset, uint256 amount) external override nonReentrant whenNotPaused onlyRouter {
+        _borrowFor(user, asset, amount);
+    }
+
+    function _borrowFor(address user, address asset, uint256 amount) internal {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
         address variableDebtToken = variableDebtTokenByAsset[asset];
         require(variableDebtToken != address(0), "Debt token not configured");
         require(
-            IVariableDebtToken(variableDebtToken).borrowAllowance(msg.sender, address(this)) >= amount,
+            IVariableDebtToken(variableDebtToken).borrowAllowance(user, address(this)) >= amount,
             "Insufficient credit delegation"
         );
 
-        getAavePool().borrow(asset, amount, VARIABLE_RATE_MODE, 0, msg.sender);
+        getAavePool().borrow(asset, amount, VARIABLE_RATE_MODE, 0, user);
 
         uint256 fee = (amount * convenienceFee) / FEE_PRECISION;
         uint256 amountToUser = amount - fee;
@@ -178,27 +226,35 @@ contract InsteadLendingPool is
             totalFeesByAsset[asset] += fee;
             emit FeeCollected(asset, fee);
         }
-        IERC20(asset).safeTransfer(msg.sender, amountToUser);
+        IERC20(asset).safeTransfer(user, amountToUser);
 
         totalBorrowedByAsset[asset] += amount;
-        emit Borrowed(msg.sender, asset, amount, fee);
+        emit Borrowed(user, asset, amount, fee);
     }
 
     function repay(address asset, uint256 amount) external nonReentrant whenNotPaused returns (uint256 repaid) {
+        return _repayFor(msg.sender, asset, amount);
+    }
+
+    function repayFor(address user, address asset, uint256 amount) external override nonReentrant whenNotPaused onlyRouter returns (uint256 repaid) {
+        return _repayFor(user, asset, amount);
+    }
+
+    function _repayFor(address user, address asset, uint256 amount) internal returns (uint256 repaid) {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
         IERC20(asset).forceApprove(address(getAavePool()), amount);
-        repaid = getAavePool().repay(asset, amount, VARIABLE_RATE_MODE, msg.sender);
+        repaid = getAavePool().repay(asset, amount, VARIABLE_RATE_MODE, user);
 
         uint256 refund = amount - repaid;
         if (refund > 0) {
-            IERC20(asset).safeTransfer(msg.sender, refund);
+            IERC20(asset).safeTransfer(user, refund);
         }
 
         totalRepaidByAsset[asset] += repaid;
-        emit Repaid(msg.sender, asset, repaid);
+        emit Repaid(user, asset, repaid);
     }
 
     function getUserAccountData(address user) external view returns (

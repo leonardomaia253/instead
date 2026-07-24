@@ -7,6 +7,17 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import "./GenericToken.sol";
 
+interface IUniswapV2RouterLike {
+    function addLiquidityETH(
+        address token,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256 amountToken, uint256 amountETH, uint256 liquidity);
+}
+
 /**
  * @title InsteadTokenFactory v2
  * @dev Factory com:
@@ -17,9 +28,11 @@ import "./GenericToken.sol";
  *  - Refund de excedente de taxa
  */
 contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
+    uint256 public constant FACTORY_VERSION = 3;
     uint256 public feeUSD = 500_000_000; // $5.00 em 8 decimais
     AggregatorV3Interface public immutable ethUsdFeed;
     address public immutable treasury; // Gnosis Safe — IMUTÁVEL
+    IUniswapV2RouterLike public immutable dexRouter;
     uint256 public constant MAX_PRICE_DELAY = 1 hours;
 
     struct TokenMeta {
@@ -32,6 +45,8 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         bool    taxable;
         uint256 taxBPS;
         bool    hasBlacklist;
+        bool    burnTax;
+        uint256 maxWalletBPS;
         address creator;
         uint256 chainId;
         uint256 createdAt;
@@ -52,16 +67,21 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         bool mintable,
         bool taxable,
         uint256 taxBPS,
+        bool burnTax,
+        uint256 maxWalletBPS,
         uint256 feePaid
     );
     event FeeUpdated(uint256 oldFeeUSD, uint256 newFeeUSD);
     event FeesWithdrawn(address indexed to, uint256 amount);
+    event FairLaunchCreated(address indexed tokenAddress, address indexed creator, uint256 tokenAmount, uint256 ethAmount, uint256 liquidity, address indexed lpRecipient);
 
-    constructor(address _ethUsdFeed, address _treasury) Ownable(msg.sender) {
+    constructor(address _ethUsdFeed, address _treasury, address _dexRouter) Ownable(msg.sender) {
         require(_ethUsdFeed != address(0), "Invalid feed");
         require(_treasury != address(0), "Invalid treasury");
+        require(_dexRouter != address(0), "Invalid router");
         ethUsdFeed = AggregatorV3Interface(_ethUsdFeed);
         treasury   = _treasury;
+        dexRouter  = IUniswapV2RouterLike(_dexRouter);
     }
 
     // ─── Validações de Nome/Símbolo on-chain ──────────────────────────────────
@@ -102,18 +122,155 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         uint256 taxBPS_,
         bool hasBlacklist_
     ) external payable nonReentrant whenNotPaused returns (address) {
+        return _createToken(
+            name,
+            symbol,
+            initialSupply,
+            maxSupply,
+            isMintable,
+            isTaxable,
+            taxBPS_,
+            hasBlacklist_,
+            false,
+            0
+        );
+    }
+
+    function createTokenAdvanced(
+        string memory name,
+        string memory symbol,
+        uint256 initialSupply,
+        uint256 maxSupply,
+        bool isMintable,
+        bool isTaxable,
+        uint256 taxBPS_,
+        bool hasBlacklist_,
+        bool burnTax_,
+        uint256 maxWalletBPS_
+    ) external payable nonReentrant whenNotPaused returns (address) {
+        return _createToken(
+            name,
+            symbol,
+            initialSupply,
+            maxSupply,
+            isMintable,
+            isTaxable,
+            taxBPS_,
+            hasBlacklist_,
+            burnTax_,
+            maxWalletBPS_
+        );
+    }
+
+    function createFairLaunchTokenETH(
+        string memory name,
+        string memory symbol,
+        uint256 supply,
+        uint256 minTokenAmount,
+        uint256 minEthAmount,
+        address lpRecipient,
+        uint256 deadline
+    ) external payable nonReentrant whenNotPaused returns (address tokenAddr, uint256 liquidity) {
+        _validateName(name);
+        _validateSymbol(symbol);
+        require(supply > 0, "Supply must be > 0");
+        require(lpRecipient != address(0), "Invalid LP recipient");
+        require(deadline >= block.timestamp, "Deadline expired");
+
+        uint256 feeInEth = getCreationFeeInEth();
+        require(msg.value > feeInEth, "Liquidity ETH required");
+        uint256 liquidityEth = msg.value - feeInEth;
+
+        GenericToken token = new GenericToken(
+            name,
+            symbol,
+            supply,
+            supply,
+            address(this),
+            false,
+            false,
+            0,
+            false,
+            false,
+            0
+        );
+
+        tokenAddr = address(token);
+        require(!tokenRegistered[tokenAddr], "Already registered");
+        tokenRegistered[tokenAddr] = true;
+
+        uint256 tokenAmount = token.balanceOf(address(this));
+        token.approve(address(dexRouter), tokenAmount);
+        (uint256 amountToken, uint256 amountETH, uint256 lpLiquidity) = dexRouter.addLiquidityETH{ value: liquidityEth }(
+            tokenAddr,
+            tokenAmount,
+            minTokenAmount,
+            minEthAmount,
+            lpRecipient,
+            deadline
+        );
+        require(amountToken == tokenAmount, "Not all tokens pooled");
+        require(token.balanceOf(address(this)) == 0, "Token residue");
+
+        token.transferOwnership(msg.sender);
+        liquidity = lpLiquidity;
+
+        createdTokens.push(TokenMeta({
+            tokenAddress: tokenAddr,
+            name:         name,
+            symbol:       symbol,
+            initialSupply: supply,
+            maxSupply:    supply,
+            mintable:     false,
+            taxable:      false,
+            taxBPS:       0,
+            hasBlacklist: false,
+            burnTax:      false,
+            maxWalletBPS: 0,
+            creator:      msg.sender,
+            chainId:      block.chainid,
+            createdAt:    block.timestamp
+        }));
+
+        tokensByCreator[msg.sender].push(tokenAddr);
+
+        (bool sent,) = treasury.call{ value: feeInEth }("");
+        require(sent, "Fee transfer failed");
+
+        if (liquidityEth > amountETH) {
+            payable(msg.sender).transfer(liquidityEth - amountETH);
+        }
+
+        emit TokenCreated(tokenAddr, msg.sender, name, symbol, supply, supply, false, false, 0, false, 0, feeInEth);
+        emit FairLaunchCreated(tokenAddr, msg.sender, amountToken, amountETH, lpLiquidity, lpRecipient);
+    }
+
+    function _createToken(
+        string memory name,
+        string memory symbol,
+        uint256 initialSupply,
+        uint256 maxSupply,
+        bool isMintable,
+        bool isTaxable,
+        uint256 taxBPS_,
+        bool hasBlacklist_,
+        bool burnTax_,
+        uint256 maxWalletBPS_
+    ) internal returns (address) {
         _validateName(name);
         _validateSymbol(symbol);
         require(initialSupply > 0, "Supply must be > 0");
         require(maxSupply >= initialSupply, "Max < initial");
         require(taxBPS_ <= 2500, "Tax max 25%");
+        require(maxWalletBPS_ <= 10000, "Max wallet max 100%");
+        require(!burnTax_ || isTaxable, "Burn tax requires tax");
 
         uint256 feeInEth = getCreationFeeInEth();
         require(msg.value >= feeInEth, "Insufficient fee");
 
         GenericToken token = new GenericToken(
             name, symbol, initialSupply, maxSupply,
-            msg.sender, isMintable, isTaxable, taxBPS_, hasBlacklist_
+            msg.sender, isMintable, isTaxable, taxBPS_, hasBlacklist_, burnTax_, maxWalletBPS_
         );
         address tokenAddr = address(token);
         require(!tokenRegistered[tokenAddr], "Already registered");
@@ -129,6 +286,8 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
             taxable:      isTaxable,
             taxBPS:       taxBPS_,
             hasBlacklist: hasBlacklist_,
+            burnTax:      burnTax_,
+            maxWalletBPS: maxWalletBPS_,
             creator:      msg.sender,
             chainId:      block.chainid,
             createdAt:    block.timestamp
@@ -145,7 +304,7 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
             payable(msg.sender).transfer(msg.value - feeInEth);
         }
 
-        emit TokenCreated(tokenAddr, msg.sender, name, symbol, initialSupply, maxSupply, isMintable, isTaxable, taxBPS_, feeInEth);
+        emit TokenCreated(tokenAddr, msg.sender, name, symbol, initialSupply, maxSupply, isMintable, isTaxable, taxBPS_, burnTax_, maxWalletBPS_, feeInEth);
         return tokenAddr;
     }
 

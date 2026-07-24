@@ -19,17 +19,20 @@ async function verify(address: string, args: unknown[]) {
 async function main() {
   const ethUsdFeed = requireEnv("CHAINLINK_ETH_USD_FEED");
   const treasury = requireEnv("PRODUCTION_MULTISIG_ADDRESS");
+  const dexRouter = requireEnv("DEX_ROUTER_ADDRESS");
 
   const Factory = await ethers.getContractFactory("InsteadTokenFactory");
-  const factory = await Factory.deploy(ethUsdFeed, treasury);
+  const factory = await Factory.deploy(ethUsdFeed, treasury, dexRouter);
   await factory.waitForDeployment();
 
   const address = await factory.getAddress();
   const manifest = writeDeploymentManifest(network.name, {
     tokenFactory: {
       address,
+      version: 3,
       ethUsdFeed,
       treasury,
+      dexRouter,
       deployedAt: new Date().toISOString(),
     },
   });
@@ -40,10 +43,11 @@ async function main() {
     address,
     ethUsdFeed,
     treasury,
+    dexRouter,
     manifest,
   }, null, 2));
 
-  await verify(address, [ethUsdFeed, treasury]);
+  await verify(address, [ethUsdFeed, treasury, dexRouter]);
 }
 
 main().catch((error) => {

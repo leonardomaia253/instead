@@ -16,6 +16,8 @@
 
 - **Token Factory no-code**
   - Criacao de tokens ERC-20 com opcoes como mintable, burnable, taxable e blacklist.
+  - Presets competitivos: Ultimate Token, Fair Launch Token, Deflationary Token com burn tax/anti-whale e Superchain-ready ERC20.
+  - Fair Launch on-chain: `createFairLaunchTokenETH` envia 100% do supply para liquidez DEX no deploy, junto com ETH inicial.
   - Registro off-chain em Supabase com reconciliacao por `tx_hash` e `chain_id`.
   - Fluxo comercial adequado para deploy assistido e pacotes premium.
 
@@ -24,6 +26,8 @@
   - Usa `onBehalfOf = usuario`, evitando posicao Aave agregada no contrato da Instead.
   - Bloqueado por padrao no frontend via `NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING`.
   - Nao e multi-protocolo em producao hoje; Compound/Uniswap/Curve/Yearn nao possuem integracao funcional neste codigo.
+  - Matriz multi-protocolo planejada em `LENDING_PROTOCOL_MATRIX.md`, com adapters separados para Compound, Morpho, Spark, Venus, BENQI, Euler, Silo, Exactly, Gearbox, Maker/Sky, Kamino e Marginfi.
+  - Router EVM `InsteadLendingRouter` para allowlist, kill switch e roteamento seguro de adapters aprovados.
 
 - **Dashboard e operacao**
   - Painel de tokens, posicoes, auditorias e observabilidade.
@@ -32,6 +36,11 @@
 - **Telegram bot**
   - Comandos `/token` e `/lending` para reduzir atrito de conversao.
   - Registra intencoes no Supabase e leva o usuario para finalizar no app com carteira.
+
+- **Pagamentos fiat**
+  - Stripe Checkout para cartao global.
+  - Pagar.me Checkout para Brasil com cartao e PIX.
+  - Webhooks server-side registram `payment_intents` no Supabase antes de deploy assistido.
   - Nao pede seed phrase, private key nem executa transacao custodial.
 
 ## Stack tecnologica
@@ -114,6 +123,25 @@ pnpm lending:configure-assets --network base
 pnpm deploy:staking --network base
 pnpm ownership:transfer --network base
 ```
+
+Testes de contrato sem chain real principal:
+
+```bash
+pnpm contracts:test
+
+# Fork local: usa estado real da rede via RPC, mas executa tudo em Hardhat local.
+HARDHAT_FORK_RPC_URL=$BASE_RPC_URL \
+AAVE_POOL_ADDRESSES_PROVIDER=0x... \
+pnpm contracts:test:fork
+
+# Testnet publica, com gas de teste.
+pnpm deploy:factory --network baseSepolia
+pnpm deploy:lending --network baseSepolia
+```
+
+Use mocks locais para regra de negocio, fork para compatibilidade com Aave/endereco real, e testnet para ensaio publico antes de mainnet.
+
+Para Fair Launch em producao, configure `DEX_ROUTER_ADDRESS` com um router compatível com Uniswap V2 na rede alvo. Sem router real validado, a factory nao deve ser publicada como Fair Launch completo.
 
 Cada deploy grava `deployments/<network>.json`. Verifique o manifesto e, opcionalmente, bytecode on-chain:
 

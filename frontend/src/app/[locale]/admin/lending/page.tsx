@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { LENDING_PROTOCOLS } from "@/lib/lendingProtocols";
 
 type LendingRow = {
   id: string;
@@ -34,6 +35,21 @@ export default function AdminLendingPage() {
     <main style={{ padding: 32 }}>
       <h1 style={{ margin: 0, fontSize: 32 }}>Lending</h1>
       <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Posicoes registradas para auditoria operacional e suporte.</p>
+      <section className="card" style={{ marginTop: 24, marginBottom: 24 }}>
+        <h2 style={{ marginTop: 0, fontSize: 20 }}>Protocol adapter map</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+          {LENDING_PROTOCOLS.map((protocol) => (
+            <article key={protocol.id} style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 14, background: "var(--bg-card)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+                <strong>{protocol.name}</strong>
+                <span style={{ color: protocol.status === "active" ? "var(--green)" : "var(--text-muted)", fontSize: 12 }}>{protocol.status}</span>
+              </div>
+              <div style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 8 }}>{protocol.runtime} / {protocol.adapterKind}</div>
+              <p style={{ color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>{protocol.notes}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       {error ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
       <div className="card" style={{ overflowX: "auto", marginTop: 24 }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>

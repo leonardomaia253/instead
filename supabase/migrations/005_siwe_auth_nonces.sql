@@ -22,5 +22,6 @@ DROP POLICY IF EXISTS "Service role manages siwe nonces" ON public.siwe_nonces;
 CREATE POLICY "Service role manages siwe nonces"
   ON public.siwe_nonces
   FOR ALL
-  USING (auth.role() = 'service_role')
-  WITH CHECK (auth.role() = 'service_role');
+  TO service_role
+  USING (true)
+  WITH CHECK (true);

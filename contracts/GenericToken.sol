@@ -22,8 +22,10 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
     bool    public immutable mintable;
     bool    public immutable taxable;
     bool    public immutable hasBlacklist;
+    bool    public immutable burnTax;
     uint256 public immutable taxBPS;        // Basis points (200 = 2%)
     address public immutable taxRecipient;
+    uint256 public immutable maxWalletBPS;  // 0 disabled, 100 = 1% of cap
     uint256 public immutable createdAt;
 
     mapping(address => bool) public blacklisted;
@@ -40,7 +42,9 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
         bool mintable_,
         bool taxable_,
         uint256 taxBPS_,        // e.g. 200 = 2%
-        bool hasBlacklist_
+        bool hasBlacklist_,
+        bool burnTax_,
+        uint256 maxWalletBPS_
     )
         ERC20(name_, symbol_)
         ERC20Capped(maxSupply_ * 10 ** 18)
@@ -49,6 +53,7 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
     {
         require(initialSupply_ <= maxSupply_, "Initial > max supply");
         require(taxBPS_ <= 2500, "Tax too high (max 25%)");
+        require(maxWalletBPS_ <= 10000, "Max wallet too high");
         require(owner_ != address(0), "Invalid owner");
 
         mintable      = mintable_;
@@ -56,6 +61,8 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
         taxBPS        = taxBPS_;
         taxRecipient  = owner_;   // Inicialmente o criador; pode ser atualizado via governance
         hasBlacklist  = hasBlacklist_;
+        burnTax       = burnTax_;
+        maxWalletBPS  = maxWalletBPS_;
         createdAt     = block.timestamp;
 
         _mint(owner_, initialSupply_ * 10 ** 18);
@@ -85,10 +92,14 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
         if (taxable && taxBPS > 0 && from != address(0) && to != address(0)) {
             uint256 taxAmount = (value * taxBPS) / 10000;
             uint256 sendAmount = value - taxAmount;
-            super._update(from, taxRecipient, taxAmount);
+            super._update(from, burnTax ? address(0) : taxRecipient, taxAmount);
             super._update(from, to, sendAmount);
         } else {
             super._update(from, to, value);
+        }
+
+        if (maxWalletBPS > 0 && to != address(0) && to != owner()) {
+            require(balanceOf(to) <= (cap() * maxWalletBPS) / 10000, "Max wallet exceeded");
         }
     }
 

@@ -9,6 +9,13 @@ type TokenRow = {
   symbol: string;
   chain_id: number;
   token_address: string | null;
+  token_template: string | null;
+  launch_mode: string | null;
+  taxable: boolean | null;
+  burn_tax: boolean | null;
+  max_wallet_bps: number | null;
+  liquidity_eth: number | null;
+  lp_recipient: string | null;
   created_at: string;
 };
 
@@ -19,7 +26,7 @@ export default function AdminTokensPage() {
   useEffect(() => {
     supabase
       .from("generated_tokens")
-      .select("id,name,symbol,chain_id,token_address,created_at")
+      .select("id,name,symbol,chain_id,token_address,token_template,launch_mode,taxable,burn_tax,max_wallet_bps,liquidity_eth,lp_recipient,created_at")
       .order("created_at", { ascending: false })
       .limit(100)
       .then(({ data, error: queryError }) => {
@@ -35,17 +42,23 @@ export default function AdminTokensPage() {
       {error ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
       <div className="card" style={{ overflowX: "auto", marginTop: 24 }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr>{["Token", "Chain", "Contract", "Created"].map((header) => <th key={header} style={th}>{header}</th>)}</tr></thead>
+          <thead><tr>{["Token", "Template", "Liquidity", "Chain", "Contract", "Created"].map((header) => <th key={header} style={th}>{header}</th>)}</tr></thead>
           <tbody>
             {tokens.map((token) => (
               <tr key={token.id}>
                 <td style={td}>{token.name} ({token.symbol})</td>
+                <td style={td}>
+                  {token.token_template ?? "standard"}
+                  {token.burn_tax ? " / burn" : ""}
+                  {token.max_wallet_bps ? ` / max ${token.max_wallet_bps / 100}%` : ""}
+                </td>
+                <td style={td}>{token.liquidity_eth ? `${token.liquidity_eth} ETH` : "n/a"}</td>
                 <td style={td}>{token.chain_id}</td>
                 <td style={td}>{token.token_address ?? "Pending"}</td>
                 <td style={td}>{new Date(token.created_at).toLocaleString()}</td>
               </tr>
             ))}
-            {tokens.length === 0 ? <tr><td colSpan={4} style={td}>Sem registros.</td></tr> : null}
+            {tokens.length === 0 ? <tr><td colSpan={6} style={td}>Sem registros.</td></tr> : null}
           </tbody>
         </table>
       </div>

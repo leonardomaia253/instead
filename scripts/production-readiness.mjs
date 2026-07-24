@@ -79,6 +79,7 @@ for (const requiredFile of [
   ".env.production.example",
   "scripts/deploy-token-factory.ts",
   "scripts/deploy-lending.ts",
+  "scripts/deploy-lending-router.ts",
   "scripts/configure-lending-assets.ts",
   "scripts/transfer-ownership.ts",
   "scripts/verify-ownership.mjs",
@@ -87,6 +88,7 @@ for (const requiredFile of [
   "scripts/local-smoke-test.mjs",
   "scripts/check-migrations.mjs",
   "scripts/check-supabase-contract.mjs",
+  "scripts/seed-lending-protocol-routes.mjs",
   "scripts/check-secrets.mjs",
   "scripts/set-telegram-webhook.mjs",
 ]) {
@@ -102,6 +104,10 @@ warnIfMissing("TELEGRAM_WEBHOOK_SECRET");
 warnIfMissing("SUPABASE_SERVICE_ROLE_KEY");
 warnIfMissing("SUPABASE_JWT_SECRET");
 warnIfMissing("APP_ORIGIN");
+warnIfMissing("STRIPE_SECRET_KEY");
+warnIfMissing("STRIPE_WEBHOOK_SECRET");
+warnIfMissing("PAGARME_SECRET_KEY");
+warnIfMissing("PAGARME_WEBHOOK_SECRET");
 warnIfMissing("SENTRY_DSN");
 warnIfMissing("UPTIME_STATUS_URL");
 warnIfMissing("ALERT_WEBHOOK_URL");
@@ -118,6 +124,16 @@ if (env.REQUIRE_TELEGRAM_BOT === "true") {
   requireHttpsUrl("TELEGRAM_WEBHOOK_URL");
   requireEnv("SUPABASE_URL");
   requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+}
+
+if (env.REQUIRE_FIAT_PAYMENTS === "true") {
+  requireHttpsUrl("APP_ORIGIN");
+  requireEnv("SUPABASE_URL");
+  requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  requireEnv("STRIPE_SECRET_KEY");
+  requireEnv("STRIPE_WEBHOOK_SECRET");
+  requireEnv("PAGARME_SECRET_KEY");
+  requireMinLength("PAGARME_WEBHOOK_SECRET", 32);
 }
 
 const factoryVars = [
@@ -137,9 +153,13 @@ if (configuredFactories.length === 0) {
 for (const name of configuredFactories) {
   requireEnv(name, { address: true });
 }
+if (configuredFactories.length > 0) {
+  requireEnv("DEX_ROUTER_ADDRESS", { address: true });
+}
 
 if (env.REQUIRE_DEPLOYMENT_MANIFEST === "true") {
   const networkName = requireEnv("DEPLOYMENT_NETWORK");
+  requireEnv("DEX_ROUTER_ADDRESS", { address: true });
   const manifestPath = resolve(root, "deployments", `${networkName}.json`);
   if (!existsSync(manifestPath)) {
     failures.push(`deployments/${networkName}.json is required`);
@@ -154,6 +174,11 @@ if (env.REQUIRE_OWNERSHIP_VERIFICATION === "true") {
 
 if (env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true") {
   requireEnv("NEXT_PUBLIC_LENDING_POOL_ADDRESS", { address: true });
+  if (env.REQUIRE_MULTI_PROTOCOL_LENDING === "true") {
+    requireEnv("NEXT_PUBLIC_LENDING_ROUTER_ADDRESS", { address: true });
+  } else {
+    warnings.push("REQUIRE_MULTI_PROTOCOL_LENDING is not enabled; non-Aave adapters must remain disabled");
+  }
   const requiredLendingConfig = [
     "PRODUCTION_MULTISIG_ADDRESS",
     "INCIDENT_PAUSE_RUNBOOK_URL",
@@ -167,6 +192,12 @@ if (env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true") {
         if (String(address) === "0x0000000000000000000000000000000000000000") failures.push(`${name}.${symbol} cannot be zero address`);
       }
     }
+  }
+  if (env.REQUIRE_LENDING_FORK_TEST === "true") {
+    requireEnv("HARDHAT_FORK_RPC_URL");
+    requireEnv("AAVE_POOL_ADDRESSES_PROVIDER", { address: true });
+  } else {
+    warnings.push("REQUIRE_LENDING_FORK_TEST is not enabled; fork compatibility evidence is not enforced");
   }
 } else {
   warnings.push("Production lending flag is disabled; lending UI will remain safely blocked");

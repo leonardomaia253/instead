@@ -8,6 +8,8 @@ A Instead Finance combina uma **Token Factory no-code** com modulos de apoio par
 
 O caminho mais proximo de producao e a Token Factory. O lending atual e uma integracao **Aave v3 nao custodial**: a posicao de risco fica no usuario, nao no contrato da Instead. Ainda assim, ele so deve ser habilitado por rede depois de deploy, configuracao, testes de integracao, monitoramento e auditoria externa.
 
+Na vertical de criacao de tokens, a oferta agora deve ser posicionada contra builders como CreateMyToken com presets claros: Ultimate Token, Fair Launch Token, Deflationary Token e Superchain-ready ERC20. O diferencial da Instead deve ser combinar deploy no-code, painel/admin, reconciliacao Supabase, Telegram bot e servico assistido.
+
 ## 2. Arquitetura
 
 ### Token Factory
