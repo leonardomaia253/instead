@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { rateLimit } from "@/lib/server/rateLimit";
 
 const TELEGRAM_API = "https://api.telegram.org";
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN || "https://instead.finance";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         if (!error && data) intentId = String(data.id);
       }
 
-      const link = `${APP_URL}/pt/factory?intent=${encodeURIComponent(intentId)}&source=telegram`;
+      const link = `${APP_URL}/en/factory?intent=${encodeURIComponent(intentId)}&source=telegram`;
       await sendMessage(
         chatId,
         [
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
         if (!error && data) intentId = String(data.id);
       }
 
-      const link = `${APP_URL}/pt/lending?intent=${encodeURIComponent(intentId)}&source=telegram`;
+      const link = `${APP_URL}/en/lending?intent=${encodeURIComponent(intentId)}&source=telegram`;
       await sendMessage(
         chatId,
         [

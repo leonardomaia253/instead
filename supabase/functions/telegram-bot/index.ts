@@ -15,7 +15,7 @@ type TelegramUpdate = {
 };
 
 const TELEGRAM_API = "https://api.telegram.org";
-const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")?.trim();
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
 const APP_URL = Deno.env.get("APP_ORIGIN") ?? "https://instead.finance";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -74,11 +74,11 @@ function tokenDraftFromText(text: string) {
 }
 
 function buildFactoryLink(intentId: string) {
-  return `${APP_URL}/pt/factory?intent=${encodeURIComponent(intentId)}&source=telegram`;
+  return `${APP_URL}/en/factory?intent=${encodeURIComponent(intentId)}&source=telegram`;
 }
 
 function buildLendingLink(intentId: string) {
-  return `${APP_URL}/pt/lending?intent=${encodeURIComponent(intentId)}&source=telegram`;
+  return `${APP_URL}/en/lending?intent=${encodeURIComponent(intentId)}&source=telegram`;
 }
 
 async function storeIntent(message: TelegramMessage, flow: "token" | "lending", payload: Record<string, unknown>) {
