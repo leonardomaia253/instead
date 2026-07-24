@@ -1,118 +1,117 @@
-# 📔 Documentação Extensa do Protocolo Instead
+# Documentacao do Protocolo Instead
 
-Bem-vindo ao centro de conhecimento da Instead Finance. Este documento serve como o manual definitivo para usuários, desenvolvedores e parceiros.
+Este documento descreve o estado real do projeto em codigo. Ele evita promessas de producao que ainda dependem de deploy, auditoria, configuracao de secrets e revisao de contratos.
 
----
+## 1. Visao geral
 
-## 📋 Sumário
-1. [Introdução](#1-introdução)
-2. [Arquitetura do Protocolo](#2-arquitetura-do-protocolo)
-3. [Guia de Lending & Borrowing](#3-guia-de-lending--borrowing)
-4. [Guia de Token Factory](#4-guia-de-token-factory)
-5. [Segurança e Auditoria](#5-segurança-e-auditoria)
-6. [Governança e Tokenomics](#6-governança-e-tokenomics)
-7. [API e Integração](#7-api-e-integração)
-8. [Riscos e Divulgação de Segurança](#8-riscos-e-divulgação-de-segurança)
-9. [Guia de Deployment](#9-guia-de-deployment)
+A Instead Finance combina uma **Token Factory no-code** com modulos de apoio para dashboard, staking, admin e lending experimental.
 
----
+O caminho mais proximo de producao e a Token Factory. O lending atual e uma integracao **Aave v3 nao custodial**: a posicao de risco fica no usuario, nao no contrato da Instead. Ainda assim, ele so deve ser habilitado por rede depois de deploy, configuracao, testes de integracao, monitoramento e auditoria externa.
 
-## 1. Introdução
-A **Instead Finance** nasceu da necessidade de unificar dois dos pilares mais importantes do DeFi: liquidez e emissão de ativos. Em um mercado fragmentado, oferecemos uma camada de abstração que permite que qualquer pessoa interaja com múltiplos protocolos de liquidez e lance tokens em mais de 7 redes EVM de forma transparente e eficiente.
+## 2. Arquitetura
 
----
+### Token Factory
 
-## 2. Arquitetura do Protocolo
-O protocolo Instead é composto por três camadas principais:
+- Cria tokens ERC-20 a partir de parametros definidos pelo usuario.
+- Suporta opcoes como mintable, burnable, taxable e blacklist.
+- Registra metadados off-chain no Supabase.
+- Usa `tx_hash` e `chain_id` para idempotencia e reconciliacao.
+- A interface possui configuracao para Arbitrum, Polygon, BNB Chain, Base, Optimism, Ethereum e Avalanche.
 
-### A. Camada de Agregação (Aggregation Layer)
-Nossos contratos inteligentes atuam como agregadores de liquidez, roteando depósitos para os pools mais eficientes e seguros do ecossistema (como Aave e Compound), garantindo sempre a melhor taxa para o utilizador final.
+### Lending Aave v3 nao custodial
 
-### B. Camada de Emissão (Issuance Layer - Token Factory)
-Utilizamos templates de contratos pré-auditados e modulares. Ao criar um token, o usuário seleciona módulos (mint, burn, tax, etc.) que são compilados e deployed on-chain de forma atômica.
+O contrato `InsteadLendingPool` atua como uma fachada para Aave v3:
 
-### C. Camada de Dados (Data Layer)
-Integramos o Supabase para armazenamento de metadados off-chain e indexação de eventos, permitindo uma interface rápida e reativa sem depender exclusivamente de RPCs lentos.
+- `supply`
+- `withdraw`
+- `borrow`
+- `repay`
+- `getUserAccountData`
 
----
+No estado atual, o adapter chama Aave usando `onBehalfOf = msg.sender`, removendo a posicao agregada que existia na arquitetura anterior.
 
-## 3. Guia de Lending & Borrowing
-O lending na Instead funciona através de um modelo de **Over-collateralized Loans** (Empréstimos Sobre-colateralizados).
+Por seguranca operacional, o frontend bloqueia operacoes de lending por padrao. A flag `NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING=true` deve ser usada apenas quando a rede tiver assets, aTokens, variable debt tokens, debt delegation, monitoramento e deploy auditado.
 
-### Como funciona:
-1.  **Depósito:** O usuário deposita um ativo aceito (ex: ETH, USDC) como colateral.
-2.  **LTV (Loan-to-Value):** Cada ativo possui um limite de empréstimo. Por exemplo, com um LTV de 70%, depositar $1000 em ETH permite retirar até $700 em liquidez.
-3.  **Saúde da Posição (Health Factor):** Mantemos um monitoramento constante. Se o valor do seu colateral cair e o fator de saúde chegar perto de 1.0, sua posição corre risco de liquidação para proteger o protocolo.
+### Staking
 
----
+O modulo de staking existe no codigo e depende de contratos, enderecos e fluxo de auditoria corretamente configurados por rede.
 
-## 4. Guia de Token Factory
-A Token Factory é a nossa ferramenta "No-Code" para lançamento de projetos.
+### Supabase
 
-### Funcionalidades dos Tokens:
-- **Standard:** Token ERC-20 básico, ideal para governança ou pagamentos.
-- **Mintable:** Permite a criação de novos tokens após o deploy por endereços autorizados.
-- **Burnable:** Permite que detentores destruam seus próprios tokens.
-- **Taxable:** Implementa taxas de transação automáticas enviadas para uma carteira de tesouraria ou marketing.
+Supabase e usado para:
 
----
+- usuarios e admins;
+- tokens gerados;
+- auditorias;
+- posicoes de lending;
+- nonces SIWE;
+- eventos de observabilidade;
+- fila de reconciliacao operacional.
 
-## 5. Segurança e Auditoria
-A segurança é a nossa prioridade número um.
-- **Contratos Auditados:** Todos os nossos "templates" de tokens e contratos de lending passam por auditorias rigorosas.
-- **Timelocks:** Mudanças críticas no protocolo exigem um período de espera (timelock) para garantir que a comunidade possa reagir.
-- **Multi-sig Wallet:** O acesso a fundos de tesouraria é protegido por carteiras multi-assinatura (Gnosis Safe).
+Supabase nao deve ser fonte final de autorizacao para fundos. Operacoes sensiveis precisam ser validadas contra eventos e receipts on-chain.
 
----
+## 3. Protocolos externos
 
-## 6. Governança e Tokenomics
-O futuro da Instead é decidido pela comunidade. Detentores do token nativo (INST) podem:
-- Votar em novas redes para suporte.
-- Propor mudanças em taxas e parâmetros de risco.
-- Receber parte das taxas geradas pelo protocolo através do staking.
+Integracao funcional atual:
 
----
+- **Aave v3:** usada pelo contrato de lending nao custodial.
 
-## 7. API e Integração
-Desenvolvedores podem integrar a funcionalidade da Instead em suas próprias dApps.
+Nao ha integracao funcional implementada neste repositorio para:
 
-### SDK Exemplo (Pseudocódigo):
-```javascript
-import { InsteadSDK } from '@instead/sdk';
+- Compound;
+- Uniswap;
+- Curve;
+- Yearn;
+- outros roteadores/agregadores de rendimento.
 
-const sdk = new InsteadSDK(window.ethereum);
-await sdk.lending.deposit('WETH', '1.5');
-const health = await sdk.lending.getHealthFactor(userAddress);
-```
+Qualquer mencao futura a multi-protocolo deve depender de adapters reais, testes por protocolo, configuracao de risco e auditoria externa.
 
----
+## 4. Redes suportadas
 
-## 8. Riscos e Divulgação de Segurança
-A transparência é fundamental no DeFi. Abaixo estão os riscos inerentes à arquitetura atual da Instead Finance:
+O frontend lista suporte para:
 
-### A. Risco de Agregação (Lending Pool)
-O `InsteadLendingPool` atua como uma fachada para a Aave v3. Atualmente, todas as posições são agrupadas sob o endereço do contrato da Instead. Isso significa que:
-- O **Health Factor** é global para o contrato. Embora o frontend mostre dados individuais, a liquidação on-chain ocorre no nível do contrato.
-- Uma falha na gestão de colateral por um grande usuário pode afetar a liquidez disponível para outros se o contrato for liquidado na Aave.
+- Arbitrum;
+- Polygon;
+- BNB Chain;
+- Base;
+- Optimism;
+- Ethereum Mainnet;
+- Avalanche.
 
-### B. Dependência de Oráculos
-A precificação e as taxas de criação de tokens dependem do Chainlink. Em caso de latência extrema ou falha do feed, as funções de criação podem ser pausadas automaticamente pelo contrato.
+Isso nao significa que todos os contratos estejam necessariamente deployados e prontos em todas as redes. Para declarar producao em uma rede, confirme:
 
----
+- endereco de factory configurado;
+- contratos verificados no explorer;
+- variaveis `NEXT_PUBLIC_FACTORY_*` preenchidas;
+- RPC confiavel;
+- assets suportados configurados;
+- testes de transacao reais;
+- monitoramento e alertas;
+- multisig/pause/upgrade definidos.
 
-## 9. Guia de Deployment
+## 5. Checklist de producao
 
-### Contratos Inteligentes
-1. Configure as chaves de API e Mnemonic no `hardhat.config.ts`.
-2. Execute o deploy: `npx hardhat run scripts/deploy.ts --network <network>`.
-3. Verifique os contratos no block explorer: `npx hardhat verify --network <network> <address> <args>`.
+- Build e typecheck limpos em CI.
+- `pnpm audit --prod` limpo.
+- Supabase migrations aplicadas em staging e producao.
+- SIWE validado com wallet real.
+- `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SIWE_DOMAIN` e `APP_ORIGIN` configurados.
+- Admin protegido por JWT server-side.
+- CORS, rate limit e payload limits nas Edge Functions.
+- Observabilidade com alertas externos.
+- Contratos com testes unitarios, fuzz/invariant e auditoria externa.
+- Deploy via multisig, com pause e upgrade controlados.
 
-### Frontend
-1. Clone o repositório.
-2. Copie `.env.example` para `.env.local` e preencha as variáveis.
-3. Instale dependências: `npm install --legacy-peer-deps`.
-4. Build: `npm run build`.
+## 6. Pendencias antes de 100% producao
 
----
+O bloqueador estrutural de posicao agregada foi removido do contrato de lending. Antes de declarar 100% producao, ainda falta:
 
-*Documentação gerada automaticamente para a plataforma Instead DeFi - 2026.*
+- deploy verificado dos contratos em cada rede suportada;
+- configuracao de `configureAsset(asset, aToken, variableDebtToken, true)` por rede;
+- orientacao e UI para `approveDelegation` do debt token Aave antes de borrow;
+- testes de integracao em fork ou testnet por rede;
+- auditoria externa de contratos;
+- monitoramento de eventos, RPC, Supabase, Edge Functions e posicoes Aave;
+- runbook de incidentes com pause/multisig.
+
+Enquanto esses itens nao estiverem completos, o lending deve permanecer bloqueado por flag em producao.

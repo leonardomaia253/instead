@@ -27,8 +27,9 @@ export default function LendingPage() {
   const [amount, setAmount] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(USDC_ADDRESS);
   const [colAsset, setColAsset] = useState(WETH_ADDRESS);
+  const [actionError, setActionError] = useState<string | null>(null);
   
-  const { deposit, depositCollateral, borrow, repay, isPending, isConfirmed, txHash, error, collateralBalance, borrowBalance } =
+  const { deposit, depositCollateral, approveDelegationAndBorrow, approveAndRepay, isPending, isConfirmed, txHash, error, collateralBalance, borrowBalance, borrowAllowance, variableDebtTokenAddress, isLendingEnabled, disabledReason } =
     useInsteadLending(selectedAsset);
 
   const lastAuditedHash = useRef<string | null>(null);
@@ -87,9 +88,14 @@ export default function LendingPage() {
 
   function handleAction() {
     if (!amount) return;
-    if (tab === "deposit") deposit(selectedAsset, amount);
-    else if (tab === "borrow") borrow(selectedAsset, amount);
-    else repay(selectedAsset, amount);
+    setActionError(null);
+    try {
+      if (tab === "deposit") deposit(selectedAsset, amount);
+      else if (tab === "borrow") approveDelegationAndBorrow(selectedAsset, amount);
+      else approveAndRepay(selectedAsset, amount);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Lending action failed.");
+    }
   }
 
   const applyPreset = (percent: number) => {
@@ -122,11 +128,33 @@ export default function LendingPage() {
               🏦 <span className="gradient-text">{t("lending")} Hub</span>
             </h1>
             <p style={{ color: "var(--text-muted)", marginTop: 8 }}>
-              Deposite colateral e tome empréstimos com LTV de até 70%. Juros calculados dinamicamente.
+              Modulo Aave v3 em revisao de seguranca. Operacoes com fundos ficam bloqueadas ate haver isolamento on-chain por usuario.
             </p>
           </div>
           <ConnectButton />
         </div>
+
+        {!isLendingEnabled && (
+          <div style={{
+            background: "rgba(245,158,11,0.1)",
+            border: "1px solid rgba(245,158,11,0.35)",
+            color: "#fbbf24",
+            padding: 16,
+            marginBottom: 24,
+            display: "grid",
+            gridTemplateColumns: "24px 1fr",
+            gap: 12,
+            alignItems: "start",
+          }}>
+            <AlertTriangle size={20} />
+            <div>
+              <strong>Lending em modo manutencao segura</strong>
+              <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.5, marginTop: 4 }}>
+                {disabledReason} Defina <code>NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING=true</code> apenas apos configurar assets, aTokens, debt delegation, monitoramento e deploy auditado por rede.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 24, alignItems: "start" }}>
           {/* Left Column: Action Form */}
@@ -173,6 +201,25 @@ export default function LendingPage() {
                       <option value={WETH_ADDRESS}>WETH</option>
                       <option value={USDC_ADDRESS}>USDC</option>
                     </select>
+                  </div>
+                )}
+
+                {tab === "borrow" && (
+                  <div style={{
+                    background: "rgba(85,240,192,0.08)",
+                    border: "1px solid rgba(85,240,192,0.22)",
+                    borderRadius: 10,
+                    color: "var(--text-muted)",
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                    padding: 12,
+                    marginBottom: 20,
+                  }}>
+                    Borrow usa Aave credit delegation. O fluxo assina `approveDelegation` no debt token antes de chamar o adapter.
+                    <br />
+                    Debt token: <span style={{ color: "var(--text-primary)", fontFamily: "monospace" }}>{variableDebtTokenAddress ?? "nao configurado"}</span>
+                    <br />
+                    Allowance atual: <span style={{ color: "var(--text-primary)" }}>{borrowAllowance.toString()}</span>
                   </div>
                 )}
 
@@ -223,13 +270,13 @@ export default function LendingPage() {
                   </div>
                 )}
 
-                {error && (
+                {(error || actionError) && (
                   <div style={{
                     background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
                     borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 13,
                     color: "var(--red)",
                   }}>
-                    ❌ {error.message?.split("\n")[0]}
+                    Erro: {(actionError ?? error?.message)?.split("\n")[0]}
                   </div>
                 )}
 
@@ -237,9 +284,9 @@ export default function LendingPage() {
                   className="btn-primary"
                   style={{ width: "100%", padding: "14px 0", fontSize: 16 }}
                   onClick={handleAction}
-                  disabled={isPending || !amount}
+                  disabled={isPending || !amount || !isLendingEnabled}
                 >
-                  {isPending ? "Aguardando carteira..." : tab === "deposit"
+                  {!isLendingEnabled ? "Lending bloqueado para producao" : isPending ? "Aguardando carteira..." : tab === "deposit"
                     ? "Depositar"
                     : tab === "borrow"
                     ? "Tomar Empréstimo"

@@ -3,13 +3,11 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-// ─── Aave v3 Interfaces ──────────────────────────────────────────────────
 interface IPool {
     function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
     function withdraw(address asset, uint256 amount, address to) external returns (uint256);
@@ -29,201 +27,179 @@ interface IPoolAddressesProvider {
     function getPool() external view returns (address);
 }
 
+interface IAToken is IERC20 {
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+}
+
+interface IVariableDebtToken {
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+    function borrowAllowance(address fromUser, address toUser) external view returns (uint256);
+}
+
 /**
- * @title InsteadLendingPool Aggregator v1
- * @dev Lending Aggregator that routes liquidity through Aave v3.
- *  - Zero Liquidity: Instead doesn't hold its own pools.
- *  - Intermediary: Users interact with Instead, which interacts with Aave.
- *  - Fee Model: Charges a convenience fee on borrow/interest.
+ * @title InsteadLendingPool
+ * @dev Non-custodial Aave v3 adapter.
+ *
+ * User risk stays isolated in Aave:
+ * - supply deposits on behalf of msg.sender, so aTokens are minted to the user.
+ * - withdraw requires the user to approve this adapter to transfer their aTokens first.
+ * - borrow creates debt for msg.sender and requires Aave credit delegation to this adapter.
+ * - repay repays debt on behalf of msg.sender.
+ *
+ * The adapter never borrows against a shared contract-level Aave account.
  */
 contract InsteadLendingPool is
     UUPSUpgradeable,
     OwnableUpgradeable,
-    ReentrancyGuardUpgradeable,
+    ReentrancyGuard,
     PausableUpgradeable
 {
     using SafeERC20 for IERC20;
 
-    // ─── Structs ──────────────────────────────────────────────────────────────
-    struct UserPosition {
-        uint256 collateralBalance;
-        uint256 borrowBalance;
-    }
+    uint256 public constant FEE_PRECISION = 10_000;
+    uint256 public constant VARIABLE_RATE_MODE = 2;
 
-    // ─── Constants ────────────────────────────────────────────────────────────
-    uint256 public constant RAY = 1e27;
-    uint256 public constant FEE_PRECISION = 10000; // 100.00%
-
-    // ─── Storage ──────────────────────────────────────────────────────────────
     IPoolAddressesProvider public addressesProvider;
     address public treasury;
-    uint256 public convenienceFee; // e.g., 50 = 0.5%
-    
-    // mapping to track user positions locally (mirrored from Aave for UI/fee calculation)
-    mapping(address => mapping(address => UserPosition)) public userPositions;
+    uint256 public convenienceFee; // 50 = 0.50%
+
     mapping(address => bool) public supportedAssets;
-    mapping(address => uint256) public totalCollateralByAsset;
+    mapping(address => address) public aTokenByAsset;
+    mapping(address => address) public variableDebtTokenByAsset;
+    mapping(address => uint256) public totalSuppliedByAsset;
     mapping(address => uint256) public totalBorrowedByAsset;
+    mapping(address => uint256) public totalRepaidByAsset;
     mapping(address => uint256) public totalFeesByAsset;
 
-    // ─── Events ───────────────────────────────────────────────────────────────
-    event CollateralDeposited(address indexed user, address indexed asset, uint256 amount);
+    event CollateralSupplied(address indexed user, address indexed asset, uint256 amount);
     event CollateralWithdrawn(address indexed user, address indexed asset, uint256 amount);
     event Borrowed(address indexed user, address indexed asset, uint256 amount, uint256 fee);
     event Repaid(address indexed user, address indexed asset, uint256 amount);
     event FeeCollected(address indexed asset, uint256 amount);
-    event OperationAccounted(
-        address indexed user,
-        address indexed asset,
-        bytes32 indexed operation,
-        uint256 userCollateral,
-        uint256 userBorrow,
-        uint256 totalCollateral,
-        uint256 totalBorrowed
-    );
+    event AssetConfigured(address indexed asset, address indexed aToken, address indexed variableDebtToken, bool supported);
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+    event ConvenienceFeeUpdated(uint256 oldFee, uint256 newFee);
 
-    // ─── Initializer (UUPS) ───────────────────────────────────────────────────
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() { _disableInitializers(); }
+    constructor() {
+        _disableInitializers();
+    }
 
     function initialize(address _addressesProvider, address _treasury) public initializer {
-        __UUPSUpgradeable_init();
-        __Ownable_init(msg.sender);
-        __ReentrancyGuard_init();
-        __Pausable_init();
-        
         require(_addressesProvider != address(0), "Invalid provider");
         require(_treasury != address(0), "Invalid treasury");
-        
+
+        __Ownable_init(msg.sender);
+        __Pausable_init();
+
         addressesProvider = IPoolAddressesProvider(_addressesProvider);
         treasury = _treasury;
-        convenienceFee = 50; // default 0.5%
+        convenienceFee = 50;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    // ─── Admin ────────────────────────────────────────────────────────────────
-    function setConvenienceFee(uint256 _fee) external onlyOwner {
-        require(_fee <= 500, "Fee too high"); // Max 5%
-        convenienceFee = _fee;
-    }
-
-    function setSupportedAsset(address asset, bool supported) external onlyOwner {
-        supportedAssets[asset] = supported;
-    }
-
-    // ─── Core Operations ──────────────────────────────────────────────────────
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function getAavePool() public view returns (IPool) {
         return IPool(addressesProvider.getPool());
     }
 
-    function depositCollateral(address asset, uint256 amount) external nonReentrant whenNotPaused {
+    function configureAsset(address asset, address aToken, address variableDebtToken, bool supported) external onlyOwner {
+        require(asset != address(0), "Invalid asset");
+        require(!supported || aToken != address(0), "Invalid aToken");
+        require(!supported || variableDebtToken != address(0), "Invalid debt token");
+        if (aToken != address(0)) {
+            require(IAToken(aToken).UNDERLYING_ASSET_ADDRESS() == asset, "aToken mismatch");
+        }
+        if (variableDebtToken != address(0)) {
+            require(IVariableDebtToken(variableDebtToken).UNDERLYING_ASSET_ADDRESS() == asset, "debt token mismatch");
+        }
+
+        supportedAssets[asset] = supported;
+        aTokenByAsset[asset] = aToken;
+        variableDebtTokenByAsset[asset] = variableDebtToken;
+
+        emit AssetConfigured(asset, aToken, variableDebtToken, supported);
+    }
+
+    function setConvenienceFee(uint256 newFee) external onlyOwner {
+        require(newFee <= 500, "Fee too high");
+        emit ConvenienceFeeUpdated(convenienceFee, newFee);
+        convenienceFee = newFee;
+    }
+
+    function setTreasury(address newTreasury) external onlyOwner {
+        require(newTreasury != address(0), "Invalid treasury");
+        emit TreasuryUpdated(treasury, newTreasury);
+        treasury = newTreasury;
+    }
+
+    function supply(address asset, uint256 amount) external nonReentrant whenNotPaused {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
-        
-        IPool pool = getAavePool();
-        IERC20(asset).approve(address(pool), amount);
-        pool.supply(asset, amount, address(this), 0);
+        IERC20(asset).forceApprove(address(getAavePool()), amount);
+        getAavePool().supply(asset, amount, msg.sender, 0);
 
-        userPositions[msg.sender][asset].collateralBalance += amount;
-        totalCollateralByAsset[asset] += amount;
-        
-        emit CollateralDeposited(msg.sender, asset, amount);
-        _emitAccounting(msg.sender, asset, "DEPOSIT");
+        totalSuppliedByAsset[asset] += amount;
+        emit CollateralSupplied(msg.sender, asset, amount);
     }
 
-    function withdrawCollateral(address asset, uint256 amount) external nonReentrant whenNotPaused {
+    function withdraw(address asset, uint256 amount) external nonReentrant whenNotPaused returns (uint256 withdrawn) {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
-        require(userPositions[msg.sender][asset].collateralBalance >= amount, "Insufficient balance");
-        
-        IPool pool = getAavePool();
-        uint256 withdrawn = pool.withdraw(asset, amount, msg.sender);
-        
-        userPositions[msg.sender][asset].collateralBalance -= withdrawn;
-        totalCollateralByAsset[asset] -= withdrawn;
-        
+
+        address aToken = aTokenByAsset[asset];
+        require(aToken != address(0), "aToken not configured");
+
+        IERC20(aToken).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(aToken).forceApprove(address(getAavePool()), amount);
+        withdrawn = getAavePool().withdraw(asset, amount, msg.sender);
+
         emit CollateralWithdrawn(msg.sender, asset, withdrawn);
-        _emitAccounting(msg.sender, asset, "WITHDRAW");
     }
 
     function borrow(address asset, uint256 amount) external nonReentrant whenNotPaused {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
+        address variableDebtToken = variableDebtTokenByAsset[asset];
+        require(variableDebtToken != address(0), "Debt token not configured");
+        require(
+            IVariableDebtToken(variableDebtToken).borrowAllowance(msg.sender, address(this)) >= amount,
+            "Insufficient credit delegation"
+        );
 
-        IPool pool = getAavePool();
-        
-        // Borrow from Aave on behalf of this contract
-        // interestRateMode: 2 for Variable
-        pool.borrow(asset, amount, 2, 0, address(this));
+        getAavePool().borrow(asset, amount, VARIABLE_RATE_MODE, 0, msg.sender);
 
-        // Deduct convenience fee
         uint256 fee = (amount * convenienceFee) / FEE_PRECISION;
         uint256 amountToUser = amount - fee;
-
         if (fee > 0) {
             IERC20(asset).safeTransfer(treasury, fee);
             totalFeesByAsset[asset] += fee;
             emit FeeCollected(asset, fee);
         }
-
         IERC20(asset).safeTransfer(msg.sender, amountToUser);
-        
-        userPositions[msg.sender][asset].borrowBalance += amount;
+
         totalBorrowedByAsset[asset] += amount;
-        
         emit Borrowed(msg.sender, asset, amount, fee);
-        _emitAccounting(msg.sender, asset, "BORROW");
     }
 
-    function repay(address asset, uint256 amount) external nonReentrant whenNotPaused {
+    function repay(address asset, uint256 amount) external nonReentrant whenNotPaused returns (uint256 repaid) {
         require(supportedAssets[asset], "Asset not supported");
         require(amount > 0, "Amount must be > 0");
-        uint256 userDebt = userPositions[msg.sender][asset].borrowBalance;
-        require(userDebt > 0, "No tracked debt");
-        uint256 repayAmount = amount > userDebt ? userDebt : amount;
-        
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), repayAmount);
-        
-        IPool pool = getAavePool();
-        IERC20(asset).approve(address(pool), repayAmount);
-        
-        // Repay to Aave
-        uint256 repaid = pool.repay(asset, repayAmount, 2, address(this));
-        
-        // Update local tracking (simplified)
-        if (userPositions[msg.sender][asset].borrowBalance > repaid) {
-            userPositions[msg.sender][asset].borrowBalance -= repaid;
-        } else {
-            userPositions[msg.sender][asset].borrowBalance = 0;
-        }
-        if (totalBorrowedByAsset[asset] > repaid) {
-            totalBorrowedByAsset[asset] -= repaid;
-        } else {
-            totalBorrowedByAsset[asset] = 0;
+
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(asset).forceApprove(address(getAavePool()), amount);
+        repaid = getAavePool().repay(asset, amount, VARIABLE_RATE_MODE, msg.sender);
+
+        uint256 refund = amount - repaid;
+        if (refund > 0) {
+            IERC20(asset).safeTransfer(msg.sender, refund);
         }
 
+        totalRepaidByAsset[asset] += repaid;
         emit Repaid(msg.sender, asset, repaid);
-        _emitAccounting(msg.sender, asset, "REPAY");
     }
-
-    function _emitAccounting(address user, address asset, string memory operation) internal {
-        UserPosition storage position = userPositions[user][asset];
-        emit OperationAccounted(
-            user,
-            asset,
-            keccak256(bytes(operation)),
-            position.collateralBalance,
-            position.borrowBalance,
-            totalCollateralByAsset[asset],
-            totalBorrowedByAsset[asset]
-        );
-    }
-
-    // ─── View Functions ───────────────────────────────────────────────────────
 
     function getUserAccountData(address user) external view returns (
         uint256 totalCollateralBase,
@@ -233,11 +209,14 @@ contract InsteadLendingPool is
         uint256 ltv,
         uint256 healthFactor
     ) {
-        // This returns data from Aave for this contract's position
-        // In a real multi-user scenario, this needs to be mapped per user
-        return getAavePool().getUserAccountData(address(this));
+        return getAavePool().getUserAccountData(user);
     }
 
-    function pause()   external onlyOwner { _pause(); }
-    function unpause() external onlyOwner { _unpause(); }
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
 }

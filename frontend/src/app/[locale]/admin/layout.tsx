@@ -1,11 +1,14 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import { useAccount } from "wagmi";
-import Link from "next/link";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { BarChart3, CircleDollarSign, Coins, Settings, Users } from "lucide-react";
+import { useAccount } from "wagmi";
+import { supabase } from "@/lib/supabase";
+
+export default function AdminLayout({ children }: { children: ReactNode }) {
   const { address, isConnected } = useAccount();
   const router = useRouter();
   const pathname = usePathname();
@@ -28,13 +31,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           .eq("wallet_address", address.toLowerCase())
           .single();
 
-        if (error || !data?.is_admin) {
-          setIsAdmin(false);
-          return;
-        }
-
-        setIsAdmin(true);
-      } catch (err) {
+        setIsAdmin(!error && Boolean(data?.is_admin));
+      } catch {
         setIsAdmin(false);
       }
     }
@@ -46,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (isAdmin === false && pathname !== adminLoginPath) {
       router.push(adminLoginPath);
     }
-  }, [adminLoginPath, isAdmin, router, pathname]);
+  }, [adminLoginPath, isAdmin, pathname, router]);
 
   if (isAdmin === null) {
     return (
@@ -56,86 +54,91 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // If not admin and not on login page, we'll be redirected anyway, but let's return null to avoid flicker
-  if (!isAdmin && pathname !== adminLoginPath) {
-    return null;
-  }
+  if (!isAdmin && pathname !== adminLoginPath) return null;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-app)" }}>
-      {/* Sidebar */}
-      <aside style={{
-        width: "280px",
-        background: "var(--bg-surface)",
-        borderRight: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        padding: "32px 20px"
-      }}>
-        <div style={{ marginBottom: "40px", paddingLeft: "12px" }}>
+      <aside style={styles.sidebar}>
+        <div style={styles.brand}>
           <Link href={`/${locale}`} style={{ textDecoration: "none" }}>
-            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 800 }}>
+            <div style={styles.brandText}>
               <span className="gradient-text">Instead</span> Admin
             </div>
           </Link>
         </div>
 
-        <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-          <SidebarLink href={adminBase} icon="📊" label="Dashboard" active={pathname === adminBase} />
-          <SidebarLink href={`${adminBase}/users`} icon="👥" label="Users" active={pathname === `${adminBase}/users`} />
-          <SidebarLink href={`${adminBase}/tokens`} icon="🪙" label="Tokens" active={pathname === `${adminBase}/tokens`} />
-          <SidebarLink href={`${adminBase}/lending`} icon="📈" label="Lending" active={pathname === `${adminBase}/lending`} />
-          <SidebarLink href={`${adminBase}/settings`} icon="⚙️" label="Settings" active={pathname === `${adminBase}/settings`} />
+        <nav style={styles.nav}>
+          <SidebarLink href={adminBase} icon={<BarChart3 size={18} />} label="Dashboard" active={pathname === adminBase} />
+          <SidebarLink href={`${adminBase}/users`} icon={<Users size={18} />} label="Users" active={pathname === `${adminBase}/users`} />
+          <SidebarLink href={`${adminBase}/tokens`} icon={<Coins size={18} />} label="Tokens" active={pathname === `${adminBase}/tokens`} />
+          <SidebarLink href={`${adminBase}/lending`} icon={<CircleDollarSign size={18} />} label="Lending" active={pathname === `${adminBase}/lending`} />
+          <SidebarLink href={`${adminBase}/settings`} icon={<Settings size={18} />} label="Settings" active={pathname === `${adminBase}/settings`} />
         </nav>
 
-        <div style={{ marginTop: "auto", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "4px" }}>CONNECTED AS</div>
-          <div style={{ fontSize: "13px", fontWeight: 600, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {address}
-          </div>
-          <button 
-            onClick={() => router.push(`/${locale}/login`)}
-            style={{ 
-              marginTop: "12px", 
-              width: "100%", 
-              padding: "8px", 
-              borderRadius: "8px", 
-              background: "transparent", 
-              border: "1px solid var(--border)",
-              color: "var(--text-secondary)",
-              fontSize: "13px",
-              cursor: "pointer"
-            }}
-          >
+        <div style={styles.accountBox}>
+          <div style={styles.accountLabel}>CONNECTED AS</div>
+          <div style={styles.address}>{address}</div>
+          <button onClick={() => router.push(`/${locale}/login`)} style={styles.switchButton}>
             Switch Account
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main style={{ flex: 1, overflowY: "auto" }}>
-        {children}
-      </main>
+      <main style={{ flex: 1, overflowY: "auto" }}>{children}</main>
     </div>
   );
 }
 
-function SidebarLink({ href, icon, label, active }: { href: string, icon: string, label: string, active: boolean }) {
+function SidebarLink({ href, icon, label, active }: { href: string; icon: ReactNode; label: string; active: boolean }) {
   return (
-    <Link href={href} style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      padding: "12px 16px",
-      borderRadius: "12px",
-      textDecoration: "none",
-      color: active ? "white" : "var(--text-muted)",
-      background: active ? "var(--accent-grad)" : "transparent",
-      fontWeight: 600,
-      transition: "all 0.2s"
-    }}>
-      <span>{icon}</span>
+    <Link href={href} style={{ ...styles.link, color: active ? "white" : "var(--text-muted)", background: active ? "var(--accent-grad)" : "transparent" }}>
+      <span style={styles.icon}>{icon}</span>
       {label}
     </Link>
   );
 }
+
+const styles = {
+  sidebar: {
+    width: 280,
+    background: "var(--bg-surface)",
+    borderRight: "1px solid var(--border)",
+    display: "flex",
+    flexDirection: "column" as const,
+    padding: "32px 20px",
+  },
+  brand: { marginBottom: 40, paddingLeft: 12 },
+  brandText: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 800 },
+  nav: { flex: 1, display: "flex", flexDirection: "column" as const, gap: 8 },
+  link: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "12px 16px",
+    borderRadius: 8,
+    textDecoration: "none",
+    fontWeight: 600,
+    transition: "all 0.2s",
+  },
+  icon: { display: "inline-flex", width: 20 },
+  accountBox: {
+    marginTop: "auto",
+    padding: 16,
+    background: "rgba(255,255,255,0.03)",
+    borderRadius: 8,
+    border: "1px solid var(--border)",
+  },
+  accountLabel: { fontSize: 12, color: "var(--text-muted)", marginBottom: 4 },
+  address: { fontSize: 13, fontWeight: 600, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" },
+  switchButton: {
+    marginTop: 12,
+    width: "100%",
+    padding: 8,
+    borderRadius: 8,
+    background: "transparent",
+    border: "1px solid var(--border)",
+    color: "var(--text-secondary)",
+    fontSize: 13,
+    cursor: "pointer",
+  },
+};

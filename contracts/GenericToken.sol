@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import "@openzeppelin/contracts/utils/Nonces.sol";
 
 /**
  * @title GenericToken v2
@@ -91,7 +92,7 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
         }
     }
 
-    function nonces(address owner_) public view override(ERC20Votes, Nonces) returns (uint256) {
+    function nonces(address owner_) public view override(Nonces) returns (uint256) {
         return super.nonces(owner_);
     }
 }

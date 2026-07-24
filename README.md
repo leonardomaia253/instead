@@ -1,75 +1,154 @@
-# 🌌 Instead DeFi: Infraestrutura de Empréstimos e Tokenização
+# Instead DeFi: tokenizacao e lending experimental
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-black.svg)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
 [![Web3](https://img.shields.io/badge/Web3-EVM-blueviolet.svg)](https://ethereum.org/)
 
-**Instead Finance** é um ecossistema DeFi completo projetado para democratizar o acesso a empréstimos colateralizados e à criação de ativos digitais. Operando de forma multichain, a plataforma permite que usuários retirem liquidez de seus ativos bluechip e lancem novos tokens sem a necessidade de escrever uma única linha de código.
+**Instead Finance** e um ecossistema DeFi para criacao de ativos digitais e lending via Aave v3. A Token Factory foi desenhada para operacao multichain; o modulo de lending agora usa um adapter nao custodial em que a posicao fica no usuario, mas continua desabilitado por padrao ate deploy, auditoria e configuracao por rede.
 
----
+## Status de producao
 
-## 🚀 Funcionalidades Principais
+- **Token Factory:** caminho principal de produto. A interface suporta Arbitrum, Polygon, BNB Chain, Base, Optimism, Ethereum e Avalanche, desde que os enderecos de factory estejam configurados e validados por rede.
+- **Lending:** adapter Aave v3 nao custodial. Nao deve receber capital real antes de configuracao de assets/aTokens/debt delegation por rede, testes de integracao e auditoria externa.
+- **Staking e dashboards:** dependem de configuracao correta de contratos, Supabase, RLS, SIWE e observabilidade no ambiente de producao.
 
-*   **🏦 Mercado de Empréstimos (Lending):**
-    *   Deposite colateral em redes como Arbitrum, Polygon e Ethereum.
-    *   Taxas de juros dinâmicas baseadas na utilização do pool.
-    *   Monitoramento de saúde da posição em tempo real.
-*   **🏭 Fábrica de Tokens (Token Factory):**
-    *   Criação de tokens ERC-20 com funcionalidades avançadas (Mintable, Burnable, Taxable).
-    *   Deploy simultâneo em múltiplas redes.
-    *   Segurança garantida por contratos auditados.
-*   **📈 Dashboard Analytics:**
-    *   Visão clara de suas posições e ativos tokenizados.
-    *   Integração direta com MetaMask e WalletConnect.
-*   **⚡ Landing Page de Alta Performance:**
-    *   Experiência imersiva com 3D (Three.js), animações fluidas (Framer Motion) e interações dinâmicas (GSAP).
+## Funcionalidades principais
 
----
+- **Token Factory no-code**
+  - Criacao de tokens ERC-20 com opcoes como mintable, burnable, taxable e blacklist.
+  - Registro off-chain em Supabase com reconciliacao por `tx_hash` e `chain_id`.
+  - Fluxo comercial adequado para deploy assistido e pacotes premium.
 
-## 🛠️ Stack Tecnológica
+- **Lending Aave v3 nao custodial**
+  - Integra `supply`, `withdraw`, `borrow` e `repay` da Aave v3 no contrato `InsteadLendingPool`.
+  - Usa `onBehalfOf = usuario`, evitando posicao Aave agregada no contrato da Instead.
+  - Bloqueado por padrao no frontend via `NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING`.
+  - Nao e multi-protocolo em producao hoje; Compound/Uniswap/Curve/Yearn nao possuem integracao funcional neste codigo.
+
+- **Dashboard e operacao**
+  - Painel de tokens, posicoes, auditorias e observabilidade.
+  - Admin com SIWE/JWT e um Revenue Command Center para operacao comercial.
+
+- **Telegram bot**
+  - Comandos `/token` e `/lending` para reduzir atrito de conversao.
+  - Registra intencoes no Supabase e leva o usuario para finalizar no app com carteira.
+  - Nao pede seed phrase, private key nem executa transacao custodial.
+
+## Stack tecnologica
 
 ### Frontend
-- **Framework:** [Next.js](https://nextjs.org/) (App Router)
-- **3D & Animações:** [Three.js](https://threejs.org/), [@react-three/fiber](https://github.com/pmndrs/react-three-fiber), [Framer Motion](https://www.framer.com/motion/), [GSAP](https://greensock.com/gsap/)
-- **Estilização:** Vanilla CSS com Variáveis Modernas
-- **Web3:** [Wagmi](https://wagmi.sh/), [Viem](https://viem.sh/), [RainbowKit](https://www.rainbowkit.com/)
 
-### Backend & Smart Contracts
-- **Banco de Dados:** [Supabase](https://supabase.com/)
-- **Linguagem:** Solidity
-- **Ambiente:** Hardhat
+- Next.js App Router
+- Wagmi, Viem e RainbowKit
+- Three.js, Framer Motion e GSAP
+- CSS com variaveis de tema
 
----
+### Backend e contratos
 
-## 📦 Como Instalar e Rodar
+- Supabase PostgreSQL, RLS e Edge Functions
+- Solidity
+- Contratos ERC-20, Token Factory, Staking e Lending experimental
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone https://github.com/seu-usuario/instead.git
-    cd instead
-    ```
+## Como rodar
 
-2.  **Instale as dependências do Frontend:**
-    ```bash
-    cd frontend
-    npm install --legacy-peer-deps
-    ```
+1. Instale dependencias:
 
-3.  **Configure as variáveis de ambiente:**
-    - Copie o `.env.example` para `.env.local` dentro da pasta `frontend`.
-    - Insira suas chaves do Supabase e do WalletConnect.
+```bash
+cd frontend
+npm install --legacy-peer-deps
+```
 
-4.  **Inicie o servidor de desenvolvimento:**
-    ```bash
-    npm run dev
-    ```
+2. Configure variaveis em `frontend/.env.local`:
 
----
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
+NEXT_PUBLIC_FACTORY_ARBITRUM=
+NEXT_PUBLIC_FACTORY_POLYGON=
+NEXT_PUBLIC_FACTORY_BSC=
+NEXT_PUBLIC_FACTORY_BASE=
+NEXT_PUBLIC_FACTORY_OPTIMISM=
+NEXT_PUBLIC_FACTORY_MAINNET=
+NEXT_PUBLIC_FACTORY_AVALANCHE=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=
+NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING=false
+NEXT_PUBLIC_LENDING_POOL_ADDRESS=
+AAVE_SUPPORTED_ASSETS_JSON=
+AAVE_ATOKENS_JSON=
+AAVE_VARIABLE_DEBT_TOKENS_JSON=
+PRODUCTION_MULTISIG_ADDRESS=
+INCIDENT_PAUSE_RUNBOOK_URL=
+```
 
-## 📖 Documentação Detalhada
+3. Inicie o app:
 
-Para uma visão técnica profunda e guias passo a passo, consulte nosso [Guia Completo (GitBook Style)](DOCS.md).
+```bash
+npm run dev
+```
 
-## 📄 Licença
+## Lending em producao
 
-Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+Por seguranca, o lending fica bloqueado no frontend ate cada rede estar configurada e auditada:
+
+```bash
+NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING=true
+```
+
+Nao habilite essa flag em producao antes de configurar assets, aTokens, debt delegation, monitoramento, multisig e plano de resposta a incidentes.
+
+Rode o verificador antes de go-live:
+
+```bash
+pnpm secrets:check
+pnpm readiness
+```
+
+Deploy operacional:
+
+```bash
+pnpm deploy:factory --network base
+pnpm deploy:lending --network base
+pnpm lending:configure-assets --network base
+pnpm deploy:staking --network base
+pnpm ownership:transfer --network base
+```
+
+Cada deploy grava `deployments/<network>.json`. Verifique o manifesto e, opcionalmente, bytecode on-chain:
+
+```bash
+DEPLOYMENT_NETWORK=base DEPLOYMENT_RPC_URL=$BASE_RPC_URL pnpm deployments:verify
+DEPLOYMENT_NETWORK=base DEPLOYMENT_RPC_URL=$BASE_RPC_URL PRODUCTION_MULTISIG_ADDRESS=0x... pnpm ownership:verify
+APP_ORIGIN=https://instead.finance SUPABASE_URL=https://... pnpm smoke:test
+pnpm db:migrations:check
+```
+
+Health endpoint:
+
+```bash
+curl https://instead.finance/api/health
+```
+
+Use `RUNBOOK.md` para a sequencia completa de go-live e resposta a incidentes.
+
+## Documentacao
+
+Veja [DOCS.md](DOCS.md), [PRODUCTION_AUDIT.md](PRODUCTION_AUDIT.md) e [PRIME_BROKER_OPERATIONS.md](PRIME_BROKER_OPERATIONS.md).
+
+## Telegram webhook
+
+Configure o webhook apontando para a Edge Function `telegram-bot` e envie um segredo forte no header `X-Telegram-Bot-Api-Secret-Token`.
+
+Nunca commite `TELEGRAM_BOT_TOKEN`. Se um token aparecer em chat, issue, log ou print, rotacione no BotFather antes de producao.
+
+```bash
+TELEGRAM_BOT_TOKEN=... \
+TELEGRAM_WEBHOOK_SECRET=... \
+TELEGRAM_WEBHOOK_URL=https://<project-ref>.functions.supabase.co/telegram-bot \
+pnpm telegram:set-webhook
+```
+
+## Licenca
+
+MIT.

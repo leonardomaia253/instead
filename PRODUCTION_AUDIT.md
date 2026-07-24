@@ -4,9 +4,9 @@ Data: 2026-07-17
 
 ## Veredito
 
-Status atual: **frontend e backend de apoio muito mais proximos de producao, mas ainda nao aprovado para producao 100%**.
+Status atual: **mais proximo de producao, mas ainda nao aprovado para producao 100% sem deploy/auditoria/configuracao real por rede**.
 
-A aplicacao tem uma base boa de frontend, Supabase e contratos, mas ainda possui bloqueadores de seguranca, operacao e contrato inteligente. O ponto mais critico e o contrato `InsteadLendingPool`: ele deposita/empresta na Aave em nome do contrato agregador (`address(this)`) e tenta separar usuarios apenas em mappings locais. Isso nao isola posicoes por usuario e pode criar risco de perda, saque indevido, contabilidade incorreta e liquidacao cruzada.
+A aplicacao tem uma base boa de frontend, Supabase e contratos. O bloqueador estrutural anterior do `InsteadLendingPool` foi corrigido: o contrato agora atua como adapter Aave v3 nao custodial e chama Aave com `onBehalfOf = msg.sender`, evitando posicao agregada em `address(this)`. Ainda faltam gates indispensaveis de producao: deploy verificado por rede, configuracao de assets/aTokens, fluxo de debt delegation, testes em fork/testnet, auditoria externa, multisig e monitoramento.
 
 ## Correcoes aplicadas nesta auditoria
 
@@ -41,12 +41,16 @@ A aplicacao tem uma base boa de frontend, Supabase e contratos, mas ainda possui
 - Login admin passou a assinar SIWE e reutilizar o token emitido pela Edge Function, em vez de confiar apenas na wallet conectada no client.
 - Edge Functions `token-ai` e `lending-ai` receberam CORS restrito por `APP_ORIGIN`, metodo POST obrigatorio, bearer token obrigatorio, limite de payload, sanitizacao de entrada e rate limit em memoria por IP/token.
 - Criado workflow GitHub Actions `Production Checks` com install congelado, typecheck, build e `pnpm audit --prod`.
+- Refatorado `InsteadLendingPool` para adapter Aave v3 nao custodial.
+- Adicionados Hardhat, compile de contratos e testes cobrindo que supply/borrow/repay usam `onBehalfOf = usuario`.
+- Frontend atualizado para bloquear lending por padrao via `NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING`.
 
 ## Bloqueadores antes de producao
 
-1. **Smart contract de lending nao esta apto para mainnet**
-   - Refatorar para arquitetura com isolamento real por usuario, ou usar posicoes diretas do usuario no Aave.
-   - Incluir testes unitarios/fuzz/invariant e auditoria externa.
+1. **Lending ainda precisa gates de rede antes de mainnet**
+   - Configurar assets e aTokens por rede via `configureAsset`.
+   - Implementar/validar fluxo de `approveDelegation` do debt token Aave antes de borrow.
+   - Rodar testes em fork/testnet por rede e auditoria externa.
 
 2. **SIWE precisa ser validado em staging/producao real**
    - O backend SIWE foi implementado, mas ainda precisa ser implantado com `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `SIWE_DOMAIN` e `APP_ORIGIN`.

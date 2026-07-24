@@ -1,24 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
 import { verifyMessage } from "npm:viem@2"
+import { cleanText, json, preflight, rateLimit, readJsonBody } from "../_shared/security.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 const SUPABASE_JWT_SECRET = Deno.env.get("SUPABASE_JWT_SECRET")
 const SIWE_DOMAIN = Deno.env.get("SIWE_DOMAIN") ?? "instead.finance"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") ?? "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-}
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  })
-}
 
 function requiredEnv(value: string | undefined, name: string) {
   if (!value) throw new Error(`${name} is not configured`)
@@ -68,18 +56,21 @@ function createSiweMessage(address: string, nonce: string) {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405)
+  const methodResponse = preflight(req)
+  if (methodResponse) return methodResponse
 
   try {
+    const limited = rateLimit(req, "siwe-auth")
+    if (limited) return limited
+
     const supabase = createClient(
       requiredEnv(SUPABASE_URL, "SUPABASE_URL"),
       requiredEnv(SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY"),
       { auth: { persistSession: false } },
     )
-    const body = await req.json()
+    const body = await readJsonBody(req, 4096)
     const action = body.action as "nonce" | "verify"
-    const walletAddress = String(body.address ?? "").toLowerCase()
+    const walletAddress = cleanText(body.address, 64).toLowerCase()
 
     if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
       return json({ error: "Invalid wallet address" }, 400)
@@ -105,9 +96,9 @@ serve(async (req) => {
 
     if (action === "verify") {
       const jwtSecret = requiredEnv(SUPABASE_JWT_SECRET, "SUPABASE_JWT_SECRET")
-      const nonce = String(body.nonce ?? "")
-      const message = String(body.message ?? "")
-      const signature = String(body.signature ?? "")
+      const nonce = cleanText(body.nonce, 128)
+      const message = String(body.message ?? "").slice(0, 1200)
+      const signature = cleanText(body.signature, 160)
 
       const { data: nonceRecord, error: nonceError } = await supabase
         .from("siwe_nonces")

@@ -160,12 +160,21 @@ export const TOKEN_FACTORY_ABI = [
 ] as const;
 
 export const LENDING_POOL_ABI = [
-  { name: "depositCollateral",type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "withdrawCollateral",type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { name: "supply",           type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { name: "withdraw",         type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "withdrawn", type: "uint256" }] },
   { name: "borrow",           type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "repay",            type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "userPositions",    type: "function", stateMutability: "view",       inputs: [{ name: "", type: "address" }, { name: "", type: "address" }], outputs: [{ name: "collateralBalance", type: "uint256" }, { name: "borrowBalance", type: "uint256" }] },
-  { name: "supportedAssets",  type: "function", stateMutability: "view",       inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "bool" }] },
+  { name: "repay",            type: "function", stateMutability: "nonpayable", inputs: [{ name: "asset", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "repaid", type: "uint256" }] },
+  { name: "getUserAccountData", type: "function", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [
+    { name: "totalCollateralBase", type: "uint256" },
+    { name: "totalDebtBase", type: "uint256" },
+    { name: "availableBorrowsBase", type: "uint256" },
+    { name: "currentLiquidationThreshold", type: "uint256" },
+    { name: "ltv", type: "uint256" },
+    { name: "healthFactor", type: "uint256" },
+  ] },
+  { name: "supportedAssets",  type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "bool" }] },
+  { name: "aTokenByAsset",    type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "address" }] },
+  { name: "variableDebtTokenByAsset", type: "function", stateMutability: "view", inputs: [{ name: "", type: "address" }], outputs: [{ name: "", type: "address" }] },
 ] as const;
 
 export const STAKING_ABI = [
@@ -180,6 +189,11 @@ export const ERC20_ABI = [
   { name: "approve", type: "function", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
   { name: "transfer", type: "function", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
   { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
+] as const;
+
+export const AAVE_VARIABLE_DEBT_TOKEN_ABI = [
+  { name: "approveDelegation", type: "function", stateMutability: "nonpayable", inputs: [{ name: "delegatee", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { name: "borrowAllowance", type: "function", stateMutability: "view", inputs: [{ name: "fromUser", type: "address" }, { name: "toUser", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
 ] as const;
 
 export const CONTRACTS = {
