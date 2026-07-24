@@ -263,13 +263,13 @@ input:focus, select:focus, textarea:focus {
   }
 
   .proof-row {
-    grid-template-columns: 135px minmax(0, 1fr);
+    grid-template-columns: 145px minmax(0, 1fr);
   }
 
   .proof-row strong {
     font-size: 11px;
-    letter-spacing: 0.02em;
-    word-break: break-word;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
   }
 
   .proof-row strong,
@@ -735,7 +735,7 @@ input:focus, select:focus, textarea:focus {
 
 .proof-row {
   display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
+  grid-template-columns: 155px minmax(0, 1fr);
   border-bottom: 1px solid var(--border);
 }
 
@@ -743,17 +743,27 @@ input:focus, select:focus, textarea:focus {
 
 .proof-row strong,
 .proof-row span {
-  padding: 22px;
+  padding: 20px 24px;
 }
 
 .proof-row strong {
   color: #050604;
   background: var(--accent-1);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .proof-row span {
   color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .chain-tape {
@@ -1368,12 +1378,20 @@ input:focus, select:focus, textarea:focus {
   }
 
   .proof-row {
-    grid-template-columns: 74px minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 
-  .proof-row strong,
+  .proof-row strong {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    justify-content: flex-start;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
   .proof-row span {
-    padding: 14px;
+    padding: 14px 16px;
   }
 
   .chain-tape span {
