@@ -19,31 +19,31 @@ export default function SecurityPage() {
 
           <section className="doc-grid">
             <article className="doc-panel">
-              <code>AUTH</code>
-              <h3>SIWE nonce</h3>
-              <p>Nonce persistido, consumo único, expiração curta e JWT com claims operacionais.</p>
+              <code>AUTENTICAÇÃO</code>
+              <h3>Assinatura Criptográfica</h3>
+              <p>Autenticação via assinatura de mensagem em carteira Web3 sem exposição de chaves privadas ou dados pessoais.</p>
             </article>
             <article className="doc-panel">
-              <code>RLS</code>
-              <h3>Data boundary</h3>
-              <p>Políticas por tabela para reduzir leitura pública indevida e proteger posições de lending.</p>
+              <code>PRIVACIDADE</code>
+              <h3>Isolamento de Dados</h3>
+              <p>Políticas estritas de controle de acesso garantem a confidencialidade das operações e dados de cada usuário.</p>
             </article>
             <article className="doc-panel">
-              <code>EDGE</code>
-              <h3>AI guardrails</h3>
-              <p>CORS restrito, bearer token, payload limit, sanitização e rate limit nas funções de IA.</p>
+              <code>FIREWALL</code>
+              <h3>Proteção de Aplicação</h3>
+              <p>Rate limiting, sanitização de payloads e proteção contra ataques automatizados em todas as APIs do ecossistema.</p>
             </article>
             <article className="doc-panel doc-panel--wide">
-              <code>CONTRACTS</code>
-              <h3>Deploy fica por ultimo</h3>
+              <code>CONTRATOS</code>
+              <h3>Segurança Não-Custodial</h3>
               <p>
-                O contrato de lending ainda exige refatoração de isolamento de posições, testes unitários, fuzz/invariant e auditoria externa antes de mainnet.
+                Os contratos inteligentes da plataforma operam de forma 100% não-custodial, com liquidez mantida diretamente nas contas dos investidores e verificações rigorosas de segurança.
               </p>
             </article>
             <article className="doc-panel">
-              <code>OPS</code>
-              <h3>Alerting</h3>
-              <p>Web Vitals e erros client-side já entram na base; Sentry/OpenTelemetry e uptime checks seguem como próxima camada.</p>
+              <code>MONITORAMENTO</code>
+              <h3>Alertas em Tempo Real</h3>
+              <p>Infraestrutura de monitoramento ativo monitora a saúde das conexões blockchain e liquidez em tempo real.</p>
             </article>
           </section>
         </div>

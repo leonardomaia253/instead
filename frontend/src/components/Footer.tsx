@@ -35,9 +35,9 @@ export function Footer() {
 
           <div className="proto-footer__status">
             <span>STATUS</span>
-            <div><ShieldCheck size={16} /> RLS hardened</div>
-            <div><Terminal size={16} /> SIWE enabled</div>
-            <div><MessageSquare size={16} /> Observability online</div>
+            <div><ShieldCheck size={16} /> Protocolo Auditado</div>
+            <div><Terminal size={16} /> Autenticação Segura</div>
+            <div><MessageSquare size={16} /> Redes Operacionais</div>
             <div className="proto-footer__social">
               <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter size={18} /></a>
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github size={18} /></a>

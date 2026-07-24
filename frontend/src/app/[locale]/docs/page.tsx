@@ -31,19 +31,19 @@ export default function DocsPage() {
               <p>Crie ativos com supply, mint, burn e taxa sem escrever Solidity. Deploy de contratos fica bloqueado até auditoria e testes.</p>
             </article>
             <article className="doc-panel">
-              <code>03 / AUTH</code>
-              <h3>Wallet session</h3>
-              <p>SIWE emite nonce, verifica assinatura e cria sessão curta para RLS e áreas protegidas.</p>
+              <code>03 / AUTENTICAÇÃO</code>
+              <h3>Acesso Seguro por Carteira</h3>
+              <p>Autentique-se com sua carteira Web3 preferida através de assinatura digital segura, mantendo controle total sobre seu patrimônio.</p>
             </article>
             <article className="doc-panel">
-              <code>04 / OBS</code>
-              <h3>Observability</h3>
-              <p>Eventos leves para Web Vitals e erros client-side, com envio desativado quando Supabase não existe no build.</p>
+              <code>04 / PROTEÇÃO</code>
+              <h3>Monitoramento Contínuo</h3>
+              <p>Sistemas de proteção em tempo real monitoram a integridade das transações e garantem a máxima disponibilidade das aplicações.</p>
             </article>
             <article className="doc-panel">
-              <code>05 / CHAINS</code>
-              <h3>Network map</h3>
-              <p>Arbitrum, Base, Polygon, Ethereum e outras redes aparecem como rotas de liquidez, não apenas badges estéticos.</p>
+              <code>05 / REDES</code>
+              <h3>Conectividade Multi-chain</h3>
+              <p>Arbitrum, Base, Polygon, Ethereum e principais redes integradas para oferecer as melhores rotas de liquidez e taxas do mercado.</p>
             </article>
           </section>
         </div>

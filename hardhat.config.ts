@@ -56,14 +56,36 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY ?? "",
+      sepolia: process.env.ETHERSCAN_API_KEY ?? "",
       arbitrumOne: process.env.ARBISCAN_API_KEY ?? "",
+      arbitrumSepolia: process.env.ARBISCAN_API_KEY ?? "",
       polygon: process.env.POLYGONSCAN_API_KEY ?? "",
       bsc: process.env.BSCSCAN_API_KEY ?? "",
       base: process.env.BASESCAN_API_KEY ?? "",
+      baseSepolia: process.env.BASESCAN_API_KEY ?? "",
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY ?? "",
-      mainnet: process.env.ETHERSCAN_API_KEY ?? "",
+      optimisticSepolia: process.env.OPTIMISTIC_ETHERSCAN_API_KEY ?? "",
       avalanche: process.env.SNOWTRACE_API_KEY ?? "",
     },
+    customChains: [
+      {
+        network: "baseSepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org",
+        },
+      },
+      {
+        network: "arbitrumSepolia",
+        chainId: 421614,
+        urls: {
+          apiURL: "https://api-sepolia.arbiscan.io/api",
+          browserURL: "https://sepolia.arbiscan.io",
+        },
+      },
+    ],
   },
 };
 

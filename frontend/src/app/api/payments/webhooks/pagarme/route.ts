@@ -42,6 +42,8 @@ export async function POST(request: Request) {
         providerReference,
         amountCents: Number(amountCents),
         currency: "brl",
+      }).catch((err) => {
+        console.warn("Failed to mark payment paid in Pagarme webhook:", err);
       });
     }
 

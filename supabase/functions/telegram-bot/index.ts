@@ -107,6 +107,20 @@ async function storeIntent(message: TelegramMessage, flow: "token" | "lending", 
 async function handleMessage(message: TelegramMessage) {
   const chatId = String(message.chat.id);
   const text = cleanText(message.text ?? "", 600);
+  const telegramUserId = String(message.from?.id ?? message.chat.id);
+
+  // DB-backed per-user rate limit: max 5 intents per minute per user
+  // This persists across Edge Function cold starts unlike in-memory maps
+  const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+  const { count: recentCount } = await supabase!
+    .from("telegram_bot_intents")
+    .select("id", { count: "exact", head: true })
+    .eq("telegram_user_id", telegramUserId)
+    .gte("created_at", oneMinuteAgo);
+  if ((recentCount ?? 0) >= 5) {
+    await sendMessage(chatId, "Muitas solicitacoes. Aguarde 1 minuto e tente novamente.");
+    return;
+  }
 
   if (!text || text === "/start") {
     await sendMessage(
@@ -119,6 +133,7 @@ async function handleMessage(message: TelegramMessage) {
         "Comandos:",
         "`/token NomeDoToken TICKER` - preparar uma moeda",
         "`/lending` - abrir fluxo de emprestimo com carteira",
+        "`/status <id>` - consultar status de um intento pelo UUID",
         "`/help` - ver regras de seguranca",
       ].join("\n"),
     );
@@ -177,7 +192,38 @@ async function handleMessage(message: TelegramMessage) {
     return;
   }
 
-  await sendMessage(chatId, "Nao entendi. Use `/token Nome TICKER`, `/lending` ou `/help`.");
+  if (text.startsWith("/status")) {
+    const intentId = cleanText(text.replace(/^\/status\s*/i, "").trim(), 64);
+    if (!intentId) {
+      await sendMessage(chatId, "Informe o ID do intento. Ex: `/status <uuid>`");
+      return;
+    }
+    const { data: intent, error: intentError } = await supabase!
+      .from("telegram_bot_intents")
+      .select("id,flow,status,payload,wallet_address,created_at,updated_at")
+      .eq("id", intentId)
+      .single();
+    if (intentError || !intent) {
+      await sendMessage(chatId, "Intento nao encontrado. Verifique o ID e tente novamente.");
+      return;
+    }
+    const statusEmoji = intent.status === "confirmed" ? "✅" : intent.status === "draft" ? "⏳" : "❓";
+    const walletLine = intent.wallet_address ? `\nCarteira: \`${intent.wallet_address.slice(0, 8)}...\`` : "";
+    await sendMessage(
+      chatId,
+      [
+        `*Status do intento*`,
+        "",
+        `ID: \`${intent.id}\``,
+        `Fluxo: ${intent.flow}`,
+        `Status: ${statusEmoji} ${intent.status}${walletLine}`,
+        `Criado: ${new Date(intent.created_at).toISOString().slice(0, 19).replace("T", " ")} UTC`,
+      ].join("\n"),
+    );
+    return;
+  }
+
+  await sendMessage(chatId, "Nao entendi. Use `/token Nome TICKER`, `/lending`, `/status <id>` ou `/help`.");
 }
 
 serve(async (req) => {

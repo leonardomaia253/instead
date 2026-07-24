@@ -1,24 +1,24 @@
 {
   "Index": {
-    "title": "Instead DeFi | Lending and Tokenization in one Platform",
-    "description": "Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation across 7+ EVM networks.",
-    "hero_title": "The Future of DeFi is Here",
-    "hero_subtitle": "Lend, borrow, and tokenize with institutional-grade security and consumer-grade simplicity.",
-    "get_started": "Get Started",
-    "view_docs": "View Documentation",
-    "lending_title": "Liquid Lending",
-    "lending_desc": "Maximize your capital efficiency. Deposit collateral and borrow against it with instant liquidity.",
-    "factory_title": "No-Code Token Factory",
-    "factory_desc": "Launch your own ERC-20 token in minutes. No coding required, audit-ready, and multi-chain support.",
-    "stats_users": "Active Users",
-    "stats_tvl": "Total Value Locked",
-    "stats_tokens": "Tokens Created"
+    "title": "Instead Finance | Decentralized Lending & Digital Asset Launchpad",
+    "description": "Instead Finance is the intelligent platform for decentralized lending, liquidity management, and digital asset creation with institutional security.",
+    "hero_title": "The Future of Decentralized Finance",
+    "hero_subtitle": "Smart lending, digital asset yield, and token launches built with institutional-grade security and ultimate simplicity.",
+    "get_started": "Explore Platform",
+    "view_docs": "Read Solutions",
+    "lending_title": "Lending & Yield",
+    "lending_desc": "Maximize your capital efficiency. Deposit collateral and access instant liquidity across top blockchain networks.",
+    "factory_title": "Digital Asset Launchpad",
+    "factory_desc": "Create and launch your project's digital currency in minutes. 100% no-code, audited, and multi-network ready.",
+    "stats_users": "Active Investors",
+    "stats_tvl": "Protected Value (TVL)",
+    "stats_tokens": "Projects Launched"
   },
   "Common": {
     "lending": "Lending",
-    "factory": "Factory",
-    "staking": "Staking",
+    "factory": "Token Launchpad",
+    "staking": "Staking Yield",
     "docs": "Documentation",
-    "security": "Security"
+    "security": "Security & Audits"
   }
 }

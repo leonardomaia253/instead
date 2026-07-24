@@ -79,6 +79,8 @@ function shouldReadFile(path) {
   const name = path.split(/[\\/]/).pop();
   if (ignoredFiles.has(name)) return false;
   if (isIgnoredPath(path)) return false;
+  if (name.endsWith(".local")) return false;
+  if (name.startsWith(".env")) return true;
   return textExtensions.has(extname(name));
 }
 

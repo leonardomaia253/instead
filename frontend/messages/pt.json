@@ -1,24 +1,24 @@
 {
   "Index": {
-    "title": "Instead DeFi | Empréstimos e Tokenização em uma Plataforma",
-    "description": "A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code em mais de 7 redes EVM.",
+    "title": "Instead Finance | Empréstimos Descentralizados e Lançamento de Ativos",
+    "description": "A Instead Finance é a plataforma financeira inteligente para empréstimos descentralizados, gestão de liquidez e criação de ativos digitais com segurança institucional.",
     "hero_title": "O Futuro das Finanças Descentralizadas",
-    "hero_subtitle": "Empréstimos, capital e tokenização com segurança institucional e simplicidade para o usuário.",
-    "get_started": "Começar Agora",
-    "view_docs": "Ver Documentação",
-    "lending_title": "Lending Líquido",
-    "lending_desc": "Maximize a eficiência do seu capital. Deposite colateral e tome empréstimos com liquidez instantânea.",
-    "factory_title": "Fábrica de Tokens No-Code",
-    "factory_desc": "Lance seu próprio token ERC-20 em minutos. Sem código, pronto para auditoria e suporte multi-chain.",
-    "stats_users": "Usuários Ativos",
-    "stats_tvl": "Valor Total Bloqueado",
-    "stats_tokens": "Tokens Criados"
+    "hero_subtitle": "Empréstimos inteligentes, rendimento em ativos digitais e criação de moedas com segurança institucional e simplicidade total.",
+    "get_started": "Explorar Plataforma",
+    "view_docs": "Conhecer Soluções",
+    "lending_title": "Empréstimos & Rendimento",
+    "lending_desc": "Maximize a eficiência do seu patrimônio. Deposite garantias e obtenha liquidez instantânea nas melhores redes do mercado.",
+    "factory_title": "Lançamento de Ativos Digitais",
+    "factory_desc": "Crie e lance a moeda digital do seu projeto em minutos. Processo 100% intuitivo, sem programação e com padrão de segurança auditado.",
+    "stats_users": "Investidores Ativos",
+    "stats_tvl": "Patrimônio Protegido (TVL)",
+    "stats_tokens": "Projetos Lançados"
   },
   "Common": {
-    "lending": "Lending",
-    "factory": "Factory",
-    "staking": "Staking",
+    "lending": "Empréstimos",
+    "factory": "Lançador de Tokens",
+    "staking": "Rendimento (Staking)",
     "docs": "Documentação",
-    "security": "Segurança"
+    "security": "Segurança & Auditoria"
   }
 }

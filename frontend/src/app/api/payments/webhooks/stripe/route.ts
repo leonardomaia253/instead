@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getStripe, markPaymentPaid, updatePaymentIntentById } from "@/lib/server/payments";
 import { rateLimit } from "@/lib/server/rateLimit";
+import { captureException } from "@/lib/observability/sentry";
+import { sendSystemAlert } from "@/lib/observability/alerts";
 
 export async function POST(request: Request) {
   const limited = rateLimit(request, "payments:webhook:stripe", 120, 60_000);
@@ -29,6 +31,14 @@ export async function POST(request: Request) {
           providerReference: session.id,
           amountCents: session.amount_total ?? 0,
           currency: session.currency ?? "",
+        }).catch((err) => {
+          captureException(err, { context: "markPaymentPaid", provider: "stripe", paymentIntentId });
+          sendSystemAlert({
+            title: "Stripe Webhook Payment Processing Failed",
+            severity: "warning",
+            source: "api/payments/webhooks/stripe",
+            details: { paymentIntentId, error: String(err) },
+          });
         });
       }
     }
@@ -46,7 +56,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Stripe webhook failed", error);
+    captureException(error, { context: "stripe_webhook_handler" });
+    sendSystemAlert({
+      title: "Invalid Stripe Webhook Request",
+      severity: "warning",
+      source: "api/payments/webhooks/stripe",
+      details: { error: error instanceof Error ? error.message : String(error) },
+    });
     return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   }
 }

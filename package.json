@@ -9,6 +9,7 @@
     "contracts:test": "hardhat test",
     "contracts:test:fork": "hardhat test test/InsteadLendingPoolFork.ts",
     "deploy:factory": "hardhat run scripts/deploy-token-factory.ts",
+    "deploy:staging": "hardhat run scripts/deploy-staging-all.ts",
     "deploy:lending": "hardhat run scripts/deploy-lending.ts",
     "deploy:lending-router": "hardhat run scripts/deploy-lending-router.ts",
     "deploy:staking": "hardhat run scripts/deploy-staking.ts",
@@ -21,6 +22,9 @@
     "db:migrations:check": "node scripts/check-migrations.mjs",
     "db:contract:check": "node scripts/check-supabase-contract.mjs",
     "db:lending-protocols:seed": "node scripts/seed-lending-protocol-routes.mjs",
+    "db:payments:reconcile": "node scripts/reconcile-payments.mjs",
+    "webhooks:test": "node scripts/test-webhooks.mjs",
+    "webhooks:sandbox": "node scripts/test-webhooks.mjs",
     "edge:functions:check": "node scripts/check-edge-functions.mjs",
     "secrets:check": "node scripts/check-secrets.mjs",
     "telegram:set-webhook": "node scripts/set-telegram-webhook.mjs",
@@ -41,6 +45,7 @@
     "@nomicfoundation/hardhat-toolbox": "^6.1.2",
     "@openzeppelin/contracts": "^5.6.1",
     "@openzeppelin/contracts-upgradeable": "^5.6.1",
+    "dotenv": "^17.4.2",
     "hardhat": "^2.29.0"
   }
 }

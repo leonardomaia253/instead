@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { usePathname, useRouter } from "@/navigation";
 
 type PaymentRow = {
   id: string;
@@ -25,6 +26,8 @@ function formatMoney(amountCents: number, currency: string) {
 }
 
 export default function AdminPaymentsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [error, setError] = useState("");
 
@@ -35,10 +38,29 @@ export default function AdminPaymentsPage() {
       .order("created_at", { ascending: false })
       .limit(100)
       .then(({ data, error: queryError }) => {
-        if (queryError) setError(queryError.message);
+        if (queryError) {
+          const msg = (queryError.message || "").toLowerCase();
+          const status = (queryError as any).status;
+          const isAuthError =
+            msg.includes("403") ||
+            msg.includes("jwt") ||
+            msg.includes("expired") ||
+            msg.includes("unauthorized") ||
+            status === 401 ||
+            status === 403;
+
+          if (isAuthError) {
+            setError("Sessão expirada. Redirecionando para o login...");
+            setTimeout(() => {
+              router.push("/" + pathname.split("/")[1] + "/admin/login");
+            }, 2000);
+          } else {
+            setError(queryError.message);
+          }
+        }
         setPayments((data ?? []) as PaymentRow[]);
       });
-  }, []);
+  }, [pathname, router]);
 
   const totals = useMemo(() => {
     return payments.reduce(
@@ -64,7 +86,12 @@ export default function AdminPaymentsPage() {
         <Metric label="Pending" value={String(payments.filter((payment) => payment.status === "pending").length)} />
       </section>
 
-      {error ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
+      {error && error.startsWith("Sessão expirada") && (
+        <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10, padding: "14px 18px", marginTop: 16, color: "#f59e0b", fontWeight: 600, fontSize: 14 }}>
+          ⚠️ {error}
+        </div>
+      )}
+      {error && !error.startsWith("Sessão expirada") ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
       <div className="card" style={{ overflowX: "auto", marginTop: 24 }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>

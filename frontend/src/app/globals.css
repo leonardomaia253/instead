@@ -263,17 +263,23 @@ input:focus, select:focus, textarea:focus {
   }
 
   .proof-row {
-    grid-template-columns: 82px minmax(0, 1fr);
+    grid-template-columns: 135px minmax(0, 1fr);
+  }
+
+  .proof-row strong {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    word-break: break-word;
   }
 
   .proof-row strong,
   .proof-row span {
-    padding: 16px;
+    padding: 14px 16px;
   }
 
   .protocol-section,
   .doc-shell {
-    padding: 64px 0;
+    padding: 48px 0;
   }
 
   .proto-footer__manifesto,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -8,6 +9,7 @@ import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { CHAIN_META, TOKEN_FACTORY_ABI, SUPPORTED_CHAINS } from "@/lib/wagmi";
 import {
+  supabase,
   insertGeneratedToken,
   insertAudit,
   enqueueReconciliation,
@@ -71,9 +73,9 @@ const INITIAL_FORM: TokenForm = {
 const TOKEN_PRESETS = [
   {
     id: "ultimate" as const,
-    title: "Ultimate Token",
-    tag: "Mais vendavel",
-    description: "Cap, mint opcional, burn, taxa opcional, blacklist/compliance e ownership em 2 etapas.",
+    title: "Modelo Completo (Recomendado)",
+    tag: "Mais Completo",
+    description: "Estrutura institucional com limite de emissão, proteção contra fraudes, governança e alta flexibilidade.",
     apply: (form: TokenForm): TokenForm => ({
       ...form,
       template: "ultimate",
@@ -89,9 +91,9 @@ const TOKEN_PRESETS = [
   },
   {
     id: "fair_launch" as const,
-    title: "Fair Launch Token",
-    tag: "Distribuicao limpa",
-    description: "Sem mint futuro, sem taxa e initial supply igual ao cap. Liquidez fica para execucao assistida apos deploy.",
+    title: "Lançamento Justo (Comunidade)",
+    tag: "100% Transparente",
+    description: "Distribuição igualitária para a comunidade, sem moedas reservadas e sem emissões futuras.",
     apply: (form: TokenForm): TokenForm => ({
       ...form,
       template: "fair_launch",
@@ -108,9 +110,9 @@ const TOKEN_PRESETS = [
   },
   {
     id: "deflationary" as const,
-    title: "Deflationary Token",
-    tag: "Anti-whale",
-    description: "Taxa queimada a cada transferencia e limite maximo por carteira para reduzir concentracao.",
+    title: "Modelo Deflacionário",
+    tag: "Escassez Programada",
+    description: "Queima automática a cada movimentação e proteção antibaleia para reduzir a concentração de mercado.",
     apply: (form: TokenForm): TokenForm => ({
       ...form,
       template: "deflationary",
@@ -126,9 +128,9 @@ const TOKEN_PRESETS = [
   },
   {
     id: "superchain" as const,
-    title: "Superchain-ready ERC20",
-    tag: "Base/Optimism",
-    description: "Preset limpo para Base/Optimism, sem taxa e sem mint futuro, pronto para estrategia Superchain.",
+    title: "Alta Performance (Base / Optimism)",
+    tag: "Baixa Taxa",
+    description: "Otimizado para redes de segunda camada, garantindo transações ultra-rápidas e custo de centavos.",
     apply: (form: TokenForm): TokenForm => ({
       ...form,
       template: "superchain",
@@ -705,12 +707,14 @@ const styles = {
 
 // ─── Página Principal ─────────────────────────────────────────────────────────
 export default function FactoryPage() {
+  const searchParams = useSearchParams();
   const { isConnected, address } = useAccount();
   const chainId = useChainId();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 42161 });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [telegramIntentId, setTelegramIntentId] = useState<string | null>(null);
 
   const factoryAddress = (CHAIN_META[form.chainId]?.factoryAddress || "0x0") as `0x${string}`;
 
@@ -729,6 +733,35 @@ export default function FactoryPage() {
   useEffect(() => {
     if (chainId && CHAIN_META[chainId]) setForm((f) => ({ ...f, chainId }));
   }, [chainId]);
+
+  useEffect(() => {
+    const intent = searchParams.get('intent');
+    const source = searchParams.get('source');
+
+    if (intent && source === 'telegram') {
+      (async () => {
+        const { data } = await supabase
+          .from('telegram_bot_intents')
+          .select('*')
+          .eq('id', intent)
+          .eq('status', 'draft')
+          .single();
+
+        if (data && data.payload) {
+          const payload = data.payload;
+          setForm((f) => ({
+            ...f,
+            name: payload.name || f.name,
+            symbol: payload.symbol ? String(payload.symbol).toUpperCase() : f.symbol,
+            initialSupply: String(payload.initialSupply || '1000000'),
+            maxSupply: String(payload.maxSupply || payload.initialSupply || '10000000'),
+            mintable: Boolean(payload.mintable),
+          }));
+          setTelegramIntentId(intent);
+        }
+      })();
+    }
+  }, [searchParams]);
 
   // Trigger onboarding on confirmation
   useEffect(() => {
@@ -830,6 +863,14 @@ export default function FactoryPage() {
         tx_hash: hash,
         chain_id: form.chainId,
       });
+
+      if (telegramIntentId && address) {
+        await supabase
+          .from('telegram_bot_intents')
+          .update({ status: 'confirmed', wallet_address: address.toLowerCase() })
+          .eq('id', telegramIntentId)
+          .eq('status', 'draft');
+      }
 
       // Registra Auditoria
       const operationId = `${address.toLowerCase()}:CREATE_TOKEN:${hash.toLowerCase()}`;

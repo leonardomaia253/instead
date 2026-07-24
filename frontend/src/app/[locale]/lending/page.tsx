@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useInsteadLending } from "@/hooks/useInsteadLending";
@@ -32,7 +33,33 @@ export default function LendingPage() {
   const { deposit, depositCollateral, approveDelegationAndBorrow, approveAndRepay, isPending, isConfirmed, txHash, error, collateralBalance, borrowBalance, borrowAllowance, variableDebtTokenAddress, isLendingEnabled, disabledReason } =
     useInsteadLending(selectedAsset);
 
+  const searchParams = useSearchParams();
+  const [telegramIntentId, setTelegramIntentId] = useState<string | null>(null);
+
   const lastAuditedHash = useRef<string | null>(null);
+
+  // Load Telegram bot intent from URL query parameters
+  useEffect(() => {
+    const intentId = searchParams.get("intent");
+    const source = searchParams.get("source");
+    if (!intentId || source !== "telegram") return;
+    Promise.resolve(
+      supabase
+        .from("telegram_bot_intents")
+        .select("*")
+        .eq("id", intentId)
+        .eq("status", "draft")
+        .single()
+    ).then(({ data }) => {
+      if (!data) return;
+      setTelegramIntentId(intentId);
+      if (data.payload?.asset) setSelectedAsset(data.payload.asset as `0x${string}`);
+      if (data.payload?.amount) setAmount(String(data.payload.amount));
+      if (data.payload?.tab && ["deposit", "borrow", "repay"].includes(data.payload.tab)) {
+        setTab(data.payload.tab as Tab);
+      }
+    }).catch(console.error);
+  }, [searchParams]);
 
   useEffect(() => {
     if (isConfirmed && txHash && address && lastAuditedHash.current !== txHash) {
@@ -71,6 +98,17 @@ export default function LendingPage() {
         },
       }).catch(console.error);
 
+      // 2a. Link and confirm Telegram intent if this tx originated from one
+      if (telegramIntentId) {
+        Promise.resolve(
+          supabase
+            .from("telegram_bot_intents")
+            .update({ status: "confirmed", wallet_address: address.toLowerCase() })
+            .eq("id", telegramIntentId)
+            .eq("status", "draft")
+        ).then(() => setTelegramIntentId(null)).catch(console.error);
+      }
+
       // 2. Persist Position with real contract data
       upsertLendingPosition({
         wallet_address: address,
@@ -84,7 +122,7 @@ export default function LendingPage() {
         operation_status: "confirmed",
       }).catch(console.error);
     }
-  }, [isConfirmed, txHash, address, tab, selectedAsset, amount, colAsset, chainId, collateralBalance, borrowBalance]);
+  }, [isConfirmed, txHash, address, tab, selectedAsset, amount, colAsset, chainId, collateralBalance, borrowBalance, telegramIntentId]);
 
   function handleAction() {
     if (!amount) return;

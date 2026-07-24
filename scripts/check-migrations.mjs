@@ -26,6 +26,7 @@ const requiredFiles = [
   "010_fair_launch_liquidity.sql",
   "011_lending_protocol_registry.sql",
   "012_fiat_payment_intents.sql",
+  "013_reconciliation_refinement.sql",
 ];
 
 for (const file of requiredFiles) {

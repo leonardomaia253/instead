@@ -156,15 +156,15 @@ export default function Home() {
         <section className="protocol-section protocol-section--split">
           <div className="container split-proof">
             <div className="section-ledger">
-              <span>02 / SECURITY ARCHITECTURE</span>
-              <h2>Menos promessa, mais controle verificável.</h2>
+              <span>02 / ARQUITETURA DE SEGURANÇA</span>
+              <h2>Transparência e proteção institucional.</h2>
             </div>
             <div className="proof-stack">
               {[
-                ["AUTH", "SIWE com nonce persistido e sessão JWT curta."],
-                ["DATA", "RLS para usuários, lending positions, auditorias e eventos."],
-                ["EDGE", "CORS por origem, bearer token, payload limit e rate limit."],
-                ["FRONT", "Sem crash global quando Supabase não está configurado."],
+                ["AUTENTICAÇÃO", "Conexão de carteira sem custódia com criptografia de ponta a ponta."],
+                ["PRIVACIDADE", "Isolamento absoluto de dados e permissões estritas para cada investidor."],
+                ["PROTEÇÃO", "Proteção avançada contra ataques, limite de requisições e firewall ativo."],
+                ["RESILIÊNCIA", "Arquitetura distribuída com alta disponibilidade e execução ultrarrápida."],
               ].map(([code, text]) => (
                 <div className="proof-row" key={code}>
                   <strong>{code}</strong>
