@@ -6,7 +6,7 @@ import { cleanText, json, preflight, rateLimit, readJsonBody } from "../_shared/
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 const SUPABASE_JWT_SECRET = Deno.env.get("SUPABASE_JWT_SECRET")
-const SIWE_DOMAIN = Deno.env.get("SIWE_DOMAIN") ?? "instead.finance"
+const SIWE_DOMAIN = Deno.env.get("SIWE_DOMAIN") ?? "instead.volupai.com"
 
 function requiredEnv(value: string | undefined, name: string) {
   if (!value) throw new Error(`${name} is not configured`)

@@ -4,29 +4,34 @@ import { Providers } from '../providers';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
+const SITE_URL = 'https://instead.volupai.com';
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-// No Next.js 15, o params é uma Promise que deve ser tipada e aguardada
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
-  const { locale } = await params; // Aguarda a resolução dos parâmetros
+  const { locale } = await params;
 
   return {
-    metadataBase: new URL('https://instead.finance'),
-    title: locale === 'pt' ? 'Instead DeFi | Empréstimos e Tokenização' : 'Instead DeFi | Lending and Tokenization',
-    description: locale === 'pt'
-      ? 'A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code.'
-      : 'Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation.',
+    metadataBase: new URL(SITE_URL),
+    title:
+      locale === 'pt'
+        ? 'Instead DeFi | Empréstimos e Tokenização'
+        : 'Instead DeFi | Lending and Tokenization',
+    description:
+      locale === 'pt'
+        ? 'A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code.'
+        : 'Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation.',
     keywords: 'defi, crypto lending, token factory, ethereum, arbitrum, polygon, web3',
     openGraph: {
       title: 'Instead DeFi',
       description: 'The fastest way to lend and create tokens on blockchain.',
-      url: 'https://instead.finance',
+      url: SITE_URL,
       siteName: 'Instead Finance',
       images: [
         {
@@ -46,33 +51,32 @@ export async function generateMetadata({
       images: ['/og-image.png'],
     },
     alternates: {
-      canonical: 'https://instead.finance',
+      canonical: SITE_URL,
     },
   };
 }
 
 export default async function LocaleLayout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>; // Tipagem corrigida para Promise
+  params: Promise<{ locale: string }>;
 }) {
-  // É necessário aguardar o params antes de usar o valor de locale
   const { locale } = await params;
   const messages = await getMessages();
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    'name': 'Instead DeFi',
-    'url': 'https://instead.finance',
-    'description': 'Complete DeFi ecosystem for lending and no-code token creation.',
-    'applicationCategory': 'FinanceApplication',
-    'operatingSystem': 'Web',
-    'offers': {
+    name: 'Instead DeFi',
+    url: SITE_URL,
+    description: 'Complete DeFi ecosystem for lending and no-code token creation.',
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web',
+    offers: {
       '@type': 'Offer',
-      'price': '0',
+      price: '0',
     },
   };
 

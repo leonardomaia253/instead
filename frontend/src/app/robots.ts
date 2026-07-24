@@ -17,6 +17,6 @@ export default function robots(): MetadataRoute.Robots {
         '/en/register/',
       ],
     },
-    sitemap: 'https://instead.finance/sitemap.xml',
+    sitemap: 'https://instead.volupai.com/sitemap.xml',
   };
 }

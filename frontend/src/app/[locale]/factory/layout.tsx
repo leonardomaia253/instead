@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Crie seu Token em Minutos | Instead DeFi Factory',
     description: 'A maneira mais fácil e rápida de lançar seu projeto blockchain.',
-    url: 'https://instead.finance/factory',
+    url: 'https://instead.volupai.com/factory',
   },
 };
 

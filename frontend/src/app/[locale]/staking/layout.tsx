@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Instead Staking | Maximize seus Rendimentos',
     description: 'Participe dos pools de liquidez e ganhe recompensas diárias.',
-    url: 'https://instead.finance/staking',
+    url: 'https://instead.volupai.com/staking',
   },
 };
 

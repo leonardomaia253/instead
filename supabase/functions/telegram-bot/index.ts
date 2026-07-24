@@ -17,7 +17,7 @@ type TelegramUpdate = {
 const TELEGRAM_API = "https://api.telegram.org";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")?.trim();
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
-const APP_URL = Deno.env.get("APP_ORIGIN") ?? "https://instead.finance";
+const APP_URL = Deno.env.get("APP_ORIGIN") ?? "https://instead.volupai.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 

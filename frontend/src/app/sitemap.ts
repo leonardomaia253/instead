@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://instead.finance';
+  const baseUrl = 'https://instead.volupai.com';
   const locales = ['en', 'pt'];
   const routes = [
     '',

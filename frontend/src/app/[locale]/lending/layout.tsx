@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Crypto Lending Facilitado | Instead DeFi',
     description: 'Deposite seus ativos e tome empréstimos em segundos.',
-    url: 'https://instead.finance/lending',
+    url: 'https://instead.volupai.com/lending',
   },
 };
 

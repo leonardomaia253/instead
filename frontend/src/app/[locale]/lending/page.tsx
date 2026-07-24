@@ -182,7 +182,7 @@ export default function LendingPage() {
               Seja notificado assim que abrir para o público.
             </p>
             <a
-              href="mailto:contato@instead.finance?subject=Interesse%20em%20Empr%C3%A9stimos"
+              href="mailto:contato@instead.volupai.com?subject=Interesse%20em%20Empr%C3%A9stimos"
               style={{
                 marginTop: 8,
                 padding: "13px 32px",
