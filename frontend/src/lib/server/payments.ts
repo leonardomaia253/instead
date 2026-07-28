@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import Stripe from "stripe";
+import { FIAT_REVENUE_SOURCES } from "@/lib/revenueCatalog";
 import { createSupabaseAdminClient } from "./supabaseAdmin";
 
 export type PaymentProvider = "stripe" | "pagarme";
@@ -19,10 +20,17 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ─── Fallback hardcoded (usado se Supabase inacessível) ─────────────────────
 const FALLBACK_PRICES: Record<string, { label: string; amountUsd: number; amountBrl: number }> = {
-  token_deploy_basic:         { label: "Instead Token Deploy Basic",      amountUsd: 9900,  amountBrl: 49900  },
-  token_deploy_premium:       { label: "Instead Token Deploy Premium",     amountUsd: 29900, amountBrl: 149900 },
-  token_fair_launch_assisted: { label: "Instead Fair Launch Assistido",   amountUsd: 49900, amountBrl: 249900 },
-};
+  ...Object.fromEntries(
+    FIAT_REVENUE_SOURCES.map((source) => [
+      source.sourceCode,
+      {
+        label: `Instead ${source.label}`,
+        amountUsd: source.amountUsdCents!,
+        amountBrl: source.amountBrlCents!,
+      },
+    ]),
+  ),
+} as Record<string, { label: string; amountUsd: number; amountBrl: number }>;
 
 // ─── Cache em memória com TTL 60s ────────────────────────────────────────────
 type PriceRow = { label: string; amountUsd: number; amountBrl: number };
@@ -69,6 +77,12 @@ function appOrigin() {
   return process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3000";
 }
 
+function checkoutReturnPath(vertical: PaymentVertical) {
+  if (vertical === "lending") return "/lending";
+  if (vertical === "services") return "/dashboard";
+  return "/factory";
+}
+
 export async function validateCheckoutRequest(input: CheckoutRequest) {
   if (!input.walletAddress || !EVM_ADDRESS_RE.test(input.walletAddress)) throw new Error("Invalid wallet address");
   if (input.email && !EMAIL_RE.test(input.email)) throw new Error("Invalid email");
@@ -77,10 +91,10 @@ export async function validateCheckoutRequest(input: CheckoutRequest) {
 }
 
 export async function getPaymentProduct(vertical: PaymentVertical, productCode: string, provider: PaymentProvider) {
-  if (vertical !== "token_factory") throw new Error("Unsupported payment vertical");
   const prices = await getPricesFromDb();
   const product = prices[productCode] ?? FALLBACK_PRICES[productCode];
-  if (!product) throw new Error("Unsupported token factory product");
+  const catalogItem = FIAT_REVENUE_SOURCES.find((source) => source.sourceCode === productCode);
+  if (!product || !catalogItem || catalogItem.vertical !== vertical) throw new Error("Unsupported payment product");
   return {
     label: product.label,
     amountCents: provider === "pagarme" ? product.amountBrl : product.amountUsd,
@@ -129,7 +143,7 @@ export async function getPaymentIntentById(id: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("payment_intents")
-    .select("id,provider,provider_reference,amount_cents,currency,status,wallet_address")
+    .select("id,provider,provider_reference,amount_cents,currency,status,wallet_address,vertical,product_code")
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -141,6 +155,8 @@ export async function getPaymentIntentById(id: string) {
     currency: string;
     status: string;
     wallet_address: string | null;
+    vertical: PaymentVertical;
+    product_code: string;
   };
 }
 
@@ -163,6 +179,29 @@ export async function markPaymentPaid(input: {
     provider_reference: input.providerReference,
     paid_at: new Date().toISOString(),
   });
+
+  const catalogItem = FIAT_REVENUE_SOURCES.find((source) => source.sourceCode === payment.product_code);
+  if (catalogItem && payment.wallet_address) {
+    const supabase = createSupabaseAdminClient();
+    const expiresAt = catalogItem.billingInterval === "monthly"
+      ? new Date(Date.now() + 1000 * 60 * 60 * 24 * 31).toISOString()
+      : null;
+    await supabase
+      .from("user_revenue_entitlements")
+      .upsert(
+        {
+          wallet_address: payment.wallet_address.toLowerCase(),
+          source_code: payment.product_code,
+          status: "active",
+          starts_at: new Date().toISOString(),
+          expires_at: expiresAt,
+          payment_intent_id: payment.id,
+          metadata: { provider: payment.provider, vertical: payment.vertical },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "wallet_address,source_code" },
+      );
+  }
 }
 
 export function getStripe() {
@@ -197,8 +236,8 @@ export async function createStripeCheckout(input: CheckoutRequest) {
         },
       },
     ],
-    success_url: `${appOrigin()}/factory?payment=success&payment_id=${payment.id}`,
-    cancel_url: `${appOrigin()}/factory?payment=cancel&payment_id=${payment.id}`,
+    success_url: `${appOrigin()}${checkoutReturnPath(input.vertical)}?payment=success&payment_id=${payment.id}`,
+    cancel_url: `${appOrigin()}${checkoutReturnPath(input.vertical)}?payment=cancel&payment_id=${payment.id}`,
     metadata: {
       payment_intent_id: payment.id,
       vertical: input.vertical,

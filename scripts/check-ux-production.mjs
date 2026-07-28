@@ -47,6 +47,7 @@ for (const file of [
   "frontend/src/app/[locale]/legal/privacy/page.tsx",
   "frontend/src/app/[locale]/admin/login/page.tsx",
   "frontend/src/app/[locale]/admin/page.tsx",
+  "frontend/src/app/[locale]/admin/revenue/page.tsx",
   "frontend/src/app/robots.ts",
   "frontend/src/app/sitemap.ts",
   "frontend/public/site.webmanifest",
@@ -91,6 +92,20 @@ requireContains("frontend/src/app/[locale]/legal/privacy/page.tsx", [
   /dados|data/i,
 ]);
 
+requireContains("frontend/src/app/[locale]/lending/page.tsx", [
+  /Lending Pro Stack|Protection Layer|Risk Shield/i,
+]);
+
+requireContains("frontend/src/app/[locale]/dashboard/page.tsx", [
+  /Meu plano Instead/i,
+  /Timeline operacional/i,
+]);
+
+requireContains("frontend/src/app/[locale]/admin/revenue/page.tsx", [
+  /Provisionar Widget\/API B2B/i,
+  /API key/i,
+]);
+
 const manifest = JSON.parse(read("frontend/public/site.webmanifest"));
 for (const key of ["name", "short_name", "icons", "theme_color", "background_color", "display"]) {
   if (!manifest[key]) failures.push(`frontend/public/site.webmanifest missing ${key}`);
@@ -100,6 +115,14 @@ if (!Array.isArray(manifest.icons) || manifest.icons.length === 0) failures.push
 const factoryText = read("frontend/src/app/[locale]/factory/page.tsx");
 if (/seguran[cç]a auditad[oa]|audited/i.test(factoryText)) {
   warnings.push("Factory copy mentions audited/security claims; keep aligned with external audit status before public traffic");
+}
+
+if (read("frontend/src/app/[locale]/staking/page.tsx").includes("alert(")) {
+  failures.push("Staking page must use toast/inline state instead of native alert()");
+}
+
+if (/demo/i.test(read("frontend/src/app/[locale]/simulator/page.tsx"))) {
+  failures.push("Simulator page must not expose demo wording in production UX");
 }
 
 if (failures.length > 0) {

@@ -31,6 +31,7 @@
     "secrets:check": "node scripts/check-secrets.mjs",
     "telegram:set-webhook": "node scripts/set-telegram-webhook.mjs",
     "balances:monitor": "node scripts/monitor-balances.mjs",
+    "revenue:check": "node scripts/check-revenue-sources.mjs",
     "addresses:check": "node scripts/check-production-addresses.mjs",
     "ux:check": "node scripts/check-ux-production.mjs",
     "production:gate": "node scripts/production-gate.mjs",

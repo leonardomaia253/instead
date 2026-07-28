@@ -24,6 +24,13 @@ const expectedTables = [
   "operation_reconciliation_queue",
   "lending_protocol_routes",
   "payment_intents",
+  "revenue_sources",
+  "user_revenue_entitlements",
+  "lending_automation_intents",
+  "b2b_widget_clients",
+  "lending_alert_events",
+  "lending_risk_preferences",
+  "b2b_widget_events",
 ];
 
 for (const table of expectedTables) {
@@ -71,6 +78,19 @@ if (!read("frontend/src/lib/lendingProtocols.ts").includes("solana_sdk")) failur
 if (!read("config/lending-protocols.json").includes("compound_v3")) failures.push("Seed config must include Compound III");
 if (!read("scripts/seed-lending-protocol-routes.mjs").includes("SUPABASE_SERVICE_ROLE_KEY")) failures.push("Lending protocol seed script must use service role server-side");
 if (!read("frontend/src/lib/server/supabaseAdmin.ts").includes("SUPABASE_SERVICE_ROLE_KEY")) failures.push("Payment helpers must use service role server-side");
+if (!read("frontend/src/lib/revenueCatalog.ts").includes("REVENUE_SOURCE_COUNT")) failures.push("Revenue catalog must expose canonical revenue source count");
+if (!read("frontend/src/app/[locale]/admin/revenue/page.tsx").includes("revenue_sources")) failures.push("Admin revenue page must expose revenue_sources");
+if (!read("frontend/src/lib/server/payments.ts").includes("FIAT_REVENUE_SOURCES")) failures.push("Payment helpers must support monetized revenue catalog products");
+if (!read("frontend/src/lib/server/payments.ts").includes("user_revenue_entitlements")) failures.push("Paid premium products must create user entitlements");
+if (!read("frontend/src/app/api/lending/automation-intents/route.ts").includes("lending_automation_intents")) failures.push("Lending premium automation intents API is missing");
+if (!read("frontend/src/app/api/b2b/widget/route.ts").includes("b2b_widget_clients")) failures.push("B2B widget API is missing");
+if (!read("frontend/src/app/api/admin/b2b-clients/route.ts").includes("apiKey")) failures.push("Admin B2B client provisioning API is missing");
+if (!read("frontend/src/app/api/revenue/me/route.ts").includes("user_revenue_entitlements")) failures.push("User revenue status API is missing");
+if (!read("frontend/src/app/[locale]/login/page.tsx").includes("signInWithWeb3")) failures.push("Wallet login must use Supabase native Web3 auth");
+if (!read("frontend/src/app/api/auth/wallet-profile/route.ts").includes("supabase.auth.getUser")) failures.push("Wallet profile API must validate the Supabase session");
+if (!read("supabase/functions/lending-automation/index.ts").includes("lending_alert_events")) failures.push("Lending automation function must create risk alerts");
+if (!read("supabase/functions/lending-automation/index.ts").includes("required_user_signature")) failures.push("Lending automation must preserve user-signature execution boundary");
+if (!read("frontend/src/app/[locale]/lending/page.tsx").includes("Lending Pro Stack")) failures.push("Lending page must expose premium revenue products");
 if (!read("frontend/src/app/api/payments/webhooks/stripe/route.ts").includes("constructEvent")) failures.push("Stripe webhook must verify signatures");
 if (!read("frontend/src/app/api/payments/webhooks/pagarme/route.ts").includes("verifyPagarmeWebhook")) failures.push("Pagar.me webhook must verify signatures");
 

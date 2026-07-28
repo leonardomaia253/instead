@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { HealthGauge } from "@/components/HealthGauge";
 import { CHAIN_META } from "@/lib/wagmi";
 import { Shield } from "lucide-react";
+import { formatRevenuePrice, LENDING_PREMIUM_PRODUCTS, liquidationRecommendation, liquidationRiskLabel } from "@/lib/lendingPremium";
 
 const LENDING_ASSETS = {
   USDC: {
@@ -39,6 +40,9 @@ export default function LendingPage() {
   const [selectedAsset, setSelectedAsset] = useState(USDC_ADDRESS);
   const [colAsset, setColAsset] = useState(WETH_ADDRESS);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [premiumEmail, setPremiumEmail] = useState("");
+  const [premiumProvider, setPremiumProvider] = useState<"stripe" | "pagarme">("stripe");
+  const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
 
   const {
     deposit, depositCollateral, approveDelegationAndBorrow, approveAndRepay,
@@ -158,6 +162,66 @@ export default function LendingPage() {
   const liveCollateral = Number(collateralBalance) / 1e18;
   const liveBorrow = Number(borrowBalance) / 1e18;
   const liveHF = liveBorrow > 0 ? (liveCollateral / liveBorrow) * 0.8 : 999;
+  const riskLabel = liquidationRiskLabel(liveHF);
+  const recommendation = liquidationRecommendation(liveHF);
+
+  async function createPremiumCheckout(productCode: string, vertical: "lending" | "services") {
+    if (!address) {
+      setPremiumStatus("Conecte sua carteira antes de contratar.");
+      return;
+    }
+    setPremiumStatus("Criando checkout seguro...");
+    const response = await fetch("/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        provider: premiumProvider,
+        vertical,
+        productCode,
+        walletAddress: address,
+        email: premiumEmail || undefined,
+        metadata: {
+          chain_id: chainId,
+          health_factor: liveHF,
+          risk_label: riskLabel,
+          recommendation,
+        },
+      }),
+    });
+    const body = await response.json();
+    if (!response.ok || !body.url) {
+      setPremiumStatus("Não foi possível criar checkout agora.");
+      return;
+    }
+    window.location.href = body.url;
+  }
+
+  async function createAutomationIntent(productCode: string) {
+    if (!address) {
+      setPremiumStatus("Conecte sua carteira antes de criar uma intenção.");
+      return;
+    }
+    setPremiumStatus("Registrando intenção operacional...");
+    const response = await fetch("/api/lending/automation-intents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        walletAddress: address,
+        sourceCode: productCode,
+        chainId,
+        riskThreshold: liveHF < 999 ? Math.max(1.15, Number((liveHF - 0.2).toFixed(2))) : 1.4,
+        payload: {
+          collateral_asset: colAsset,
+          borrow_asset: selectedAsset,
+          collateral_amount: liveCollateral,
+          borrowed_amount: liveBorrow,
+        },
+        recommendation,
+      }),
+    });
+    const body = await response.json();
+    setPremiumStatus(response.ok ? `Intenção criada: ${body.intent.id}` : "Não foi possível registrar a intenção.");
+  }
 
   return (
     <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
@@ -383,9 +447,72 @@ export default function LendingPage() {
                   </div>
                 </div>
               </div>
+
+              <div className="card" style={{ padding: "clamp(20px, 5vw, 28px)", display: "grid", gap: 18 }}>
+                <div>
+                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+                    Protection Layer
+                  </h3>
+                  <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55 }}>
+                    Risco atual: <strong style={{ color: liveHF < 1.35 ? "var(--red)" : "var(--accent-1)" }}>{riskLabel}</strong>. {recommendation}
+                  </p>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                  <input
+                    type="email"
+                    placeholder="email para recibo e alertas"
+                    value={premiumEmail}
+                    onChange={(event) => setPremiumEmail(event.target.value)}
+                    style={{ fontSize: 13, padding: "10px 12px" }}
+                  />
+                  <select value={premiumProvider} onChange={(event) => setPremiumProvider(event.target.value as "stripe" | "pagarme")}>
+                    <option value="stripe">Stripe</option>
+                    <option value="pagarme">Pagar.me</option>
+                  </select>
+                </div>
+                {premiumStatus && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{premiumStatus}</div>}
+              </div>
             </div>
           )}
         </div>
+
+        <section style={{ marginTop: 28, display: "grid", gap: 16 }}>
+          <div>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, marginBottom: 8 }}>Lending Pro Stack</h2>
+            <p style={{ color: "var(--text-muted)", maxWidth: 780, lineHeight: 1.6 }}>
+              Produtos premium da Instead para alertas, simulações, deleverage, estratégias, rebalanceamento, wealth dashboard, B2B e risk shield.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+            {LENDING_PREMIUM_PRODUCTS.map((product) => (
+              <article key={product.sourceCode} className="card" style={{ padding: 18, display: "grid", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+                  <strong>{product.label}</strong>
+                  <span style={{ color: "var(--accent-1)", fontWeight: 800 }}>{formatRevenuePrice(product)}</span>
+                </div>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.45 }}>{product.notes}</p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: "auto" }}>
+                  {product.amountUsdCents && product.vertical !== "token_factory" ? (
+                    <button
+                      onClick={() => createPremiumCheckout(product.sourceCode, product.vertical === "services" ? "services" : "lending")}
+                      style={{ padding: "9px 12px", background: "var(--accent-grad)", color: "#000", border: 0, fontWeight: 800, cursor: "pointer" }}
+                    >
+                      Contratar
+                    </button>
+                  ) : null}
+                  {product.vertical === "lending" && product.sourceCode !== "lending_pro_subscription" ? (
+                    <button
+                      onClick={() => createAutomationIntent(product.sourceCode)}
+                      style={{ padding: "9px 12px", background: "transparent", color: "var(--text-primary)", border: "1px solid var(--border)", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Criar intenção
+                    </button>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
 
       <AIAssistant

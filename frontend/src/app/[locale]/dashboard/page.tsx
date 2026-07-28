@@ -5,7 +5,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Link } from "@/navigation";
 import { HealthGauge } from "@/components/HealthGauge";
 import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
-import { supabase, getAuditsByWallet, type GeneratedToken, type Audit } from "@/lib/supabase";
+import { supabase, getAuditsByWallet, type GeneratedToken, type Audit, type RevenueEntitlement, type LendingAutomationIntent, type LendingAlertEvent } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { useTranslations } from "next-intl";
 
@@ -24,6 +24,9 @@ export default function DashboardPage() {
   const [positions, setPositions] = useState<LendingPosition[]>([]);
   const [tokens, setTokens] = useState<GeneratedToken[]>([]);
   const [audits, setAudits] = useState<Audit[]>([]);
+  const [entitlements, setEntitlements] = useState<RevenueEntitlement[]>([]);
+  const [intents, setIntents] = useState<LendingAutomationIntent[]>([]);
+  const [alerts, setAlerts] = useState<LendingAlertEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [auditFilter, setAuditFilter] = useState<"all" | "lending" | "staking" | "tokens">("all");
 
@@ -34,11 +37,15 @@ export default function DashboardPage() {
     Promise.all([
       supabase.from("lending_positions").select("*").eq("wallet_address", wallet),
       supabase.from("generated_tokens").select("*").eq("creator_wallet", wallet).order("created_at", { ascending: false }).limit(6),
-      getAuditsByWallet(wallet)
-    ]).then(([{ data: pos }, { data: tok }, auditData]) => {
+      getAuditsByWallet(wallet),
+      fetch(`/api/revenue/me?wallet=${encodeURIComponent(wallet)}`).then((res) => res.json()).catch(() => ({ entitlements: [], intents: [] }))
+    ]).then(([{ data: pos }, { data: tok }, auditData, revenueData]) => {
       setPositions((pos ?? []) as LendingPosition[]);
       setTokens((tok ?? []) as GeneratedToken[]);
       setAudits(auditData ?? []);
+      setEntitlements((revenueData.entitlements ?? []) as RevenueEntitlement[]);
+      setIntents((revenueData.intents ?? []) as LendingAutomationIntent[]);
+      setAlerts((revenueData.alerts ?? []) as LendingAlertEvent[]);
       setLoading(false);
     });
 
@@ -117,6 +124,78 @@ export default function DashboardPage() {
           <div className="card" style={{ textAlign: "center" }}>
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 8 }}>Health Factor Mínimo</div>
             <HealthGauge healthFactor={lowestHF} size={120} />
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, marginBottom: 40 }}>
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 16 }}>
+              <div>
+                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Meu plano Instead</h2>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6 }}>Produtos premium ativos e benefícios liberados.</p>
+              </div>
+              <Link href="/lending" style={{ color: "var(--accent-1)", textDecoration: "none", fontSize: 13 }}>Upgrade</Link>
+            </div>
+            {entitlements.length === 0 ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>
+                Nenhum plano premium ativo. Ative alertas, risk shield ou Lending Pro quando quiser proteção mais robusta.
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {entitlements.map((item) => (
+                  <div key={item.id} style={{ border: "1px solid var(--border)", padding: 14, background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <strong>{item.revenue_sources?.label ?? item.source_code}</strong>
+                      <span style={{ color: item.status === "active" ? "var(--green)" : "var(--text-muted)", fontWeight: 800 }}>{item.status}</span>
+                    </div>
+                    <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 6 }}>
+                      {item.expires_at ? `Renova/expira em ${new Date(item.expires_at).toLocaleDateString("pt-BR")}` : "Compra pontual / serviço assistido"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Timeline operacional</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Deleverage, rebalance, risk shield, estratégias e solicitações B2B.</p>
+            {intents.length === 0 ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhuma intenção premium criada ainda.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {intents.slice(0, 5).map((intent) => (
+                  <div key={intent.id} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 12, alignItems: "start" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 99, background: statusColor(intent.status), marginTop: 5 }} />
+                    <div>
+                      <strong style={{ fontSize: 14 }}>{intent.revenue_sources?.label ?? intent.source_code}</strong>
+                      <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 4 }}>{intent.recommendation ?? "Aguardando próxima ação."}</div>
+                    </div>
+                    <span style={{ fontSize: 11, color: statusColor(intent.status), fontWeight: 800, textTransform: "uppercase" }}>{intent.status}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Alertas de risco</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Liquidação, risk shield e recomendações geradas por automação.</p>
+            {alerts.length === 0 ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhum alerta recente.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {alerts.slice(0, 5).map((alert) => (
+                  <div key={alert.id} style={{ border: "1px solid var(--border)", padding: 12, background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <strong style={{ color: alertSeverityColor(alert.severity), textTransform: "uppercase", fontSize: 12 }}>{alert.severity}</strong>
+                      <span style={{ color: "var(--text-muted)", fontSize: 11 }}>{new Date(alert.created_at).toLocaleString("pt-BR")}</span>
+                    </div>
+                    <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, lineHeight: 1.45 }}>{alert.message}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -342,4 +421,17 @@ function formatNum(n: number) {
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
   return String(n);
+}
+
+function statusColor(status: string) {
+  if (["executed", "active", "paid"].includes(status)) return "var(--green)";
+  if (["failed", "cancelled"].includes(status)) return "var(--red)";
+  if (["awaiting_payment", "signed"].includes(status)) return "var(--accent-1)";
+  return "var(--text-muted)";
+}
+
+function alertSeverityColor(severity: string) {
+  if (severity === "critical") return "var(--red)";
+  if (severity === "warning") return "var(--accent-1)";
+  return "var(--green)";
 }

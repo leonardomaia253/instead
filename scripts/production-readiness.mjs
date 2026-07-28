@@ -68,7 +68,7 @@ function requireJsonObject(name) {
   }
 }
 
-const requiredEdgeFunctions = ["siwe-auth", "token-ai", "lending-ai", "telegram-bot", "balance-monitor"];
+const requiredEdgeFunctions = ["siwe-auth", "token-ai", "lending-ai", "telegram-bot", "balance-monitor", "lending-automation"];
 for (const functionName of requiredEdgeFunctions) {
   const indexPath = resolve(root, `supabase/functions/${functionName}/index.ts`);
   if (!existsSync(indexPath)) failures.push(`Supabase function ${functionName} is missing`);
@@ -92,6 +92,17 @@ for (const requiredFile of [
   "scripts/check-secrets.mjs",
   "scripts/set-telegram-webhook.mjs",
   "scripts/monitor-balances.mjs",
+  "frontend/src/lib/revenueCatalog.ts",
+  "frontend/src/app/[locale]/admin/revenue/page.tsx",
+  "supabase/migrations/019_revenue_sources.sql",
+  "supabase/migrations/20260728203609_monetization_product_flows.sql",
+  "frontend/src/app/api/lending/automation-intents/route.ts",
+  "frontend/src/app/api/b2b/widget/route.ts",
+  "frontend/src/app/api/admin/b2b-clients/route.ts",
+  "frontend/src/app/api/revenue/me/route.ts",
+  "frontend/src/app/api/auth/wallet-profile/route.ts",
+  "supabase/functions/lending-automation/index.ts",
+  "supabase/migrations/20260728214740_lending_automation_engine.sql",
 ]) {
   if (!existsSync(resolve(root, requiredFile))) failures.push(`${requiredFile} is missing`);
 }
@@ -103,7 +114,6 @@ requireEnv("NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID");
 warnIfMissing("TELEGRAM_BOT_TOKEN");
 warnIfMissing("TELEGRAM_WEBHOOK_SECRET");
 warnIfMissing("SUPABASE_SERVICE_ROLE_KEY");
-warnIfMissing("SUPABASE_JWT_SECRET");
 warnIfMissing("APP_ORIGIN");
 warnIfMissing("STRIPE_SECRET_KEY");
 warnIfMissing("STRIPE_WEBHOOK_SECRET");

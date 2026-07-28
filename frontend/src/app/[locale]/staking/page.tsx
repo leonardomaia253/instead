@@ -27,6 +27,7 @@ import {
 } from "@/lib/supabase";
 import { useInsteadStaking } from "@/hooks/useInsteadStaking";
 import { ROICalculator } from "@/components/ROICalculator";
+import { useToast } from "@/components/Toast";
 
 // Mapper para ícones do Lucide baseado no banco de dados
 const IconMapper: Record<string, React.ReactNode> = {
@@ -38,6 +39,7 @@ const IconMapper: Record<string, React.ReactNode> = {
 export default function StakingPage() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const toast = useToast();
   const [pools, setPools] = useState<StakingPool[]>([]);
   const [stats, setStats] = useState<PlatformStat[]>([]);
   const [selectedPool, setSelectedPool] = useState<StakingPool | null>(null);
@@ -115,10 +117,10 @@ export default function StakingPage() {
         },
       });
       
-      alert(`Solicitação de Staking de ${amount} INST enviada com sucesso!`);
+      toast.success(`Solicitação de staking de ${amount} INST enviada com sucesso.`);
     } catch (error: any) {
       console.error("Erro ao realizar stake:", error);
-      alert(`Erro ao realizar stake: ${error.message || "Verifique o console."}`);
+      toast.error(error.message || "Erro ao realizar stake. Verifique a carteira e tente novamente.");
       setIsSubmitting(false);
     }
   };

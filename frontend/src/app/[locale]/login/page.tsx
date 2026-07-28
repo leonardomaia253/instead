@@ -3,14 +3,13 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount } from "wagmi";
 import { Link } from "@/navigation";
 import { useToast } from "@/components/Toast";
-import { assertSupabaseConfigured, getSupabaseFunctionUrl, setWalletAccessToken, supabase } from "@/lib/supabase";
+import { assertSupabaseConfigured, setWalletAccessToken, supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
   const router = useRouter();
   const toast = useToast();
   const params = useParams<{ locale: string }>();
@@ -26,34 +25,30 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const nonceResponse = await fetch(getSupabaseFunctionUrl("siwe-auth"), {
+      assertSupabaseConfigured();
+      const { data, error } = await supabase.auth.signInWithWeb3({
+        chain: "ethereum",
+        statement: "Sign in to Instead Finance.",
+        options: {
+          url: typeof window !== "undefined" ? window.location.origin : "https://instead.volupai.com",
+        },
+      });
+      if (error) throw error;
+      if (!data.session?.access_token) throw new Error("Wallet authentication did not return a session");
+
+      setWalletAccessToken(data.session.access_token);
+
+      const profileResponse = await fetch("/api/auth/wallet-profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "nonce", address }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        body: JSON.stringify({ walletAddress: address }),
       });
-      const nonceData = await nonceResponse.json();
-      if (!nonceResponse.ok) throw new Error(nonceData.error ?? "Could not start wallet login");
+      const profileData = await profileResponse.json();
+      if (!profileResponse.ok) throw new Error(profileData.error ?? "Could not create wallet profile");
 
-      const signature = await signMessageAsync({
-        account: address,
-        message: nonceData.message,
-      });
-
-      const verifyResponse = await fetch(getSupabaseFunctionUrl("siwe-auth"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "verify",
-          address,
-          nonce: nonceData.nonce,
-          message: nonceData.message,
-          signature,
-        }),
-      });
-      const sessionData = await verifyResponse.json();
-      if (!verifyResponse.ok) throw new Error(sessionData.error ?? "Wallet authentication failed");
-
-      setWalletAccessToken(sessionData.access_token);
       toast.success("Conectado com sucesso.");
       router.push(`/${locale}/dashboard`);
     } catch (error) {

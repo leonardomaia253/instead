@@ -174,6 +174,48 @@ export type ReconciliationOperation = {
   status?: "pending" | "confirmed" | "mismatch" | "failed" | "ignored";
 };
 
+export type RevenueEntitlement = {
+  id: string;
+  source_code: string;
+  status: "active" | "past_due" | "cancelled" | "expired";
+  starts_at: string;
+  expires_at: string | null;
+  metadata: Record<string, unknown>;
+  revenue_sources?: {
+    label: string;
+    category: string;
+    billing_interval: string;
+  } | null;
+};
+
+export type LendingAutomationIntent = {
+  id: string;
+  source_code: string;
+  chain_id: number;
+  status: "draft" | "awaiting_payment" | "paid" | "queued" | "signed" | "executed" | "cancelled" | "failed";
+  risk_threshold: number | null;
+  recommendation: string | null;
+  tx_hash: string | null;
+  created_at: string;
+  updated_at: string;
+  payload: Record<string, unknown>;
+  revenue_sources?: {
+    label: string;
+    category: string;
+  } | null;
+};
+
+export type LendingAlertEvent = {
+  id: string;
+  severity: "info" | "warning" | "critical";
+  status: "queued" | "sent" | "skipped" | "failed";
+  health_factor: number | null;
+  message: string;
+  metadata: Record<string, unknown>;
+  sent_at: string | null;
+  created_at: string;
+};
+
 function normalizeTxHash(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value.toLowerCase() : null;
 }

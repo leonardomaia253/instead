@@ -1,0 +1,207 @@
+export type RevenueVertical = "token_factory" | "lending" | "services";
+export type RevenueCategory = "transactional" | "subscription" | "service" | "spread_or_fee" | "b2b";
+export type RevenueStatus = "active" | "ready" | "planned";
+
+export type RevenueSource = {
+  sourceCode: string;
+  label: string;
+  vertical: RevenueVertical;
+  category: RevenueCategory;
+  revenueModel: string;
+  billingInterval: "one_time" | "monthly" | "usage" | "per_transaction";
+  status: RevenueStatus;
+  productionReady: boolean;
+  amountUsdCents?: number;
+  amountBrlCents?: number;
+  takeRateBps?: number;
+  notes: string;
+};
+
+export const REVENUE_SOURCES: RevenueSource[] = [
+  {
+    sourceCode: "token_deploy_basic",
+    label: "Token Deploy Basic",
+    vertical: "token_factory",
+    category: "transactional",
+    revenueModel: "Preço fixo por deploy assistido básico",
+    billingInterval: "one_time",
+    status: "active",
+    productionReady: true,
+    amountUsdCents: 9900,
+    amountBrlCents: 49900,
+    notes: "Checkout Stripe/Pagar.me e execução via factory EVM.",
+  },
+  {
+    sourceCode: "token_deploy_premium",
+    label: "Token Deploy Premium",
+    vertical: "token_factory",
+    category: "service",
+    revenueModel: "Pacote premium com configuração, publicação e validação",
+    billingInterval: "one_time",
+    status: "active",
+    productionReady: true,
+    amountUsdCents: 29900,
+    amountBrlCents: 149900,
+    notes: "Ideal para projetos que querem deploy com suporte humano.",
+  },
+  {
+    sourceCode: "token_fair_launch_assisted",
+    label: "Fair Launch Assistido",
+    vertical: "token_factory",
+    category: "service",
+    revenueModel: "Serviço assistido de lançamento e liquidez inicial",
+    billingInterval: "one_time",
+    status: "active",
+    productionReady: true,
+    amountUsdCents: 49900,
+    amountBrlCents: 249900,
+    notes: "Monetiza preparação, checklist e acompanhamento de lançamento.",
+  },
+  {
+    sourceCode: "lending_borrow_fee",
+    label: "Lending Borrow Fee",
+    vertical: "lending",
+    category: "spread_or_fee",
+    revenueModel: "Taxa de conveniência cobrada no borrow on-chain",
+    billingInterval: "per_transaction",
+    status: "active",
+    productionReady: true,
+    takeRateBps: 50,
+    notes: "Configurado no contrato de lending; 50 bps por borrow.",
+  },
+  {
+    sourceCode: "lending_pro_subscription",
+    label: "Lending Pro",
+    vertical: "lending",
+    category: "subscription",
+    revenueModel: "Assinatura mensal para alertas, analytics e limites avançados",
+    billingInterval: "monthly",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 4900,
+    amountBrlCents: 24900,
+    notes: "Checkout habilitado; libera camada premium de acompanhamento.",
+  },
+  {
+    sourceCode: "liquidation_alerts_premium",
+    label: "Alertas Premium de Liquidação",
+    vertical: "lending",
+    category: "subscription",
+    revenueModel: "Assinatura de alertas multicanal para health factor e risco",
+    billingInterval: "monthly",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 1900,
+    amountBrlCents: 9900,
+    notes: "Aproveita Telegram e monitoramento já existentes.",
+  },
+  {
+    sourceCode: "deleverage_assisted",
+    label: "Deleverage Assistido",
+    vertical: "lending",
+    category: "service",
+    revenueModel: "Serviço pontual para reduzir risco de posição alavancada",
+    billingInterval: "one_time",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 14900,
+    amountBrlCents: 74900,
+    notes: "Receita de suporte operacional em momentos de stress.",
+  },
+  {
+    sourceCode: "leverage_strategy_execution",
+    label: "Execução de Estratégia Alavancada",
+    vertical: "lending",
+    category: "service",
+    revenueModel: "Taxa por execução guiada de estratégia de lending",
+    billingInterval: "per_transaction",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 9900,
+    amountBrlCents: 49900,
+    notes: "Produto para usuários avançados que querem rota operacional com suporte.",
+  },
+  {
+    sourceCode: "auto_rebalance_protection",
+    label: "Proteção Auto-Rebalance",
+    vertical: "lending",
+    category: "subscription",
+    revenueModel: "Assinatura para automações de proteção e rebalanceamento",
+    billingInterval: "monthly",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 7900,
+    amountBrlCents: 39900,
+    notes: "Pode começar como alerta + recomendação e evoluir para automação autorizada.",
+  },
+  {
+    sourceCode: "wealth_dashboard_subscription",
+    label: "Wealth Dashboard",
+    vertical: "services",
+    category: "subscription",
+    revenueModel: "Assinatura de dashboard patrimonial DeFi/multichain",
+    billingInterval: "monthly",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 4900,
+    amountBrlCents: 24900,
+    notes: "Monetiza leitura consolidada de posições, saldos e risco.",
+  },
+  {
+    sourceCode: "white_glove_lending",
+    label: "White-glove Lending Desk",
+    vertical: "lending",
+    category: "service",
+    revenueModel: "Atendimento premium para estruturação de crédito com colateral",
+    billingInterval: "one_time",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 99900,
+    amountBrlCents: 499900,
+    notes: "Serviço humano para tickets maiores.",
+  },
+  {
+    sourceCode: "b2b_lending_widget_api",
+    label: "B2B Lending Widget/API",
+    vertical: "services",
+    category: "b2b",
+    revenueModel: "Licença mensal ou uso para parceiros embedarem lending",
+    billingInterval: "monthly",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 49900,
+    amountBrlCents: 249900,
+    notes: "Fonte B2B para comunidades, wallets, agências e fintechs.",
+  },
+  {
+    sourceCode: "multi_protocol_routing_fee",
+    label: "Taxa de Roteamento Multi-protocolo",
+    vertical: "lending",
+    category: "spread_or_fee",
+    revenueModel: "Fee por roteamento para melhor mercado/protocolo",
+    billingInterval: "per_transaction",
+    status: "ready",
+    productionReady: true,
+    takeRateBps: 20,
+    notes: "Monetiza roteador e curadoria de execução quando mais protocolos forem ligados.",
+  },
+  {
+    sourceCode: "risk_shield_membership",
+    label: "Risk Shield Membership",
+    vertical: "lending",
+    category: "subscription",
+    revenueModel: "Membro premium com relatórios, limites e playbooks de risco",
+    billingInterval: "monthly",
+    status: "ready",
+    productionReady: true,
+    amountUsdCents: 9900,
+    amountBrlCents: 49900,
+    notes: "Empacota análise de risco, alertas e suporte recorrente.",
+  },
+];
+
+export const REVENUE_SOURCE_COUNT = REVENUE_SOURCES.length;
+
+export const FIAT_REVENUE_SOURCES = REVENUE_SOURCES.filter(
+  (source) => source.amountUsdCents && source.amountBrlCents,
+);

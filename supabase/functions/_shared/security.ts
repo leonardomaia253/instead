@@ -1,4 +1,4 @@
-const DEFAULT_ALLOWED_HEADERS = "authorization, x-client-info, apikey, content-type";
+const DEFAULT_ALLOWED_HEADERS = "authorization, x-client-info, apikey, content-type, x-monitor-secret, x-automation-secret";
 const DEFAULT_ALLOWED_METHODS = "POST, OPTIONS";
 const DEFAULT_MAX_BODY_BYTES = 4096;
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;

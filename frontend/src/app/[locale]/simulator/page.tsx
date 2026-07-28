@@ -4,7 +4,7 @@ import { Link } from "@/navigation";
 import { CHAIN_META } from "@/lib/wagmi";
 import { useTranslations } from "next-intl";
 
-// Simulação simplificada — preços em USD estáticos para demo
+// Cenário educativo com preços de referência. Não trate como cotação executável.
 const ASSET_PRICES: Record<string, number> = {
   ETH: 3200,  WETH: 3200,
   BTC: 62000, WBTC: 62000,
@@ -50,8 +50,11 @@ export default function SimulatorPage() {
           🧮 Simulador de Empréstimo
         </h1>
         <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 14 }}>
-          Calcule o impacto real de uma posição antes de confirmar na blockchain.
+          Calcule o impacto estimado de uma posição antes de confirmar na blockchain. Confira preço/oracle antes da execução.
         </p>
+        <div style={{ border: "1px solid rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)", color: "var(--text-primary)", padding: 14, marginBottom: 20, fontSize: 13, lineHeight: 1.5 }}>
+          Aviso de produção: este simulador não é cotação, promessa de liquidação ou aconselhamento financeiro. Ele serve para entender sensibilidade de LTV, juros e health factor.
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 24 }}>
           {/* Inputs */}

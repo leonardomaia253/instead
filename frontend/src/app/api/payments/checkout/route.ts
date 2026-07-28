@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { createPagarmeCheckout, createStripeCheckout, validateCheckoutRequest, type CheckoutRequest, type PaymentProvider } from "@/lib/server/payments";
+import { createPagarmeCheckout, createStripeCheckout, validateCheckoutRequest, type CheckoutRequest, type PaymentProvider, type PaymentVertical } from "@/lib/server/payments";
 import { rateLimit } from "@/lib/server/rateLimit";
 
 function isProvider(value: unknown): value is PaymentProvider {
   return value === "stripe" || value === "pagarme";
+}
+
+function isVertical(value: unknown): value is PaymentVertical {
+  return value === "token_factory" || value === "lending" || value === "services";
 }
 
 export async function POST(request: Request) {
@@ -17,13 +21,13 @@ export async function POST(request: Request) {
     if (!isProvider(body.provider)) {
       return NextResponse.json({ error: "Unsupported payment provider" }, { status: 400 });
     }
-    if (body.vertical !== "token_factory") {
+    if (!isVertical(body.vertical)) {
       return NextResponse.json({ error: "Unsupported payment vertical" }, { status: 400 });
     }
     if (!body.productCode) {
       return NextResponse.json({ error: "productCode is required" }, { status: 400 });
     }
-    validateCheckoutRequest(body);
+    await validateCheckoutRequest(body);
 
     const checkout = body.provider === "stripe" ? await createStripeCheckout(body) : await createPagarmeCheckout(body);
     return NextResponse.json(checkout);
