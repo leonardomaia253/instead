@@ -8,6 +8,11 @@ coverage/
 artifacts/
 cache/
 typechain-types/
+target/
+solana/target/
+solana/.anchor/
+solana/test-ledger/
+solana/program-keypairs/
 
 # Next.js
 .next/
@@ -21,6 +26,7 @@ deployments/*.json
 # Misc
 .DS_Store
 *.pem
+*.json.keypair
 
 # Env
 .env

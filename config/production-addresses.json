@@ -1,0 +1,233 @@
+{
+  "updatedAt": "2026-07-27",
+  "notes": [
+    "Public production contract addresses for supported deployment networks.",
+    "The current TokenFactory expects an UniswapV2-like router with addLiquidityETH(address,uint256,uint256,uint256,address,uint256).",
+    "Uniswap V3, Universal Router, and Aerodrome-style routers are not drop-in replacements for the current TokenFactory without adapter/code changes.",
+    "Always re-check these public addresses against official docs before mainnet deployment."
+  ],
+  "sources": {
+    "chainlinkFeeds": "https://docs.chain.link/data-feeds/price-feeds/addresses",
+    "chainlinkDataFeeds": "https://data.chain.link/",
+    "uniswapV2Deployments": "https://developers.uniswap.org/docs/protocols/v2/deployments",
+    "pancakeSwapV2Addresses": "https://developer.pancakeswap.finance/contracts/v2/addresses",
+    "quickSwapAddresses": "https://docs.quickswap.exchange/overview/contracts-and-addresses",
+    "solanaDocs": "https://solana.com/docs",
+    "splTokenDocs": "https://spl.solana.com/token",
+    "jupiterDocs": "https://dev.jup.ag/",
+    "pythSolanaDocs": "https://docs.pyth.network/price-feeds/use-real-time-data/solana"
+  },
+  "nonEvmNetworks": {
+    "solana": {
+      "status": "not-supported-by-current-token-factory",
+      "reason": "The current TokenFactory is a Solidity/EVM contract and requires Chainlink AggregatorV3Interface plus an UniswapV2-like addLiquidityETH router. Solana uses programs, SPL tokens, and non-EVM liquidity/oracle integrations.",
+      "mainnet": {
+        "cluster": "mainnet-beta",
+        "rpcEnv": "SOLANA_RPC_URL",
+        "factoryProgramEnv": "NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID",
+        "nativeSymbol": "SOL",
+        "tokenProgram": {
+          "name": "SPL Token Program",
+          "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        "associatedTokenProgram": {
+          "name": "Associated Token Account Program",
+          "programId": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        "recommendedDexAggregator": {
+          "name": "Jupiter",
+          "type": "quote-and-swap-api",
+          "compatibility": "requires-solana-specific-integration"
+        },
+        "recommendedOracle": {
+          "name": "Pyth Price Feeds",
+          "compatibility": "requires-solana-specific-integration"
+        }
+      },
+      "implementationRequired": [
+        "Create a Solana program or Anchor program for token factory logic.",
+        "Use SPL Token or Token-2022 for mint creation and token features.",
+        "Integrate a Solana liquidity venue or aggregator such as Jupiter/Raydium/Orca with Solana transaction construction.",
+        "Use Pyth or another Solana-compatible oracle instead of Chainlink AggregatorV3Interface.",
+        "Add frontend wallet support through Solana wallet adapters.",
+        "Add dedicated deployment, verification, and smoke-test scripts outside Hardhat."
+      ]
+    }
+  },
+  "networks": {
+    "mainnet": {
+      "chainId": 1,
+      "hardhatNetwork": "mainnet",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_MAINNET",
+      "rpcEnv": "MAINNET_RPC_URL",
+      "nativeSymbol": "ETH",
+      "chainlinkEthUsdFeed": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "Uniswap V2 Router02",
+        "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+          "source": "uniswapV2Deployments"
+        }
+      ]
+    },
+    "arbitrum": {
+      "chainId": 42161,
+      "hardhatNetwork": "arbitrum",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_ARBITRUM",
+      "rpcEnv": "ARBITRUM_RPC_URL",
+      "nativeSymbol": "ETH",
+      "chainlinkEthUsdFeed": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "Uniswap V2 Router02",
+        "address": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+          "source": "uniswapV2Deployments"
+        },
+        {
+          "name": "PancakeSwap V2 Router",
+          "address": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+          "source": "pancakeSwapV2Addresses"
+        }
+      ]
+    },
+    "polygon": {
+      "chainId": 137,
+      "hardhatNetwork": "polygon",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_POLYGON",
+      "rpcEnv": "POLYGON_RPC_URL",
+      "nativeSymbol": "POL",
+      "chainlinkEthUsdFeed": "0xF9680D99D6C9589e2a93a78A04A279e509205945",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "Uniswap V2 Router02",
+        "address": "0xedf6066a2b290C185783862C7F4776A2C8077AD1",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0xedf6066a2b290C185783862C7F4776A2C8077AD1",
+          "source": "uniswapV2Deployments"
+        },
+        {
+          "name": "QuickSwap V2 Router",
+          "address": "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
+          "source": "quickSwapAddresses"
+        }
+      ]
+    },
+    "bsc": {
+      "chainId": 56,
+      "hardhatNetwork": "bsc",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_BSC",
+      "rpcEnv": "BSC_RPC_URL",
+      "nativeSymbol": "BNB",
+      "chainlinkEthUsdFeed": "0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "PancakeSwap V2 Router",
+        "address": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "PancakeSwap V2 Router",
+          "address": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+          "source": "pancakeSwapV2Addresses"
+        },
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+          "source": "uniswapV2Deployments"
+        }
+      ]
+    },
+    "base": {
+      "chainId": 8453,
+      "hardhatNetwork": "base",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_BASE",
+      "rpcEnv": "BASE_RPC_URL",
+      "nativeSymbol": "ETH",
+      "chainlinkEthUsdFeed": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "Uniswap V2 Router02",
+        "address": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+          "source": "uniswapV2Deployments"
+        },
+        {
+          "name": "PancakeSwap V2 Router",
+          "address": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+          "source": "pancakeSwapV2Addresses"
+        }
+      ],
+      "notDropInRouters": [
+        {
+          "name": "Aerodrome Router",
+          "address": "0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43",
+          "reason": "Aerodrome routes and liquidity methods are not the same drop-in ABI expected by TokenFactory."
+        }
+      ]
+    },
+    "optimism": {
+      "chainId": 10,
+      "hardhatNetwork": "optimism",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_OPTIMISM",
+      "rpcEnv": "OPTIMISM_RPC_URL",
+      "nativeSymbol": "ETH",
+      "chainlinkEthUsdFeed": "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "Uniswap V2 Router02",
+        "address": "0x4A7b5Da61326A6379179b40d00F57E5bbDC962c2",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0x4A7b5Da61326A6379179b40d00F57E5bbDC962c2",
+          "source": "uniswapV2Deployments"
+        }
+      ]
+    },
+    "avalanche": {
+      "chainId": 43114,
+      "hardhatNetwork": "avalanche",
+      "factoryEnv": "NEXT_PUBLIC_FACTORY_AVALANCHE",
+      "rpcEnv": "AVALANCHE_RPC_URL",
+      "nativeSymbol": "AVAX",
+      "chainlinkEthUsdFeed": "0x976B3D034E162d8bD72D6b9C989d545b839003b0",
+      "recommendedDexRouterEnv": "DEX_ROUTER_ADDRESS",
+      "recommendedDexRouter": {
+        "name": "Uniswap V2 Router02",
+        "address": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+        "compatibility": "uniswap-v2-like"
+      },
+      "compatibleRouters": [
+        {
+          "name": "Uniswap V2 Router02",
+          "address": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+          "source": "uniswapV2Deployments"
+        }
+      ]
+    }
+  }
+}

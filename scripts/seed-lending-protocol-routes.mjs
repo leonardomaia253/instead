@@ -32,6 +32,34 @@ const rows = protocols.map((protocol) => ({
   updated_at: new Date().toISOString(),
 }));
 
+if (
+  process.env.DEPLOYMENT_NETWORK === "base" &&
+  process.env.NEXT_PUBLIC_LENDING_POOL_ADDRESS &&
+  process.env.NEXT_PUBLIC_LENDING_ROUTER_ADDRESS &&
+  process.env.AAVE_POOL_ADDRESSES_PROVIDER
+) {
+  rows.push({
+    protocol_id: "aave_v3",
+    protocol_name: "Aave v3 Base",
+    runtime: "evm",
+    adapter_kind: "aave_v3",
+    chain_id: 8453,
+    adapter_address: process.env.NEXT_PUBLIC_LENDING_POOL_ADDRESS,
+    market_address: process.env.AAVE_POOL_ADDRESSES_PROVIDER,
+    config: {
+      router_address: process.env.NEXT_PUBLIC_LENDING_ROUTER_ADDRESS,
+      supported_assets: JSON.parse(process.env.AAVE_SUPPORTED_ASSETS_JSON ?? "{}"),
+      a_tokens: JSON.parse(process.env.AAVE_ATOKENS_JSON ?? "{}"),
+      variable_debt_tokens: JSON.parse(process.env.AAVE_VARIABLE_DEBT_TOKENS_JSON ?? "{}"),
+    },
+    status: "active",
+    production_ready: true,
+    risk_tier: "medium",
+    notes: "Production Base route configured from deployed InsteadLendingPool/InsteadLendingRouter and Aave v3 Base address book.",
+    updated_at: new Date().toISOString(),
+  });
+}
+
 const response = await fetch(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/lending_protocol_routes?on_conflict=protocol_id,chain_id,adapter_address,market_address`, {
   method: "POST",
   headers: {

@@ -99,6 +99,38 @@ async function clearSession(telegramUserId: string) {
 }
 
 // ─────────────────────────────────────────
+// Wallet link helpers
+// ─────────────────────────────────────────
+function isValidEVMAddress(address: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(address);
+}
+
+async function getWalletLink(telegramUserId: string): Promise<string | null> {
+  const { data } = await supabase!
+    .from("telegram_wallet_links")
+    .select("wallet_address")
+    .eq("telegram_user_id", telegramUserId)
+    .maybeSingle();
+  return data?.wallet_address ?? null;
+}
+
+async function setWalletLink(telegramUserId: string, username: string, walletAddress: string) {
+  await supabase!
+    .from("telegram_wallet_links")
+    .upsert(
+      { telegram_user_id: telegramUserId, username, wallet_address: walletAddress, updated_at: new Date().toISOString() },
+      { onConflict: "telegram_user_id" },
+    );
+}
+
+async function clearWalletLink(telegramUserId: string) {
+  await supabase!
+    .from("telegram_wallet_links")
+    .delete()
+    .eq("telegram_user_id", telegramUserId);
+}
+
+// ─────────────────────────────────────────
 // Intent storage
 // ─────────────────────────────────────────
 async function storeIntent(
@@ -108,9 +140,21 @@ async function storeIntent(
   flow: "token" | "lending",
   payload: Record<string, unknown>,
 ) {
+  // Automatically attach linked wallet address to the intent if available
+  const walletAddress = await getWalletLink(telegramUserId);
+
   const { data, error } = await supabase!
     .from("telegram_bot_intents")
-    .insert({ telegram_user_id: telegramUserId, chat_id: chatId, username, flow, status: "draft", payload, rate_key: `telegram:${telegramUserId}` })
+    .insert({
+      telegram_user_id: telegramUserId,
+      chat_id: chatId,
+      username,
+      flow,
+      status: "draft",
+      payload: walletAddress ? { ...payload, linked_wallet: walletAddress } : payload,
+      wallet_address: walletAddress ?? undefined,
+      rate_key: `telegram:${telegramUserId}`,
+    })
     .select("id")
     .single();
   if (error) throw error;

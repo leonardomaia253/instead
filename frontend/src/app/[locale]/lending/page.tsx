@@ -13,8 +13,20 @@ import { HealthGauge } from "@/components/HealthGauge";
 import { CHAIN_META } from "@/lib/wagmi";
 import { Shield } from "lucide-react";
 
-const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" as `0x${string}`;
-const WETH_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1" as `0x${string}`;
+const LENDING_ASSETS = {
+  USDC: {
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`,
+    symbol: "USDC",
+    decimals: 6,
+  },
+  WETH: {
+    address: "0x4200000000000000000000000000000000000006" as `0x${string}`,
+    symbol: "WETH",
+    decimals: 18,
+  },
+} as const;
+const USDC_ADDRESS = LENDING_ASSETS.USDC.address;
+const WETH_ADDRESS = LENDING_ASSETS.WETH.address;
 
 type Tab = "deposit" | "borrow" | "repay";
 
@@ -120,9 +132,11 @@ export default function LendingPage() {
     if (!amount) return;
     setActionError(null);
     try {
-      if (tab === "deposit") deposit(selectedAsset, amount);
-      else if (tab === "borrow") approveDelegationAndBorrow(selectedAsset, amount);
-      else approveAndRepay(selectedAsset, amount);
+      const asset = Object.values(LENDING_ASSETS).find((item) => item.address.toLowerCase() === selectedAsset.toLowerCase());
+      const decimals = asset?.decimals ?? 18;
+      if (tab === "deposit") deposit(selectedAsset, amount, decimals);
+      else if (tab === "borrow") approveDelegationAndBorrow(selectedAsset, amount, decimals);
+      else approveAndRepay(selectedAsset, amount, decimals);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Operação não concluída. Tente novamente.");
     }
@@ -233,8 +247,9 @@ export default function LendingPage() {
                     {tab === "borrow" ? "Ativo para Tomar Emprestado" : "Ativo"}
                   </label>
                   <select value={selectedAsset} onChange={(e) => setSelectedAsset(e.target.value as `0x${string}`)}>
-                    <option value={USDC_ADDRESS}>USDC</option>
-                    <option value={WETH_ADDRESS}>WETH</option>
+                    {Object.values(LENDING_ASSETS).map((asset) => (
+                      <option key={asset.symbol} value={asset.address}>{asset.symbol}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -244,8 +259,9 @@ export default function LendingPage() {
                       Colateral Depositado
                     </label>
                     <select value={colAsset} onChange={(e) => setColAsset(e.target.value as `0x${string}`)}>
-                      <option value={WETH_ADDRESS}>WETH</option>
-                      <option value={USDC_ADDRESS}>USDC</option>
+                      {Object.values(LENDING_ASSETS).map((asset) => (
+                        <option key={asset.symbol} value={asset.address}>{asset.symbol}</option>
+                      ))}
                     </select>
                   </div>
                 )}

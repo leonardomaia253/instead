@@ -1,6 +1,26 @@
-const appOrigin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL;
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const telegramSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+function parseEnvFile(path) {
+  if (!existsSync(path)) return {};
+  return Object.fromEntries(
+    readFileSync(path, "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#") && line.includes("="))
+      .map((line) => {
+        const index = line.indexOf("=");
+        return [line.slice(0, index), line.slice(index + 1).replace(/^["']|["']$/g, "")];
+      }),
+  );
+}
+
+const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
+const env = { ...process.env, ...fileEnv };
+
+const appOrigin = env.APP_ORIGIN || env.NEXT_PUBLIC_APP_URL;
+const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
+const telegramSecret = env.TELEGRAM_WEBHOOK_SECRET;
 
 const failures = [];
 const warnings = [];

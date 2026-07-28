@@ -1,0 +1,20 @@
+[package]
+name = "instead_solana_factory"
+version = "0.1.0"
+description = "Production-grade Solana token factory foundation for Instead Finance"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "instead_solana_factory"
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.1", features = ["metadata"] }

@@ -68,7 +68,7 @@ function requireJsonObject(name) {
   }
 }
 
-const requiredEdgeFunctions = ["siwe-auth", "token-ai", "lending-ai", "telegram-bot"];
+const requiredEdgeFunctions = ["siwe-auth", "token-ai", "lending-ai", "telegram-bot", "balance-monitor"];
 for (const functionName of requiredEdgeFunctions) {
   const indexPath = resolve(root, `supabase/functions/${functionName}/index.ts`);
   if (!existsSync(indexPath)) failures.push(`Supabase function ${functionName} is missing`);
@@ -91,6 +91,7 @@ for (const requiredFile of [
   "scripts/seed-lending-protocol-routes.mjs",
   "scripts/check-secrets.mjs",
   "scripts/set-telegram-webhook.mjs",
+  "scripts/monitor-balances.mjs",
 ]) {
   if (!existsSync(resolve(root, requiredFile))) failures.push(`${requiredFile} is missing`);
 }
@@ -110,12 +111,32 @@ warnIfMissing("PAGARME_SECRET_KEY");
 warnIfMissing("PAGARME_WEBHOOK_SECRET");
 warnIfMissing("SENTRY_DSN");
 warnIfMissing("UPTIME_STATUS_URL");
-warnIfMissing("ALERT_WEBHOOK_URL");
+warnIfMissing("TELEGRAM_ALERT_CHAT_ID");
+warnIfMissing("SOLANA_RPC_URL");
+warnIfMissing("BALANCE_MONITOR_SECRET");
 
 if (env.REQUIRE_MONITORING === "true") {
   requireEnv("SENTRY_DSN");
   requireEnv("UPTIME_STATUS_URL");
-  requireEnv("ALERT_WEBHOOK_URL");
+  requireEnv("TELEGRAM_BOT_TOKEN");
+  requireEnv("TELEGRAM_ALERT_CHAT_ID");
+}
+
+if (env.REQUIRE_SOLANA_PRODUCTION === "true") {
+  requireHttpsUrl("SOLANA_RPC_URL");
+  requireEnv("NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID");
+  if (env.NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(env.NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID)) {
+    failures.push("NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID must be a Solana base58 public key");
+  }
+} else {
+  warnings.push("Solana production gate is disabled; Solana launch remains blocked");
+}
+
+if (env.REQUIRE_EVM_PRODUCTION_GATE === "true") {
+  requireEnv("DEPLOYMENT_NETWORK");
+  requireHttpsUrl("DEPLOYMENT_RPC_URL");
+  requireEnv("PRODUCTION_MULTISIG_ADDRESS", { address: true });
+  if (env.REQUIRE_EXTERNAL_AUDIT !== "true") warnings.push("REQUIRE_EXTERNAL_AUDIT is not enabled");
 }
 
 if (env.REQUIRE_TELEGRAM_BOT === "true") {

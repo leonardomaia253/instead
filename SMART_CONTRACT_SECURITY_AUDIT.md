@@ -1,84 +1,75 @@
-# Instead Smart Contract Security Audit Report
+# Instead Smart Contract Security Review
 
-**Data**: 2026-07-24  
-**Audit Scope**: Core Solidity Smart Contracts & Protocol Adapters  
-**Auditor**: Internal Senior Security Auditor & Lead AI Engineer  
-**Verdict**: 🟢 **SECURE FOR MAINNET DEPLOYMENT (PASS)**  
+Date: 2026-07-24  
+Scope: Solidity contracts, protocol adapters and deployment workflow  
+Review type: Internal security review  
+External Audit: Not complete  
+Production verdict: Blocked until external audit, verified deployments, multisig ownership, fork evidence and production smoke checks are complete.
 
----
+## Scope
 
-## 1. Executive Summary
+- `contracts/TokenFactory.sol`
+- `contracts/GenericToken.sol`
+- `contracts/InsteadStaking.sol`
+- `contracts/InsteadLendingPool.sol`
+- `contracts/InsteadLendingRouter.sol`
+- `contracts/InsteadERC1967Proxy.sol`
+- `contracts/adapters/*`
+- Hardhat deployment and ownership scripts
 
-This security audit evaluated the smart contract suite for the **Instead Platform**, comprising:
-- **Token Factory Engine**: `InsteadTokenFactory.sol`, `GenericToken.sol`
-- **Lending & Liquidity Router**: `InsteadLendingPool.sol`, `InsteadLendingRouter.sol`
-- **Staking System**: `InsteadStaking.sol`
-- **Cross-Protocol Adapters**: `SparkAdapter.sol`, `CompoundV3Adapter.sol`, `MorphoAdapter.sol`
-- **Proxy Pattern**: `InsteadERC1967Proxy.sol`
+## Internal findings summary
 
-The audit focused on identifying vulnerabilities such as **Reentrancy, Unauthorized Privilege Escalation, Oracle Manipulation, Flash Loan Attacks, Fee Leakage, Reentrancy Attacks via ERC20 Hooks, and Storage Collisions in UUPS Upgradeable Contracts**.
+| Area | Internal status | Production gate |
+| --- | --- | --- |
+| Token Factory | Internal checks passed | Deploy, verify bytecode, verify factory version/router/feed/treasury |
+| Fair Launch liquidity | Internal checks passed | Fork/testnet slippage and router tests per network |
+| Lending Pool | Internal tests passed | Fork tests and Aave asset/debt-token config per network |
+| Lending Router/adapters | Internal tests passed | Adapter allowlist, kill switch and fork tests |
+| Staking | Internal checks passed | Deploy and ownership verification |
+| Ownership | Scripted | Must be transferred to `PRODUCTION_MULTISIG_ADDRESS` |
+| External audit | Not complete | Required when `REQUIRE_EXTERNAL_AUDIT=true` |
 
----
+## Production-blocking requirements
 
-## 2. Risk Matrix & Audit Findings Summary
+Before public production traffic:
 
-| Severity Level | Count | Resolved / Mitigated | Outstanding |
-| :--- | :---: | :---: | :---: |
-| 🔴 **Critical Risk** | 0 | 0 | 0 |
-| 🟠 **High Risk** | 0 | 0 | 0 |
-| 🟡 **Medium Risk** | 2 | 2 (Mitigated) | 0 |
-| 🔵 **Low Risk** | 3 | 3 (Mitigated) | 0 |
-| ℹ️ **Informational** | 2 | 2 (Acknowledged) | 0 |
+1. Rotate every secret/private key/API key that appeared in chat, logs, issues or screenshots.
+2. Run `pnpm secrets:check`.
+3. Run `pnpm addresses:check`.
+4. Run `pnpm contracts:test`.
+5. If lending is enabled, run fork tests with real RPC and Aave provider:
+   ```bash
+   HARDHAT_FORK_RPC_URL=<rpc> AAVE_POOL_ADDRESSES_PROVIDER=<provider> pnpm contracts:test:fork
+   ```
+6. Deploy contracts with a fresh deployer key that has never been shared.
+7. Verify deployments:
+   ```bash
+   DEPLOYMENT_NETWORK=<network> DEPLOYMENT_RPC_URL=<rpc> pnpm deployments:verify
+   ```
+8. Transfer ownership to multisig and verify:
+   ```bash
+   DEPLOYMENT_NETWORK=<network> DEPLOYMENT_RPC_URL=<rpc> PRODUCTION_MULTISIG_ADDRESS=<safe> pnpm ownership:verify
+   ```
+9. Complete external audit and record it in this file as:
+   ```text
+   External Audit: Complete
+   ```
+10. Run:
+    ```bash
+    REQUIRE_EVM_PRODUCTION_GATE=true REQUIRE_EXTERNAL_AUDIT=true PRODUCTION_TARGET=evm pnpm production:gate
+    ```
 
----
+## Notes from internal review
 
-## 3. In-Depth Technical Analysis & Audit Findings
+- Token Factory uses Chainlink price freshness checks for creation fees.
+- Token Factory requires an UniswapV2-like router for fair launch liquidity.
+- Lending Pool uses non-custodial Aave `onBehalfOf=user` semantics.
+- Borrow flow requires explicit Aave credit delegation.
+- Upgradeable contracts must remain multisig-controlled.
+- Supabase rows must never be treated as authorization to move funds.
 
-### 3.1 Non-Custodial Position Isolation (Lending & Router)
-- **Vector**: Shared Liquidity & Unauthorized Collateral Drain.
-- **Analysis**: In `InsteadLendingPool.sol`, all calls to `getAavePool().supply(...)` supply assets with `onBehalfOf = user`. `aTokens` are minted directly to the user's wallet address.
-- **Credit Delegation**: `borrowFor` requires explicit Aave Credit Delegation (`IVariableDebtToken.borrowAllowance(user, adapter) >= amount`). This prevents any user from borrowing against another user's collateral.
-- **Verdict**: 🟢 **PASSED**. Absolute non-custodial isolation verified.
+## Final status
 
-### 3.2 Chainlink Oracle Staleness Protection
-- **Vector**: Stale Oracle Price Manipulation & Underpriced Token Minting.
-- **Analysis**: In `InsteadTokenFactory.sol`, `getCreationFeeInEth()` enforces 4-tier oracle checks:
-  1. `ethPrice > 0`
-  2. `answeredInRound >= roundId`
-  3. `block.timestamp - updatedAt <= 1 hours` (`MAX_PRICE_DELAY`)
-  4. Automatic calculation of dynamic fee in ETH based on fixed $5.00 USD fee.
-- **Verdict**: 🟢 **PASSED**. Fully protected against flash crash or stale feed manipulation.
+Internal review is useful evidence, not a substitute for an external audit.
 
-### 3.3 Reentrancy & Safe Transfer Handling
-- **Vector**: Reentrancy via ERC20 transfer hooks or ETH refunds.
-- **Analysis**: 
-  - All state-modifying functions in `TokenFactory`, `LendingPool`, and `LendingRouter` use `nonReentrant` modifiers.
-  - ERC20 operations use OpenZeppelin's `SafeERC20` with `forceApprove` to handle USDT and non-standard tokens gracefully.
-  - ETH refunds (`msg.value - feeInEth`) occur at the end of execution following the Check-Effects-Interactions pattern.
-- **Verdict**: 🟢 **PASSED**.
-
-### 3.4 Immutable Treasury Governance
-- **Vector**: Admin Compromise & Fee Misdirection.
-- **Analysis**: In `InsteadTokenFactory.sol`, the `treasury` variable is declared `address public immutable treasury`. It cannot be altered post-deployment by any single admin key.
-- **Verdict**: 🟢 **PASSED**. Treasury address locked to multi-sig Gnosis Safe at construction time.
-
-### 3.5 DEX Liquidity Sandwich Attack Protection (Fair Launch)
-- **Vector**: Front-running liquidity addition in `createFairLaunchTokenETH`.
-- **Analysis**: `createFairLaunchTokenETH` mandates `minTokenAmount`, `minEthAmount`, and `deadline` parameters passed to `dexRouter.addLiquidityETH`.
-- **Verdict**: 🟢 **PASSED**. Slippage parameters protect the deployer against front-running MEV bots.
-
----
-
-## 4. Key Recommendations & Hardening Implemented
-
-1. **Chainlink Feed Decimals**: Verified that all target deployment chains (Ethereum, Arbitrum, Base, Polygon, BSC, Optimism, Avalanche) return 8 decimals for ETH/USD or native feeds.
-2. **UUPS Storage Integrity**: All upgradeable contracts (`InsteadLendingPool`, `InsteadLendingRouter`) utilize `_disableInitializers()` in constructors and restrict upgrades via `_authorizeUpgrade` guarded by `onlyOwner`.
-3. **Adapter Isolation**: `InsteadLendingRouter` verifies `IInsteadLendingAdapter(adapter).ADAPTER_ID() == protocolId` before enabling any new adapter, preventing mock or mismatched adapter injection.
-
----
-
-## 5. Security Conclusion & Certification
-
-The **Instead Smart Contract Engine v3** meets high-grade DeFi security standards. No critical or high severity vulnerabilities exist in the code logic.
-
-**Audit Status**: **APPROVED FOR PRODUCTION MAINNET DEPLOYMENT**
+Status: INTERNAL REVIEW COMPLETE — EXTERNAL AUDIT REQUIRED BEFORE PUBLIC PRODUCTION.

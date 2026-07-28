@@ -1,0 +1,26 @@
+-- Optional production scheduler for the balance-monitor Edge Function.
+--
+-- Requirements in Supabase Dashboard:
+-- 1. Enable the `pg_cron` extension.
+-- 2. Enable the `pg_net` extension.
+-- 3. Store BALANCE_MONITOR_SECRET as a Supabase secret and replace the placeholder below
+--    if you choose to enforce x-monitor-secret on the Edge Function.
+--
+-- This migration is intentionally commented out because projects differ in extension
+-- permissions and secret-storage policy. Apply manually after confirming pg_cron/pg_net
+-- are enabled in production.
+
+-- SELECT cron.schedule(
+--   'instead-balance-monitor-every-15-minutes',
+--   '*/15 * * * *',
+--   $$
+--   SELECT net.http_post(
+--     url := 'https://wjvrcwvnznkisoerngal.supabase.co/functions/v1/balance-monitor',
+--     headers := jsonb_build_object(
+--       'Content-Type', 'application/json',
+--       'x-monitor-secret', 'REPLACE_WITH_BALANCE_MONITOR_SECRET'
+--     ),
+--     body := '{}'::jsonb
+--   );
+--   $$
+-- );

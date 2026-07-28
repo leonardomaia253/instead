@@ -2,7 +2,7 @@
 
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { parseUnits } from "ethers";
-import { AAVE_VARIABLE_DEBT_TOKEN_ABI, CONTRACTS, ERC20_ABI, LENDING_POOL_ABI } from "@/lib/wagmi";
+import { AAVE_VARIABLE_DEBT_TOKEN_ABI, CONTRACTS, ERC20_ABI, LENDING_POOL_ABI, LENDING_ROUTER_ABI } from "@/lib/wagmi";
 
 const ENABLE_PRODUCTION_LENDING = process.env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true";
 const LENDING_DISABLED_MESSAGE =
@@ -60,14 +60,24 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
   async function approveAndSupply(asset: `0x${string}`, amount: string, decimals = 18) {
     assertLendingEnabled();
     const amountBN = parseUnits(amount, decimals);
+    const spender = CONTRACTS.LENDING_ROUTER || CONTRACTS.LENDING_POOL;
 
     const approveHash = await writeContractAsync({
       address: asset,
       abi: ERC20_ABI,
       functionName: "approve",
-      args: [CONTRACTS.LENDING_POOL, amountBN],
+      args: [spender, amountBN],
     });
     await publicClient.waitForTransactionReceipt({ hash: approveHash });
+
+    if (CONTRACTS.LENDING_ROUTER) {
+      return writeContractAsync({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "supply",
+        args: [CONTRACTS.LENDING_POOL, asset, amountBN],
+      });
+    }
 
     return writeContractAsync({
       address: CONTRACTS.LENDING_POOL,
@@ -79,6 +89,15 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
 
   function supply(asset: `0x${string}`, amount: string, decimals = 18) {
     assertLendingEnabled();
+    if (CONTRACTS.LENDING_ROUTER) {
+      writeContract({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "supply",
+        args: [CONTRACTS.LENDING_POOL, asset, parseUnits(amount, decimals)],
+      });
+      return;
+    }
     writeContract({
       address: CONTRACTS.LENDING_POOL,
       abi: LENDING_POOL_ABI,
@@ -89,6 +108,15 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
 
   function withdraw(asset: `0x${string}`, amount: string, decimals = 18) {
     assertLendingEnabled();
+    if (CONTRACTS.LENDING_ROUTER) {
+      writeContract({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "withdraw",
+        args: [CONTRACTS.LENDING_POOL, asset, parseUnits(amount, decimals)],
+      });
+      return;
+    }
     writeContract({
       address: CONTRACTS.LENDING_POOL,
       abi: LENDING_POOL_ABI,
@@ -99,6 +127,15 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
 
   function borrow(asset: `0x${string}`, amount: string, decimals = 18) {
     assertLendingEnabled();
+    if (CONTRACTS.LENDING_ROUTER) {
+      writeContract({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "borrow",
+        args: [CONTRACTS.LENDING_POOL, asset, parseUnits(amount, decimals)],
+      });
+      return;
+    }
     writeContract({
       address: CONTRACTS.LENDING_POOL,
       abi: LENDING_POOL_ABI,
@@ -121,6 +158,15 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
     });
     await publicClient.waitForTransactionReceipt({ hash: delegationHash });
 
+    if (CONTRACTS.LENDING_ROUTER) {
+      return writeContractAsync({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "borrow",
+        args: [CONTRACTS.LENDING_POOL, asset, amountBN],
+      });
+    }
+
     return writeContractAsync({
       address: CONTRACTS.LENDING_POOL,
       abi: LENDING_POOL_ABI,
@@ -132,14 +178,24 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
   async function approveAndRepay(asset: `0x${string}`, amount: string, decimals = 18) {
     assertLendingEnabled();
     const amountBN = parseUnits(amount, decimals);
+    const spender = CONTRACTS.LENDING_ROUTER || CONTRACTS.LENDING_POOL;
 
     const approveHash = await writeContractAsync({
       address: asset,
       abi: ERC20_ABI,
       functionName: "approve",
-      args: [CONTRACTS.LENDING_POOL, amountBN],
+      args: [spender, amountBN],
     });
     await publicClient.waitForTransactionReceipt({ hash: approveHash });
+
+    if (CONTRACTS.LENDING_ROUTER) {
+      return writeContractAsync({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "repay",
+        args: [CONTRACTS.LENDING_POOL, asset, amountBN],
+      });
+    }
 
     return writeContractAsync({
       address: CONTRACTS.LENDING_POOL,
@@ -151,6 +207,15 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
 
   function repay(asset: `0x${string}`, amount: string, decimals = 18) {
     assertLendingEnabled();
+    if (CONTRACTS.LENDING_ROUTER) {
+      writeContract({
+        address: CONTRACTS.LENDING_ROUTER,
+        abi: LENDING_ROUTER_ABI,
+        functionName: "repay",
+        args: [CONTRACTS.LENDING_POOL, asset, parseUnits(amount, decimals)],
+      });
+      return;
+    }
     writeContract({
       address: CONTRACTS.LENDING_POOL,
       abi: LENDING_POOL_ABI,

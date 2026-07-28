@@ -23,7 +23,7 @@ export type LendingProtocolDefinition = {
 };
 
 export const LENDING_PROTOCOLS: LendingProtocolDefinition[] = [
-  { id: "aave_v3",      name: "Aave v3",          runtime: "evm",         adapterKind: "aave_v3",        status: "active",   productionReady: false },
+  { id: "aave_v3",      name: "Aave v3",          runtime: "evm",         adapterKind: "aave_v3",        status: "active",   productionReady: true },
   { id: "spark",        name: "SparkLend",         runtime: "evm",         adapterKind: "aave_derived",   status: "planned",  productionReady: false },
   { id: "radiant",      name: "Radiant Capital",   runtime: "evm",         adapterKind: "aave_derived",   status: "research", productionReady: false },
   { id: "compound_v3",  name: "Compound III",      runtime: "evm",         adapterKind: "compound_comet", status: "planned",  productionReady: false },

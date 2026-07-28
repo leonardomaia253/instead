@@ -1,6 +1,6 @@
 /**
  * System Operational Alerting Utility
- * Dispatches high-priority alerts to configured alert webhooks (Discord / Slack / Telegram).
+ * Dispatches high-priority alerts to the configured Telegram operations chat.
  */
 
 export interface SystemAlertPayload {
@@ -11,26 +11,37 @@ export interface SystemAlertPayload {
 }
 
 export async function sendSystemAlert(alert: SystemAlertPayload): Promise<boolean> {
-  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
-  
-  // Format console log regardless of webhook status for internal log monitoring
+  // Always log alerts, even when Telegram delivery is not configured.
   console.warn(
     `[ALERT_${alert.severity.toUpperCase()}] [${alert.source}] ${alert.title}`,
-    JSON.stringify(alert.details)
+    JSON.stringify(alert.details),
   );
 
-  if (!webhookUrl) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_ALERT_CHAT_ID;
+
+  if (!botToken || !chatId) {
     return false;
   }
 
   try {
-    const response = await fetch(webhookUrl, {
+    const text = [
+      `🚨 [${alert.severity.toUpperCase()}] ${alert.title}`,
+      `Source: ${alert.source}`,
+      "",
+      JSON.stringify(alert.details, null, 2).slice(0, 3500),
+    ].join("\n");
+
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        content: `🚨 **[${alert.severity.toUpperCase()}] ${alert.title}**\n**Source:** ${alert.source}\n\`\`\`json\n${JSON.stringify(alert.details, null, 2)}\n\`\`\``,
+        chat_id: chatId,
+        text,
+        disable_web_page_preview: true,
       }),
     });
+
     return response.ok;
   } catch (err) {
     console.error("[ALERT_DISPATCH_FAILED]", err);
