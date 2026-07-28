@@ -20,6 +20,7 @@ export function Footer() {
           <FooterColumn title="Protocol">
             <FooterLink href="/lending">Lending Hub</FooterLink>
             <FooterLink href="/factory">Token Factory</FooterLink>
+            <FooterLink href="/solutions">Revenue Solutions</FooterLink>
             <FooterLink href="/staking">Staking Vaults</FooterLink>
             <FooterLink href="/simulator">Risk Simulator</FooterLink>
             <FooterLink href="/dashboard">Command Desk</FooterLink>

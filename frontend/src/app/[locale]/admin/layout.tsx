@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isMobileAdmin, setIsMobileAdmin] = useState(false);
   const locale = pathname.split("/")[1] || "en";
   const adminBase = `/${locale}/admin`;
   const adminLoginPath = `${adminBase}/login`;
@@ -41,6 +42,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [isConnected, address]);
 
   useEffect(() => {
+    const onResize = () => setIsMobileAdmin(window.innerWidth < 900);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
     if (isAdmin === false && pathname !== adminLoginPath) {
       router.push(adminLoginPath);
     }
@@ -57,8 +65,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (!isAdmin && pathname !== adminLoginPath) return null;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-app)" }}>
-      <aside style={styles.sidebar}>
+    <div style={{ display: "flex", flexDirection: isMobileAdmin ? "column" : "row", minHeight: "100vh", background: "var(--bg-app)" }}>
+      <aside style={{ ...styles.sidebar, ...(isMobileAdmin ? styles.sidebarMobile : {}) }}>
         <div style={styles.brand}>
           <Link href={`/${locale}`} style={{ textDecoration: "none" }}>
             <div style={styles.brandText}>
@@ -67,7 +75,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </Link>
         </div>
 
-        <nav style={styles.nav}>
+        <nav style={{ ...styles.nav, ...(isMobileAdmin ? styles.navMobile : {}) }}>
           <SidebarLink href={adminBase} icon={<BarChart3 size={18} />} label="Dashboard" active={pathname === adminBase} />
           <SidebarLink href={`${adminBase}/users`} icon={<Users size={18} />} label="Users" active={pathname === `${adminBase}/users`} />
           <SidebarLink href={`${adminBase}/tokens`} icon={<Coins size={18} />} label="Tokens" active={pathname === `${adminBase}/tokens`} />
@@ -77,7 +85,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <SidebarLink href={`${adminBase}/settings`} icon={<Settings size={18} />} label="Settings" active={pathname === `${adminBase}/settings`} />
         </nav>
 
-        <div style={styles.accountBox}>
+        <div style={{ ...styles.accountBox, ...(isMobileAdmin ? styles.accountBoxMobile : {}) }}>
           <div style={styles.accountLabel}>CONNECTED AS</div>
           <div style={styles.address}>{address}</div>
           <button onClick={() => router.push(`/${locale}/login`)} style={styles.switchButton}>
@@ -86,7 +94,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main style={{ flex: 1, overflowY: "auto" }}>{children}</main>
+      <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>{children}</main>
     </div>
   );
 }
@@ -109,9 +117,23 @@ const styles = {
     flexDirection: "column" as const,
     padding: "32px 20px",
   },
+  sidebarMobile: {
+    width: "100%",
+    minWidth: 0,
+    borderRight: 0,
+    borderBottom: "1px solid var(--border)",
+    padding: "18px 14px",
+  },
   brand: { marginBottom: 40, paddingLeft: 12 },
   brandText: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 800 },
   nav: { flex: 1, display: "flex", flexDirection: "column" as const, gap: 8 },
+  navMobile: {
+    flex: "0 0 auto",
+    flexDirection: "row" as const,
+    gap: 8,
+    overflowX: "auto" as const,
+    paddingBottom: 8,
+  },
   link: {
     display: "flex",
     alignItems: "center",
@@ -129,6 +151,9 @@ const styles = {
     background: "rgba(255,255,255,0.03)",
     borderRadius: 8,
     border: "1px solid var(--border)",
+  },
+  accountBoxMobile: {
+    marginTop: 12,
   },
   accountLabel: { fontSize: 12, color: "var(--text-muted)", marginBottom: 4 },
   address: { fontSize: 13, fontWeight: 600, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" },

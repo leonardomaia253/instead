@@ -72,6 +72,7 @@ export default function Home() {
               <div className="hero-actions">
                 <Link href="/lending" className="btn-primary brutal-button">Abrir lending</Link>
                 <Link href="/factory" className="btn-outline brutal-button">Criar token</Link>
+                <Link href="/solutions" className="btn-outline brutal-button">Ver receitas</Link>
               </div>
               <div className="signal-strip" aria-label="Protocol signals">
                 <span>AUTENTICAÇÃO SEGURA</span>
@@ -148,6 +149,12 @@ export default function Home() {
                 <span className="panel-index">SIM</span>
                 <h3>Risk simulator</h3>
                 <p>Simule liquidação e eficiência de capital antes de colocar patrimônio em jogo.</p>
+              </Link>
+
+              <Link href="/solutions" className="brutal-panel">
+                <span className="panel-index">REV</span>
+                <h3>Revenue OS</h3>
+                <p>14 verticais de monetizacao com landing, oferta e caminho de conversao.</p>
               </Link>
             </div>
           </div>

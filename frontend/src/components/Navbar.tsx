@@ -28,6 +28,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/lending", label: locale === "en" ? "Lending" : "Lending" },
+    { href: "/solutions", label: locale === "en" ? "Solutions" : "Solucoes" },
     { href: "/factory", label: locale === "en" ? "Factory" : "Fábrica" },
     { href: "/tokens", label: locale === "en" ? "Explore" : "Explorar" },
     { href: "/staking", label: locale === "en" ? "Staking" : "Staking" },
@@ -60,7 +61,7 @@ export function Navbar() {
 
         <div className="proto-nav__links hide-mobile">
           {navLinks.map(({ href, label }) => (
-            <Link key={href} href={href} className={pathname === href ? "active" : ""}>
+            <Link key={href} href={href} className={pathname === href || pathname.startsWith(`${href}/`) ? "active" : ""}>
               {label}
             </Link>
           ))}
@@ -104,7 +105,7 @@ export function Navbar() {
       {open && (
         <div className="proto-mobile-menu">
           {navLinks.map(({ href, label }) => (
-            <Link key={href} href={href} onClick={() => setOpen(false)} className={pathname === href ? "active" : ""}>
+            <Link key={href} href={href} onClick={() => setOpen(false)} className={pathname === href || pathname.startsWith(`${href}/`) ? "active" : ""}>
               {label}
             </Link>
           ))}

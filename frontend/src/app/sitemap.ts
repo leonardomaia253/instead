@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { REVENUE_LANDINGS } from '@/lib/revenueLanding';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://instead.volupai.com';
@@ -7,6 +8,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '',
     '/lending',
     '/factory',
+    '/solutions',
+    ...REVENUE_LANDINGS.map((landing) => `/solutions/${landing.slug}`),
     '/staking',
     '/docs',
     '/security',

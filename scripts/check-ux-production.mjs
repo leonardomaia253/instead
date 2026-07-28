@@ -40,6 +40,8 @@ function compareMessageKeys(localeA, localeB) {
 for (const file of [
   "frontend/src/app/[locale]/page.tsx",
   "frontend/src/app/[locale]/factory/page.tsx",
+  "frontend/src/app/[locale]/solutions/page.tsx",
+  "frontend/src/app/[locale]/solutions/[slug]/page.tsx",
   "frontend/src/app/[locale]/lending/page.tsx",
   "frontend/src/app/[locale]/security/page.tsx",
   "frontend/src/app/[locale]/docs/page.tsx",
@@ -55,6 +57,7 @@ for (const file of [
   "frontend/public/og-image.png",
   "frontend/public/favicon.ico",
   "frontend/next.config.js",
+  "frontend/src/lib/revenueLanding.ts",
 ]) {
   requireFile(file);
 }
@@ -94,6 +97,26 @@ requireContains("frontend/src/app/[locale]/legal/privacy/page.tsx", [
 
 requireContains("frontend/src/app/[locale]/lending/page.tsx", [
   /Lending Pro Stack|Protection Layer|Risk Shield/i,
+]);
+
+requireContains("frontend/src/app/[locale]/solutions/page.tsx", [
+  /REVENUE_LANDINGS\.length/,
+  /Token Factory/i,
+  /Lending & Risk/i,
+  /Wealth & B2B/i,
+]);
+
+requireContains("frontend/src/app/[locale]/solutions/[slug]/page.tsx", [
+  /generateStaticParams/,
+  /formatLandingPrice/,
+  /Ver todas as verticais/i,
+]);
+
+requireContains("frontend/src/lib/revenueLanding.ts", [
+  /token_deploy_basic/,
+  /lending_pro_subscription/,
+  /b2b_lending_widget_api/,
+  /risk_shield_membership/,
 ]);
 
 requireContains("frontend/src/app/[locale]/dashboard/page.tsx", [
