@@ -1,5 +1,5 @@
-import { createConfig, http } from "wagmi";
-import { injected, walletConnect } from "wagmi/connectors";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http } from "wagmi";
 import {
   arbitrum,
   polygon,
@@ -10,8 +10,7 @@ import {
   avalanche,
 } from "wagmi/chains";
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
-const isBrowser = typeof window !== "undefined";
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "dfab9bf7f9df6ec4e1411c76256bb638";
 
 export const SUPPORTED_CHAINS = [
   arbitrum,
@@ -23,13 +22,13 @@ export const SUPPORTED_CHAINS = [
   avalanche,
 ] as const;
 
-export const wagmiConfig = createConfig({
+export const wagmiConfig = getDefaultConfig({
+  appName: "Instead",
+  appDescription: "Instead DeFi liquidity, lending and tokenization interface.",
+  appUrl: "https://instead.volupai.com",
+  projectId,
   chains: SUPPORTED_CHAINS,
   ssr: true,
-  connectors: isBrowser ? [
-    injected(),
-    ...(projectId ? [walletConnect({ projectId })] : []),
-  ] : [],
   transports: {
     [arbitrum.id]:  http(),
     [polygon.id]:   http(),

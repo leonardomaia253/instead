@@ -1,0 +1,249 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: 🦊
+      - generic [ref=e6]: Passo 1 de 4
+      - heading "Conecte sua Carteira" [level=2] [ref=e7]
+      - paragraph [ref=e8]: Use MetaMask, Rainbow ou WalletConnect para se identificar na plataforma.
+      - generic [ref=e14]:
+        - button "Pular" [ref=e15] [cursor=pointer]
+        - button "Próximo →" [ref=e16] [cursor=pointer]
+    - generic [ref=e17]:
+      - navigation [ref=e18]:
+        - generic [ref=e19]:
+          - link "Instead home" [ref=e20] [cursor=pointer]:
+            - /url: /pt
+            - generic [ref=e26]:
+              - strong [ref=e27]: Instead
+              - emphasis [ref=e28]: Liquidity OS
+          - generic [ref=e29]:
+            - link "Lending" [ref=e30] [cursor=pointer]:
+              - /url: /pt/lending
+            - link "Planos" [ref=e31] [cursor=pointer]:
+              - /url: /pt/solutions
+            - link "Fábrica" [ref=e32] [cursor=pointer]:
+              - /url: /pt/factory
+            - link "Explorar" [ref=e33] [cursor=pointer]:
+              - /url: /pt/tokens
+            - link "Staking" [ref=e34] [cursor=pointer]:
+              - /url: /pt/staking
+            - link "Risco" [ref=e35] [cursor=pointer]:
+              - /url: /pt/simulator
+            - link "Painel" [ref=e36] [cursor=pointer]:
+              - /url: /pt/dashboard
+          - generic [ref=e37]:
+            - link "🌐 EN" [ref=e38] [cursor=pointer]:
+              - /url: /en
+            - button "Toggle 3D" [ref=e39] [cursor=pointer]
+            - button "Toggle theme" [ref=e43] [cursor=pointer]
+            - button "Connect Wallet" [ref=e51] [cursor=pointer]
+      - main [ref=e52]:
+        - generic [ref=e54]:
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: INSTEAD / LIQUIDITY OS
+              - strong [ref=e58]: MAINNET READY INTERFACE
+            - heading "Liquidez cripto para quem constrói mercado, não vitrine." [level=1] [ref=e59]
+            - paragraph [ref=e60]: "Um front-end DeFi mais direto: lending, token factory, staking e inteligência operacional no mesmo painel. Brutal no visual, cuidadoso na execução."
+            - generic [ref=e61]:
+              - link "Abrir lending" [ref=e62] [cursor=pointer]:
+                - /url: /pt/lending
+              - link "Criar token" [ref=e63] [cursor=pointer]:
+                - /url: /pt/factory
+              - link "Ver planos" [ref=e64] [cursor=pointer]:
+                - /url: /pt/solutions
+            - generic "Protocol signals" [ref=e65]:
+              - generic [ref=e66]: AUTENTICAÇÃO SEGURA
+              - generic [ref=e67]: DADOS ISOLADOS
+              - generic [ref=e68]: MULTI-CHAIN
+              - generic [ref=e69]: MONITORAMENTO 24/7
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - generic [ref=e73]: GLOBAL ROUTING MAP
+              - strong [ref=e74]: LIVE
+            - generic [ref=e75]:
+              - generic: IAD
+              - generic: SFO
+              - generic: CDG
+              - generic: HND
+              - generic: SYD
+              - generic: GRU
+              - generic: SIN
+              - generic: ARN
+              - generic: DUB
+              - generic: BOM
+              - generic: 425k req/s
+              - generic: 385k req/s
+              - generic: 282k req/s
+              - generic: 176k req/s
+              - generic: 157k req/s
+              - generic: 135k req/s
+            - generic [ref=e78]:
+              - generic [ref=e79]: Arbitrum
+              - generic [ref=e80]: Base
+              - generic [ref=e81]: Polygon
+              - generic [ref=e82]: Ethereum
+        - region "Protocol metrics" [ref=e83]:
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]: Valor total bloqueado
+              - strong [ref=e87]: $4.2M+
+            - generic [ref=e88]:
+              - generic [ref=e89]: Ativos lançados
+              - strong [ref=e90]: 1,240+
+            - generic [ref=e91]:
+              - generic [ref=e92]: Gas roteado
+              - strong [ref=e93]: $850K
+            - generic [ref=e94]:
+              - generic [ref=e95]: Redes ativas
+              - strong [ref=e96]: 7+
+            - generic [ref=e97]:
+              - generic [ref=e98]: Valor total bloqueado
+              - strong [ref=e99]: $4.2M+
+            - generic [ref=e100]:
+              - generic [ref=e101]: Ativos lançados
+              - strong [ref=e102]: 1,240+
+            - generic [ref=e103]:
+              - generic [ref=e104]: Gas roteado
+              - strong [ref=e105]: $850K
+            - generic [ref=e106]:
+              - generic [ref=e107]: Redes ativas
+              - strong [ref=e108]: 7+
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: 01 / PRODUCT SURFACE
+            - heading "Quatro máquinas, uma linguagem." [level=2] [ref=e113]
+          - generic [ref=e114]:
+            - link "LND Lending hub Depósito, borrow e health factor com leitura de risco clara antes da assinatura." [ref=e115] [cursor=pointer]:
+              - /url: /pt/lending
+              - generic [ref=e116]: LND
+              - heading "Lending hub" [level=3] [ref=e117]
+              - paragraph [ref=e118]: Depósito, borrow e health factor com leitura de risco clara antes da assinatura.
+            - link "TKN Token factory Launchpad sem código para ativos ERC-20 com supply, mint, burn e taxas configuráveis." [ref=e119] [cursor=pointer]:
+              - /url: /pt/factory
+              - generic [ref=e120]: TKN
+              - heading "Token factory" [level=3] [ref=e121]
+              - paragraph [ref=e122]: Launchpad sem código para ativos ERC-20 com supply, mint, burn e taxas configuráveis.
+            - link "STK Staking vaults APR, lock period e TVL em uma tela preparada para decisão rápida." [ref=e123] [cursor=pointer]:
+              - /url: /pt/staking
+              - generic [ref=e124]: STK
+              - heading "Staking vaults" [level=3] [ref=e125]
+              - paragraph [ref=e126]: APR, lock period e TVL em uma tela preparada para decisão rápida.
+            - link "SIM Risk simulator Simule liquidação e eficiência de capital antes de colocar patrimônio em jogo." [ref=e127] [cursor=pointer]:
+              - /url: /pt/simulator
+              - generic [ref=e128]: SIM
+              - heading "Risk simulator" [level=3] [ref=e129]
+              - paragraph [ref=e130]: Simule liquidação e eficiência de capital antes de colocar patrimônio em jogo.
+            - link "PLN Planos e serviços Escolha entre criação de token, lending, alertas, proteção de risco e painel multichain." [ref=e131] [cursor=pointer]:
+              - /url: /pt/solutions
+              - generic [ref=e132]: PLN
+              - heading "Planos e serviços" [level=3] [ref=e133]
+              - paragraph [ref=e134]: Escolha entre criação de token, lending, alertas, proteção de risco e painel multichain.
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - generic [ref=e138]: 02 / ARQUITETURA DE SEGURANÇA
+            - heading "Transparência e proteção institucional." [level=2] [ref=e139]
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - strong [ref=e142]: AUTENTICAÇÃO
+              - generic [ref=e143]: Conexão de carteira sem custódia com criptografia de ponta a ponta.
+            - generic [ref=e144]:
+              - strong [ref=e145]: PRIVACIDADE
+              - generic [ref=e146]: Isolamento absoluto de dados e permissões estritas para cada investidor.
+            - generic [ref=e147]:
+              - strong [ref=e148]: PROTEÇÃO
+              - generic [ref=e149]: Proteção avançada contra ataques, limite de requisições e firewall ativo.
+            - generic [ref=e150]:
+              - strong [ref=e151]: RESILIÊNCIA
+              - generic [ref=e152]: Arquitetura distribuída com alta disponibilidade e execução ultrarrápida.
+        - generic [ref=e154]:
+          - generic [ref=e155]: ⟠ Ethereum
+          - generic [ref=e156]: 🔴 Optimism
+          - generic [ref=e157]: 🟡 BNB Chain
+          - generic [ref=e158]: 🟣 Polygon
+          - generic [ref=e159]: 🔷 Base
+          - generic [ref=e160]: 🔵 Arbitrum One
+          - generic [ref=e161]: 🔺 Avalanche
+          - generic [ref=e162]: ⟠ Ethereum
+          - generic [ref=e163]: 🔴 Optimism
+          - generic [ref=e164]: 🟡 BNB Chain
+          - generic [ref=e165]: 🟣 Polygon
+          - generic [ref=e166]: 🔷 Base
+          - generic [ref=e167]: 🔵 Arbitrum One
+          - generic [ref=e168]: 🔺 Avalanche
+          - generic [ref=e169]: ⟠ Ethereum
+          - generic [ref=e170]: 🔴 Optimism
+          - generic [ref=e171]: 🟡 BNB Chain
+          - generic [ref=e172]: 🟣 Polygon
+          - generic [ref=e173]: 🔷 Base
+          - generic [ref=e174]: 🔵 Arbitrum One
+          - generic [ref=e175]: 🔺 Avalanche
+          - generic [ref=e176]: ⟠ Ethereum
+          - generic [ref=e177]: 🔴 Optimism
+          - generic [ref=e178]: 🟡 BNB Chain
+          - generic [ref=e179]: 🟣 Polygon
+          - generic [ref=e180]: 🔷 Base
+          - generic [ref=e181]: 🔵 Arbitrum One
+          - generic [ref=e182]: 🔺 Avalanche
+      - contentinfo [ref=e183]:
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - generic [ref=e186]: INSTEAD / PROTOCOL FOOTER
+            - heading "Interface cripto não precisa parecer banco antigo." [level=2] [ref=e187]
+            - paragraph [ref=e188]: "Lending, tokenização e operação multichain em uma superfície mais honesta: informação densa, controle visível e menos decoração vazia."
+          - generic [ref=e189]:
+            - generic [ref=e190]:
+              - heading "Protocol" [level=3] [ref=e191]
+              - list [ref=e192]:
+                - listitem [ref=e193]:
+                  - link "Lending Hub" [ref=e194] [cursor=pointer]:
+                    - /url: /lending
+                - listitem [ref=e195]:
+                  - link "Token Factory" [ref=e196] [cursor=pointer]:
+                    - /url: /factory
+                - listitem [ref=e197]:
+                  - link "Planos e serviços" [ref=e198] [cursor=pointer]:
+                    - /url: /solutions
+                - listitem [ref=e199]:
+                  - link "Staking Vaults" [ref=e200] [cursor=pointer]:
+                    - /url: /staking
+                - listitem [ref=e201]:
+                  - link "Risk Simulator" [ref=e202] [cursor=pointer]:
+                    - /url: /simulator
+                - listitem [ref=e203]:
+                  - link "Command Desk" [ref=e204] [cursor=pointer]:
+                    - /url: /dashboard
+            - generic [ref=e205]:
+              - heading "Intel" [level=3] [ref=e206]
+              - list [ref=e207]:
+                - listitem [ref=e208]:
+                  - link "Protocol Docs" [ref=e209] [cursor=pointer]:
+                    - /url: /docs
+                - listitem [ref=e210]:
+                  - link "Security Stack" [ref=e211] [cursor=pointer]:
+                    - /url: /security
+                - listitem [ref=e212]:
+                  - link "Token Explorer" [ref=e213] [cursor=pointer]:
+                    - /url: /tokens
+                - listitem [ref=e214]:
+                  - link "Terms" [ref=e215] [cursor=pointer]:
+                    - /url: /legal/terms
+                - listitem [ref=e216]:
+                  - link "Privacy" [ref=e217] [cursor=pointer]:
+                    - /url: /legal/privacy
+            - generic [ref=e218]:
+              - generic [ref=e219]: STATUS
+              - generic [ref=e220]: Protocolo Auditado
+              - generic [ref=e224]: Autenticação Segura
+              - generic [ref=e227]: Redes Operacionais
+              - generic [ref=e230]:
+                - link "Twitter" [ref=e231] [cursor=pointer]:
+                  - /url: https://twitter.com
+                - link "GitHub" [ref=e234] [cursor=pointer]:
+                  - /url: https://github.com
+          - generic [ref=e238]:
+            - generic [ref=e239]: 2026 Instead Finance
+            - generic [ref=e240]: Non-custodial by design
+            - generic [ref=e241]: Built for sovereign operators
+  - button "Open Next.js Dev Tools" [ref=e247] [cursor=pointer]
+  - alert [ref=e251]
