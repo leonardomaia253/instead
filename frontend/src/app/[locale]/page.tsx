@@ -152,7 +152,7 @@ export default function Home() {
               </Link>
 
               <Link href="/solutions" className="brutal-panel">
-                <span className="panel-index">REV</span>
+                <span className="panel-index">PLN</span>
                 <h3>Planos e serviços</h3>
                 <p>Escolha entre criação de token, lending, alertas, proteção de risco e painel multichain.</p>
               </Link>

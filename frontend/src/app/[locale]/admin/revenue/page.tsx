@@ -78,11 +78,11 @@ export default function AdminRevenuePage() {
     <div style={styles.page}>
       <header style={styles.header}>
         <div>
-          <div style={styles.kicker}>Revenue Inventory</div>
-          <h1 style={styles.title}>Fontes de receita da Instead</h1>
+          <div style={styles.kicker}>Catálogo comercial</div>
+          <h1 style={styles.title}>Planos e serviços da Instead</h1>
           <p style={styles.subtitle}>
-            Inventário auditável de monetização: produtos cobrados via Stripe/Pagar.me, taxas on-chain, assinaturas,
-            serviços premium e B2B. Contagem canônica atual: {REVENUE_SOURCE_COUNT}.
+            Inventário auditável de planos: produtos cobrados via Stripe/Pagar.me, taxas on-chain, assinaturas,
+            serviços premium e B2B disponíveis para ativação e acompanhamento.
           </p>
         </div>
         <button onClick={() => loadRevenue()} style={styles.refreshButton}>
@@ -97,7 +97,7 @@ export default function AdminRevenuePage() {
       )}
 
       <section style={styles.metricGrid}>
-        <Metric icon={<TrendingUp size={20} />} label="Total contabilizado" value={String(sources.length || REVENUE_SOURCE_COUNT)} />
+        <Metric icon={<TrendingUp size={20} />} label="Planos ativos" value={String(sources.length || REVENUE_SOURCE_COUNT)} />
         <Metric icon={<CheckCircle2 size={20} />} label="Production ready" value={String(metrics.ready)} />
         <Metric icon={<Banknote size={20} />} label="Checkout fiat" value={String(metrics.checkoutProducts)} />
         <Metric icon={<CircleDollarSign size={20} />} label="Taxas on-chain" value={String(metrics.feeBased)} />
@@ -133,7 +133,7 @@ export default function AdminRevenuePage() {
 
       <section className="card" style={styles.tableCard}>
         <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Mapa de monetização</h2>
+          <h2 style={styles.sectionTitle}>Mapa de planos</h2>
           <span style={styles.badge}>{metrics.active} ativas hoje</span>
         </div>
         <div style={styles.tableWrap}>

@@ -22,7 +22,7 @@ type RevenueLever = {
   price: number;
   monthlyGoal: number;
   closeRate: number;
-  owner: string;
+  responsible: string;
   promise: string;
 };
 
@@ -39,7 +39,7 @@ const revenueLevers: RevenueLever[] = [
     price: 299,
     monthlyGoal: 35,
     closeRate: 0.18,
-    owner: "Comercial",
+    responsible: "Comercial",
     promise: "Token ERC-20 configurado, publicado e validado com suporte humano.",
   },
   {
@@ -47,7 +47,7 @@ const revenueLevers: RevenueLever[] = [
     price: 799,
     monthlyGoal: 12,
     closeRate: 0.08,
-    owner: "Founder/Admin",
+    responsible: "Produto/Admin",
     promise: "Deploy multi-chain, pagina do token, checklist de risco e auditoria automatica.",
   },
   {
@@ -55,7 +55,7 @@ const revenueLevers: RevenueLever[] = [
     price: 49,
     monthlyGoal: 160,
     closeRate: 0.12,
-    owner: "CS/Admin",
+    responsible: "Suporte/Admin",
     promise: "Analytics, links publicos, holders, campanhas e alertas para comunidades.",
   },
   {
@@ -63,7 +63,7 @@ const revenueLevers: RevenueLever[] = [
     price: 1500,
     monthlyGoal: 6,
     closeRate: 0.05,
-    owner: "Parcerias",
+    responsible: "Parcerias",
     promise: "Pacote white-glove para agencias que lancam tokens para clientes.",
   },
 ];
@@ -73,7 +73,7 @@ const pipelineStages: PipelineStage[] = [
     stage: "Prospects mapeados",
     goal: 1800,
     conversion: 0.32,
-    action: "Listar founders Web3, DAOs, NFT projects, agencias e creators com comunidade ativa.",
+    action: "Listar projetos Web3, DAOs, NFT projects, agencias e creators com comunidade ativa.",
   },
   {
     stage: "Conversas iniciadas",
@@ -105,31 +105,31 @@ const channels = [
   {
     channel: "X/Twitter Web3",
     cadence: "3 posts + 20 DMs/dia",
-    owner: "Comercial",
+    responsible: "Comercial",
     asset: "Threads sobre custo, seguranca e checklist de launch.",
   },
   {
     channel: "Telegram/Discord",
     cadence: "10 comunidades/dia",
-    owner: "Comercial",
+    responsible: "Comercial",
     asset: "Oferta: 10 deploys assistidos com desconto e revisao gratuita.",
   },
   {
     channel: "Reddit/Farcaster",
     cadence: "2 posts educativos/dia",
-    owner: "Marketing",
+    responsible: "Marketing",
     asset: "Guias sem spam: tokenomics, deploy ERC-20, erros comuns.",
   },
   {
     channel: "Agencias Web3",
     cadence: "50 abordagens/semana",
-    owner: "Parcerias",
+    responsible: "Parcerias",
     asset: "Pacote white-label para lancar tokens de clientes.",
   },
   {
     channel: "GitHub/Product Hunt",
     cadence: "1 melhoria publica/semana",
-    owner: "Admin",
+    responsible: "Admin",
     asset: "Demo, exemplos de tokens, changelog e landing tecnica.",
   },
 ];
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
               <div style={styles.offerMeta}>
                 <span>{lever.monthlyGoal} vendas/mes</span>
                 <span>{Math.round(lever.closeRate * 100)}% close</span>
-                <span>{lever.owner}</span>
+                <span>{lever.responsible}</span>
               </div>
             </article>
           ))}
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
               <strong>{channel.channel}</strong>
               <span>{channel.cadence}</span>
               <p>{channel.asset}</p>
-              <small>{channel.owner}</small>
+              <small>{channel.responsible}</small>
             </article>
           ))}
         </div>
@@ -626,7 +626,7 @@ const styles: Record<string, CSSProperties> = {
   },
   sectionGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
     gap: 24,
   },
   calculator: {

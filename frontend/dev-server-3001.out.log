@@ -1,0 +1,18 @@
+
+> instead-frontend@0.1.0 dev
+> next dev --port 3001
+
+▲ Next.js 16.2.11 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://172.31.39.15:3001
+- Environments: .env.local
+✓ Ready in 4.1s
+○ Compiling proxy ...
+
+○ Compiling /[locale] ...
+ GET /pt 200 in 401ms (next.js: 55ms, proxy.ts: 36ms, generate-params: 23ms, application-code: 310ms)
+○ Compiling /[locale]/solutions ...
+ GET /pt/solutions 200 in 12.4s (next.js: 11.8s, proxy.ts: 11ms, generate-params: 2.4s, application-code: 549ms)
+○ Compiling /[locale]/lending ...
+ GET /pt/lending 200 in 16.5s (next.js: 16.1s, proxy.ts: 14ms, generate-params: 1121ms, application-code: 358ms)
+ GET /pt/lending 200 in 1984ms (next.js: 370ms, proxy.ts: 242ms, generate-params: 33ms, application-code: 1372ms)

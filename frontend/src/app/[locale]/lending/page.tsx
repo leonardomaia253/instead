@@ -457,7 +457,7 @@ export default function LendingPage() {
                     Risco atual: <strong style={{ color: liveHF < 1.35 ? "var(--red)" : "var(--accent-1)" }}>{riskLabel}</strong>. {recommendation}
                   </p>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 10 }}>
                   <input
                     type="email"
                     placeholder="email para recibo e alertas"
@@ -480,15 +480,15 @@ export default function LendingPage() {
           <div>
             <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, marginBottom: 8 }}>Lending Pro Stack</h2>
             <p style={{ color: "var(--text-muted)", maxWidth: 780, lineHeight: 1.6 }}>
-              Produtos premium da Instead para alertas, simulações, deleverage, estratégias, rebalanceamento, wealth dashboard, B2B e risk shield.
+              Recursos extras da Instead para alertas, simulações, redução de risco, estratégias guiadas, rebalanceamento, painel multichain e proteção recorrente.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 14 }}>
             {LENDING_PREMIUM_PRODUCTS.map((product) => (
               <article key={product.sourceCode} className="card" style={{ padding: 18, display: "grid", gap: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-                  <strong>{product.label}</strong>
-                  <span style={{ color: "var(--accent-1)", fontWeight: 800 }}>{formatRevenuePrice(product)}</span>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) max-content", gap: 12, alignItems: "start" }}>
+                  <strong style={{ minWidth: 0 }}>{product.label}</strong>
+                  <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{formatRevenuePrice(product)}</span>
                 </div>
                 <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.45 }}>{product.notes}</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: "auto" }}>

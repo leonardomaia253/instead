@@ -288,7 +288,7 @@ export default function AdminPricesPage() {
             <h2 style={s.sectionTitle}>Taxa On-chain — Token Factory</h2>
             <p style={s.sectionNote}>
               Atualiza o valor de <code>feeUSD</code> diretamente no contrato <code>InsteadTokenFactory</code>.
-              Requer a wallet owner do contrato conectada.
+              Requer a carteira administradora do contrato conectada.
             </p>
           </div>
           <DollarSign size={22} color="var(--accent-1)" />
@@ -328,7 +328,7 @@ export default function AdminPricesPage() {
             </button>
             {!isConnected && (
               <p style={{ color: "#f87171", fontSize: 12, marginTop: 6 }}>
-                Conecte a wallet owner do contrato para atualizar a taxa on-chain.
+                Conecte a carteira administradora do contrato para atualizar a taxa on-chain.
               </p>
             )}
             {!factoryAddress && (

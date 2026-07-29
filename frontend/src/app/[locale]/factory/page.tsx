@@ -373,7 +373,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
       key: "hasBlacklist" as const,
       icon: "🛡️",
       title: "Blacklist/Compliance",
-      desc: "Permite ao owner bloquear enderecos. Use apenas quando houver motivo operacional ou regulatorio claro.",
+      desc: "Permite a carteira administradora bloquear enderecos. Use apenas quando houver motivo operacional ou regulatorio claro.",
       risk: "Alto",
       riskColor: "#ef4444",
     },
@@ -477,7 +477,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
         ))}
       </div>
 
-      <FieldGroup label="Anti-whale: maximo por carteira (%)" hint="0 desativa. Ex: 2 limita cada carteira a 2% do cap, exceto o owner inicial.">
+      <FieldGroup label="Anti-whale: maximo por carteira (%)" hint="0 desativa. Ex: 2 limita cada carteira a 2% do cap, exceto a carteira administradora inicial.">
         <input
           type="number"
           value={form.maxWalletPercent}

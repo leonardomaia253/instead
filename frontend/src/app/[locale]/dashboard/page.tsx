@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 16 }}>
               <div>
                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Meu plano Instead</h2>
-                <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6 }}>Produtos premium ativos e benefícios liberados.</p>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6 }}>Planos ativos e benefícios liberados.</p>
               </div>
               <Link href="/lending" style={{ color: "var(--accent-1)", textDecoration: "none", fontSize: 13 }}>Upgrade</Link>
             </div>
