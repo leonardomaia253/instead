@@ -2,13 +2,20 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "@/navigation";
-import { REVENUE_LANDINGS, formatLandingPrice, getRevenueLanding } from "@/lib/revenueLanding";
+import { PUBLIC_OFFER_LANDINGS, formatLandingPrice, getRevenueLanding } from "@/lib/revenueLanding";
 
 export function generateStaticParams() {
-  return REVENUE_LANDINGS.map((landing) => ({ slug: landing.slug }));
+  return PUBLIC_OFFER_LANDINGS.map((landing) => ({ slug: landing.slug }));
 }
 
-export default async function RevenueSolutionPage({ params }: { params: Promise<{ slug: string }> }) {
+function billingLabel(interval: string) {
+  if (interval === "monthly") return "MENSAL";
+  if (interval === "one_time") return "PAGAMENTO ÚNICO";
+  if (interval === "per_transaction") return "POR TRANSAÇÃO";
+  return "POR USO";
+}
+
+export default async function PublicOfferPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const landing = getRevenueLanding(slug);
   if (!landing) notFound();
@@ -29,18 +36,18 @@ export default async function RevenueSolutionPage({ params }: { params: Promise<
               <p>{landing.subheadline}</p>
               <div className="hero-actions">
                 <Link href={landing.ctaHref} className="btn-primary brutal-button">{landing.ctaLabel}</Link>
-                <Link href="/solutions" className="btn-outline brutal-button">Ver todas as verticais</Link>
+                <Link href="/solutions" className="btn-outline brutal-button">Ver outras opções</Link>
               </div>
             </div>
 
             <aside className="solutions-command-card">
-              <span>OFFER BRIEF</span>
+              <span>RESUMO DO PLANO</span>
               <strong>{landing.source.label}</strong>
               <p>{landing.outcome}</p>
               <div>
-                <small>{landing.source.category}</small>
-                <small>{landing.source.status}</small>
-                <small>{landing.source.productionReady ? "PROD READY" : "PLANNED"}</small>
+                <small>{formatLandingPrice(landing.source)}</small>
+                <small>{billingLabel(landing.source.billingInterval)}</small>
+                <small>SEM CUSTÓDIA</small>
               </div>
             </aside>
           </div>
@@ -53,12 +60,12 @@ export default async function RevenueSolutionPage({ params }: { params: Promise<
               <h2>{landing.audience}</h2>
             </div>
             <div className="solution-detail-panel">
-              <span>COMO VENDE</span>
-              <h2>{landing.source.revenueModel}</h2>
-              <p>{landing.source.notes}</p>
+              <span>COMO FUNCIONA</span>
+              <h2>{landing.outcome}</h2>
+              <p>{landing.subheadline}</p>
             </div>
             <div className="solution-detail-panel solution-detail-panel--wide">
-              <span>POR QUE CONVENCE</span>
+              <span>POR QUE USAR</span>
               <h2>{landing.proof}</h2>
               <ul>
                 {landing.bullets.map((bullet) => (

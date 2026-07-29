@@ -1,13 +1,32 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "@/navigation";
-import { REVENUE_LANDINGS, formatLandingPrice } from "@/lib/revenueLanding";
+import { PUBLIC_OFFER_LANDINGS, formatLandingPrice } from "@/lib/revenueLanding";
 
 const groups = [
-  { key: "token_factory", title: "Token Factory", description: "Receita transacional e serviços de lançamento para quem precisa publicar ativos com segurança." },
-  { key: "lending", title: "Lending & Risk", description: "Assinaturas, fees, automações e serviços para usuários que operam crédito com colateral." },
-  { key: "services", title: "Wealth & B2B", description: "Produtos de cockpit patrimonial e infraestrutura para parceiros distribuírem lending." },
+  {
+    key: "token_factory",
+    title: "Criar e lançar tokens",
+    description: "Ferramentas e acompanhamento para configurar, revisar e publicar tokens com mais segurança.",
+  },
+  {
+    key: "lending",
+    title: "Operar crédito com controle",
+    description: "Painel, alertas e assistência para acompanhar colateral, dívida e risco antes de assinar transações.",
+  },
+  {
+    key: "services",
+    title: "Acompanhar patrimônio e integrar parceiros",
+    description: "Visão consolidada para usuários multichain e widget para parceiros que querem oferecer lending.",
+  },
 ] as const;
+
+function billingLabel(interval: string) {
+  if (interval === "monthly") return "mensal";
+  if (interval === "one_time") return "pagamento único";
+  if (interval === "per_transaction") return "por transação";
+  return "por uso";
+}
 
 export default function SolutionsPage() {
   return (
@@ -19,12 +38,12 @@ export default function SolutionsPage() {
           <div className="container solutions-hero__inner">
             <div className="proto-hero__copy">
               <div className="terminal-kicker">
-                <span>INSTEAD / REVENUE OS</span>
-                <strong>{REVENUE_LANDINGS.length} VERTICAIS</strong>
+                <span>INSTEAD / PLANOS</span>
+                <strong>ESCOLHA SEU FLUXO</strong>
               </div>
-              <h1>Monetização DeFi com produto, não gambiarra.</h1>
+              <h1>Escolha como quer usar a Instead.</h1>
               <p>
-                Cada fonte de receita da Instead tem uma promessa clara, uma superfície pública e um caminho de conversão ligado ao produto real: factory, lending, proteção, wealth e B2B.
+                Crie tokens, opere lending, receba alertas de risco ou acompanhe posições multichain com uma interface feita para decisão clara antes da assinatura.
               </p>
               <div className="hero-actions">
                 <Link href="/lending" className="btn-primary brutal-button">Entrar no lending</Link>
@@ -33,21 +52,21 @@ export default function SolutionsPage() {
             </div>
 
             <div className="solutions-command-card">
-              <span>REVENUE MAP</span>
-              <strong>{REVENUE_LANDINGS.length}</strong>
-              <p>landings conectadas ao catálogo, checkout, admin e dashboard.</p>
+              <span>O QUE VOCÊ PODE FAZER</span>
+              <strong>Token, crédito e risco</strong>
+              <p>Escolha um fluxo, veja o que está incluso e avance para a tela certa sem precisar entender a arquitetura por trás.</p>
               <div>
-                <small>ACTIVE</small>
-                <small>READY</small>
-                <small>B2B</small>
-                <small>RISK</small>
+                <small>CRIAR TOKEN</small>
+                <small>TOMAR LIQUIDEZ</small>
+                <small>RECEBER ALERTAS</small>
+                <small>ACOMPANHAR RISCO</small>
               </div>
             </div>
           </div>
         </section>
 
         {groups.map((group, groupIndex) => {
-          const items = REVENUE_LANDINGS.filter((landing) => landing.source.vertical === group.key);
+          const items = PUBLIC_OFFER_LANDINGS.filter((landing) => landing.source.vertical === group.key);
           return (
             <section className="protocol-section" key={group.key}>
               <div className="container">
@@ -66,7 +85,7 @@ export default function SolutionsPage() {
                       <p>{landing.subheadline}</p>
                       <div className="solution-card__meta">
                         <strong>{formatLandingPrice(landing.source)}</strong>
-                        <small>{landing.source.billingInterval.replace("_", " ")}</small>
+                        <small>{billingLabel(landing.source.billingInterval)}</small>
                       </div>
                     </Link>
                   ))}

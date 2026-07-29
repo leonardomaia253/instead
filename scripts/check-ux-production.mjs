@@ -100,16 +100,17 @@ requireContains("frontend/src/app/[locale]/lending/page.tsx", [
 ]);
 
 requireContains("frontend/src/app/[locale]/solutions/page.tsx", [
-  /REVENUE_LANDINGS\.length/,
-  /Token Factory/i,
-  /Lending & Risk/i,
-  /Wealth & B2B/i,
+  /Escolha como quer usar a Instead/i,
+  /Criar e lançar tokens/i,
+  /Operar crédito com controle/i,
+  /Acompanhar patrimônio e integrar parceiros/i,
 ]);
 
 requireContains("frontend/src/app/[locale]/solutions/[slug]/page.tsx", [
   /generateStaticParams/,
   /formatLandingPrice/,
-  /Ver todas as verticais/i,
+  /Ver outras opções/i,
+  /COMO FUNCIONA/i,
 ]);
 
 requireContains("frontend/src/lib/revenueLanding.ts", [
@@ -117,6 +118,7 @@ requireContains("frontend/src/lib/revenueLanding.ts", [
   /lending_pro_subscription/,
   /b2b_lending_widget_api/,
   /risk_shield_membership/,
+  /PUBLIC_OFFER_LANDINGS/,
 ]);
 
 requireContains("frontend/src/app/[locale]/dashboard/page.tsx", [
@@ -146,6 +148,14 @@ if (read("frontend/src/app/[locale]/staking/page.tsx").includes("alert(")) {
 
 if (/demo/i.test(read("frontend/src/app/[locale]/simulator/page.tsx"))) {
   failures.push("Simulator page must not expose demo wording in production UX");
+}
+
+const publicSolutionsCopy = [
+  read("frontend/src/app/[locale]/solutions/page.tsx"),
+  read("frontend/src/app/[locale]/solutions/[slug]/page.tsx"),
+].join("\n");
+for (const forbidden of [/REVENUE MAP/i, /VERTICAIS/i, /COMO VENDE/i, /PROD READY/i, /PLANNED/i, /landings conectadas/i, /fontes de receita/i]) {
+  if (forbidden.test(publicSolutionsCopy)) failures.push(`Public solutions pages must not expose internal strategy wording: ${forbidden}`);
 }
 
 if (failures.length > 0) {
