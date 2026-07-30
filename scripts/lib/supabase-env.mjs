@@ -14,6 +14,15 @@ export function parseEnvFile(path) {
   );
 }
 
+export function mergeEnv(processEnv = process.env, fileEnv = {}) {
+  return Object.fromEntries(
+    Object.entries({ ...processEnv, ...fileEnv }).map(([key, value]) => [
+      key,
+      fileEnv[key] === "" && processEnv[key] ? processEnv[key] : value,
+    ]),
+  );
+}
+
 export function projectRefFromSupabaseUrl(value) {
   try {
     const host = new URL(value || "").hostname;

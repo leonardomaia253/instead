@@ -1,23 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
+import { mergeEnv, parseEnvFile as parseSharedEnvFile } from "./lib/supabase-env.mjs";
 
 function parseEnvFile(path) {
-  if (!existsSync(path)) return {};
-  return Object.fromEntries(
-    readFileSync(path, "utf8")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const index = line.indexOf("=");
-        return [line.slice(0, index), line.slice(index + 1).replace(/^["']|["']$/g, "")];
-      }),
-  );
+  return parseSharedEnvFile(path);
 }
 
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
-const env = { ...fileEnv, ...process.env };
+const env = mergeEnv(process.env, fileEnv);
 const target = env.PRODUCTION_TARGET ?? "all";
 const evmNetwork = env.DEPLOYMENT_NETWORK;
 const requireSolanaProduction = env.REQUIRE_SOLANA_PRODUCTION === "true" || target === "solana";

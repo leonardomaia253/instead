@@ -17,6 +17,11 @@ const ignoredDirs = new Set([
 ]);
 
 const ignoredFiles = new Set([
+  ".env",
+  ".env.local",
+  ".env.development.local",
+  ".env.test.local",
+  ".env.production.local",
   "package-lock.json",
   "pnpm-lock.yaml",
   "yarn.lock",

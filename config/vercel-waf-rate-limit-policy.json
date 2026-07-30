@@ -1,0 +1,74 @@
+{
+  "id": "instead-prod-api-abuse-v1",
+  "provider": "vercel-waf",
+  "scope": "production",
+  "description": "Distributed rate limit policy for public Instead API, auth, webhook, and AI surfaces on Vercel WAF.",
+  "rules": [
+    {
+      "name": "instead-api-public-write",
+      "match": {
+        "paths": [
+          "/api/auth/session",
+          "/api/auth/wallet-profile",
+          "/api/payments/checkout",
+          "/api/payments/status",
+          "/api/lending/automation-intents",
+          "/api/b2b/widget",
+          "/api/revenue/me"
+        ],
+        "methods": ["POST", "PUT", "PATCH", "DELETE"]
+      },
+      "rateLimit": {
+        "algorithm": "fixed-window",
+        "key": "ip",
+        "limit": 60,
+        "window": "60s",
+        "action": "deny",
+        "mitigationStatus": 429
+      }
+    },
+    {
+      "name": "instead-webhooks",
+      "match": {
+        "paths": [
+          "/api/telegram/webhook",
+          "/api/payments/webhooks/stripe",
+          "/api/payments/webhooks/pagarme"
+        ],
+        "methods": ["POST"]
+      },
+      "rateLimit": {
+        "algorithm": "fixed-window",
+        "key": "ip",
+        "limit": 120,
+        "window": "60s",
+        "action": "deny",
+        "mitigationStatus": 429
+      }
+    },
+    {
+      "name": "instead-supabase-ai-functions",
+      "match": {
+        "hosts": ["wjvrcwvnznkisoerngal.supabase.co"],
+        "paths": [
+          "/functions/v1/token-ai",
+          "/functions/v1/lending-ai",
+          "/functions/v1/lending-automation",
+          "/functions/v1/balance-monitor"
+        ],
+        "methods": ["POST"]
+      },
+      "rateLimit": {
+        "algorithm": "fixed-window",
+        "key": "ip",
+        "limit": 30,
+        "window": "60s",
+        "action": "deny",
+        "mitigationStatus": 429
+      },
+      "note": "Vercel WAF only protects traffic routed through Vercel-managed domains. If Supabase functions are called directly on supabase.co, mirror this rule in Supabase/in-function limits or proxy calls through the Vercel app domain."
+    }
+  ],
+  "vercelDashboardPath": "Project > Firewall > WAF > Custom Rules > Rate Limit",
+  "gateValue": "vercel-waf:instead-prod-api-abuse-v1"
+}

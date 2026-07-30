@@ -8,7 +8,7 @@
 4. Run `pnpm supabase:diagnose` and fix any mismatch before deploying functions; `SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, anon keys, service role key, and `SUPABASE_PROJECT_REF` must identify the same project. If `frontend/.env.local` and process env disagree, choose the production project and remove or update the other source before continuing.
 5. Deploy Edge Functions with `SUPABASE_PROJECT_REF=<project-ref> SYNC_SUPABASE_SECRETS=true pnpm edge:functions:deploy`, which can sync configured secrets and publishes `siwe-auth`, `token-ai`, `lending-ai`, `telegram-bot`, `balance-monitor`, and `lending-automation`.
 6. Configure Telegram webhook with `pnpm telegram:set-webhook`; set `REQUIRE_TELEGRAM_BOT=true` only after the webhook URL, secret, bot token and service role are configured.
-7. For public paid/bot/AI traffic, configure a distributed rate-limit layer in the hosting/CDN/WAF, set `REQUIRE_DISTRIBUTED_RATE_LIMIT=true`, and record the policy/dashboard in `DISTRIBUTED_RATE_LIMIT_PROVIDER`. In-memory limits are only a local backstop.
+7. For public paid/bot/AI traffic, configure a distributed rate-limit layer in Vercel WAF, set `REQUIRE_DISTRIBUTED_RATE_LIMIT=true`, and set `DISTRIBUTED_RATE_LIMIT_PROVIDER=vercel-waf:instead-prod-api-abuse-v1`. Mirror `config/vercel-waf-rate-limit-policy.json` in Vercel Dashboard under Project > Firewall > WAF > Custom Rules > Rate Limit. In-memory limits are only a local backstop.
 8. Deploy Token Factory per target network.
    Configure `DEX_ROUTER_ADDRESS` para Fair Launch on-chain e valide em fork/testnet antes de publicar a oferta.
 9. Deploy Lending adapter only on networks where Aave asset config is ready.
@@ -22,6 +22,7 @@
 15. Verify ownership on-chain with `pnpm ownership:verify`.
 16. Run `pnpm audit:local-production` before deployment; it serializes workspace hygiene, local API security, secret, revenue, UX, performance, dependency, contract, build, and type checks.
 17. For serious production, set `REQUIRE_STRICT_PRODUCTION_GATE=true`, `REQUIRE_EVM_PRODUCTION_GATE=true`, `REQUIRE_EXTERNAL_AUDIT=true`, `DEPLOYMENT_NETWORK=<network>`, and `DEPLOYMENT_RPC_URL=<rpc>`, then run `pnpm production:gate`. Strict mode fails on warnings, including skipped smoke tests, disabled Solana go-live, disabled fork evidence, and missing integration credentials.
+    To certify the current production environment in one command, run `pnpm production:certify`; it diagnoses Supabase env, syncs Edge Function secrets, deploys Edge Functions, and runs the strict production gate.
 18. Deploy frontend and Edge Functions.
 19. Run `pnpm smoke:test` against the production URL.
 20. Enable `NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING=true` only after lending tests pass on that network.

@@ -1,8 +1,8 @@
 import { resolve } from "node:path";
-import { parseEnvFile, projectRefFromSupabaseUrl, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
+import { mergeEnv, parseEnvFile, projectRefFromSupabaseUrl, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
 
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
-const env = { ...process.env, ...fileEnv };
+const env = mergeEnv(process.env, fileEnv);
 
 const appOrigin = env.APP_ORIGIN || env.NEXT_PUBLIC_APP_URL;
 const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;

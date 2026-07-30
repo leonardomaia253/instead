@@ -1,13 +1,14 @@
 import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { parseEnvFile, projectRefFromSupabaseUrl, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
+import { mergeEnv, parseEnvFile, projectRefFromSupabaseUrl, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
 
 const requiredFunctions = ["siwe-auth", "token-ai", "lending-ai", "telegram-bot", "balance-monitor", "lending-automation"];
 const frontendEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
-const env = { ...process.env, ...frontendEnv };
+const env = mergeEnv(process.env, frontendEnv);
 const projectRef = env.SUPABASE_PROJECT_REF;
 const syncSecrets = process.env.SYNC_SUPABASE_SECRETS === "true";
+const strict = env.REQUIRE_STRICT_PRODUCTION_GATE === "true";
 const requiredSecrets = [
   "APP_ORIGIN",
   "SUPABASE_URL",
@@ -106,6 +107,12 @@ if (failures.length > 0) {
     console.error("\nWarnings:");
     for (const warning of warnings) console.error(`- ${warning}`);
   }
+  process.exit(1);
+}
+
+if (strict && warnings.length > 0) {
+  console.error("Edge Function deploy failed in strict mode:");
+  for (const warning of warnings) console.error(`- ${warning}`);
   process.exit(1);
 }
 

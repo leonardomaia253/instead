@@ -1,13 +1,15 @@
 import { existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseEnvFile, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
+import { mergeEnv, parseEnvFile, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const frontendEnvPath = resolve(root, "frontend/.env.local");
 
 const fileEnv = parseEnvFile(frontendEnvPath);
-const env = { ...process.env, ...fileEnv };
+const env = mergeEnv(process.env, fileEnv);
+const target = env.PRODUCTION_TARGET ?? "all";
 const failures = [];
 const warnings = [];
 const supabaseDiagnostics = supabaseEnvDiagnostics({ fileEnv, processEnv: process.env, mergedEnv: env });
@@ -60,6 +62,27 @@ function requireJsonObject(name) {
   } catch {
     failures.push(`${name} must be valid JSON`);
     return null;
+  }
+}
+
+function requireDistributedRateLimitEvidence(value) {
+  if (!value) {
+    failures.push("DISTRIBUTED_RATE_LIMIT_PROVIDER is required");
+    return;
+  }
+  if (value === "vercel-waf:instead-prod-api-abuse-v1") {
+    const policyPath = resolve(root, "config/vercel-waf-rate-limit-policy.json");
+    if (!existsSync(policyPath)) {
+      failures.push("config/vercel-waf-rate-limit-policy.json is required for Vercel WAF rate-limit evidence");
+      return;
+    }
+    try {
+      const policy = JSON.parse(readFileSync(policyPath, "utf8"));
+      if (policy.gateValue !== value) failures.push("Vercel WAF policy gateValue must match DISTRIBUTED_RATE_LIMIT_PROVIDER");
+      if (!Array.isArray(policy.rules) || policy.rules.length < 3) failures.push("Vercel WAF policy must define API, webhook and AI/function rules");
+    } catch {
+      failures.push("config/vercel-waf-rate-limit-policy.json must be valid JSON");
+    }
   }
 }
 
@@ -119,19 +142,26 @@ requireEnv("NEXT_PUBLIC_SUPABASE_URL");
 requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 requireEnv("NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID");
 
-warnIfMissing("TELEGRAM_BOT_TOKEN");
-warnIfMissing("TELEGRAM_WEBHOOK_SECRET");
 warnIfMissing("SUPABASE_SERVICE_ROLE_KEY");
 warnIfMissing("APP_ORIGIN");
-warnIfMissing("STRIPE_SECRET_KEY");
-warnIfMissing("STRIPE_WEBHOOK_SECRET");
-warnIfMissing("PAGARME_SECRET_KEY");
-warnIfMissing("PAGARME_WEBHOOK_SECRET");
-warnIfMissing("SENTRY_DSN");
 warnIfMissing("UPTIME_STATUS_URL");
 warnIfMissing("TELEGRAM_ALERT_CHAT_ID");
 warnIfMissing("SOLANA_RPC_URL");
 warnIfMissing("BALANCE_MONITOR_SECRET");
+
+if (env.REQUIRE_TELEGRAM_BOT === "true") {
+  warnIfMissing("TELEGRAM_BOT_TOKEN");
+  warnIfMissing("TELEGRAM_WEBHOOK_SECRET");
+}
+if (env.REQUIRE_FIAT_PAYMENTS === "true") {
+  warnIfMissing("STRIPE_SECRET_KEY");
+  warnIfMissing("STRIPE_WEBHOOK_SECRET");
+  warnIfMissing("PAGARME_SECRET_KEY");
+  warnIfMissing("PAGARME_WEBHOOK_SECRET");
+}
+if (env.REQUIRE_MONITORING === "true") {
+  warnIfMissing("SENTRY_DSN");
+}
 
 const exposesPublicAbuseSurface = [
   env.REQUIRE_FIAT_PAYMENTS === "true",
@@ -141,7 +171,7 @@ const exposesPublicAbuseSurface = [
 ].some(Boolean);
 
 if (env.REQUIRE_DISTRIBUTED_RATE_LIMIT === "true") {
-  requireEnv("DISTRIBUTED_RATE_LIMIT_PROVIDER");
+  requireDistributedRateLimitEvidence(env.DISTRIBUTED_RATE_LIMIT_PROVIDER);
 } else if (exposesPublicAbuseSurface) {
   failures.push("REQUIRE_DISTRIBUTED_RATE_LIMIT must be true when paid, bot, monitoring or AI endpoints are enabled for production");
 }
@@ -159,7 +189,7 @@ if (env.REQUIRE_SOLANA_PRODUCTION === "true") {
   if (env.NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(env.NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID)) {
     failures.push("NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID must be a Solana base58 public key");
   }
-} else {
+} else if (target === "all" || target === "solana") {
   warnings.push("Solana production gate is disabled; Solana launch remains blocked");
 }
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
-import { parseEnvFile, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
+import { mergeEnv, parseEnvFile, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
 
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
-const mergedEnv = { ...process.env, ...fileEnv };
+const mergedEnv = mergeEnv(process.env, fileEnv);
 const diagnostics = supabaseEnvDiagnostics({ fileEnv, processEnv: process.env, mergedEnv });
 
 function present(value) {
