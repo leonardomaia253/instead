@@ -1,28 +1,18 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseEnvFile, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const frontendEnvPath = resolve(root, "frontend/.env.local");
 
-function parseEnvFile(path) {
-  if (!existsSync(path)) return {};
-  return Object.fromEntries(
-    readFileSync(path, "utf8")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const index = line.indexOf("=");
-        return [line.slice(0, index), line.slice(index + 1).replace(/^["']|["']$/g, "")];
-      }),
-  );
-}
-
 const fileEnv = parseEnvFile(frontendEnvPath);
-const env = { ...fileEnv, ...process.env };
+const env = { ...process.env, ...fileEnv };
 const failures = [];
 const warnings = [];
+const supabaseDiagnostics = supabaseEnvDiagnostics({ fileEnv, processEnv: process.env, mergedEnv: env });
+failures.push(...supabaseDiagnostics.failures);
+warnings.push(...supabaseDiagnostics.warnings);
 
 function requireEnv(name, options = {}) {
   const value = env[name];
@@ -50,6 +40,11 @@ function requireMinLength(name, minLength) {
   const value = requireEnv(name);
   if (value && value.length < minLength) failures.push(`${name} must be at least ${minLength} characters`);
   return value;
+}
+
+function rejectPattern(name, pattern, message) {
+  const value = env[name];
+  if (value && pattern.test(value)) failures.push(`${name} ${message}`);
 }
 
 function requireJsonObject(name) {
@@ -81,6 +76,7 @@ for (const requiredFile of [
   "scripts/deploy-lending.ts",
   "scripts/deploy-lending-router.ts",
   "scripts/configure-lending-assets.ts",
+  "scripts/check-contract-security.mjs",
   "scripts/transfer-ownership.ts",
   "scripts/verify-ownership.mjs",
   "scripts/verify-deployment-manifest.mjs",
@@ -90,6 +86,14 @@ for (const requiredFile of [
   "scripts/check-supabase-contract.mjs",
   "scripts/seed-lending-protocol-routes.mjs",
   "scripts/check-secrets.mjs",
+  "scripts/check-workspace-hygiene.mjs",
+  "scripts/check-api-security.mjs",
+  "scripts/check-edge-functions.mjs",
+  "scripts/deploy-edge-functions.mjs",
+  "scripts/diagnose-supabase-env.mjs",
+  "scripts/lib/supabase-env.mjs",
+  "scripts/check-performance-budget.mjs",
+  "scripts/local-production-audit.mjs",
   "scripts/set-telegram-webhook.mjs",
   "scripts/monitor-balances.mjs",
   "frontend/src/lib/revenueCatalog.ts",
@@ -101,6 +105,10 @@ for (const requiredFile of [
   "frontend/src/app/api/admin/b2b-clients/route.ts",
   "frontend/src/app/api/revenue/me/route.ts",
   "frontend/src/app/api/auth/wallet-profile/route.ts",
+  "frontend/src/app/api/auth/session/route.ts",
+  "frontend/src/lib/server/csrf.ts",
+  "frontend/src/lib/server/responses.ts",
+  "frontend/next.config.js",
   "supabase/functions/lending-automation/index.ts",
   "supabase/migrations/20260728214740_lending_automation_engine.sql",
 ]) {
@@ -124,6 +132,19 @@ warnIfMissing("UPTIME_STATUS_URL");
 warnIfMissing("TELEGRAM_ALERT_CHAT_ID");
 warnIfMissing("SOLANA_RPC_URL");
 warnIfMissing("BALANCE_MONITOR_SECRET");
+
+const exposesPublicAbuseSurface = [
+  env.REQUIRE_FIAT_PAYMENTS === "true",
+  env.REQUIRE_TELEGRAM_BOT === "true",
+  env.REQUIRE_MONITORING === "true",
+  Boolean(env.GEMINI_API_KEY),
+].some(Boolean);
+
+if (env.REQUIRE_DISTRIBUTED_RATE_LIMIT === "true") {
+  requireEnv("DISTRIBUTED_RATE_LIMIT_PROVIDER");
+} else if (exposesPublicAbuseSurface) {
+  failures.push("REQUIRE_DISTRIBUTED_RATE_LIMIT must be true when paid, bot, monitoring or AI endpoints are enabled for production");
+}
 
 if (env.REQUIRE_MONITORING === "true") {
   requireEnv("SENTRY_DSN");
@@ -165,6 +186,9 @@ if (env.REQUIRE_FIAT_PAYMENTS === "true") {
   requireEnv("STRIPE_WEBHOOK_SECRET");
   requireEnv("PAGARME_SECRET_KEY");
   requireMinLength("PAGARME_WEBHOOK_SECRET", 32);
+  rejectPattern("APP_ORIGIN", /^https:\/\/localhost\b|^http:\/\//i, "must be a public HTTPS production origin");
+  rejectPattern("STRIPE_SECRET_KEY", /^sk_test_|dummy|changeme/i, "must be a live production key when fiat payments are required");
+  rejectPattern("PAGARME_SECRET_KEY", /dummy|changeme/i, "must be a real production key when fiat payments are required");
 }
 
 const factoryVars = [

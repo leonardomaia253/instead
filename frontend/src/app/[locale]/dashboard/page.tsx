@@ -1,7 +1,8 @@
 "use client";
+
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Link } from "@/navigation";
 import { HealthGauge } from "@/components/HealthGauge";
 import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
@@ -28,21 +29,27 @@ export default function DashboardPage() {
   const [intents, setIntents] = useState<LendingAutomationIntent[]>([]);
   const [alerts, setAlerts] = useState<LendingAlertEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [revenueAuthRequired, setRevenueAuthRequired] = useState(false);
   const [auditFilter, setAuditFilter] = useState<"all" | "lending" | "staking" | "tokens">("all");
 
   useEffect(() => {
     if (!address) { setLoading(false); return; }
     const wallet = address.toLowerCase();
+    setRevenueAuthRequired(false);
 
     Promise.all([
       supabase.from("lending_positions").select("*").eq("wallet_address", wallet),
       supabase.from("generated_tokens").select("*").eq("creator_wallet", wallet).order("created_at", { ascending: false }).limit(6),
       getAuditsByWallet(wallet),
-      fetch(`/api/revenue/me?wallet=${encodeURIComponent(wallet)}`).then((res) => res.json()).catch(() => ({ entitlements: [], intents: [] }))
+      fetch(`/api/revenue/me?wallet=${encodeURIComponent(wallet)}`).then(async (res) => {
+        if (res.status === 401) return { authRequired: true, entitlements: [], intents: [], alerts: [] };
+        return res.json();
+      }).catch(() => ({ entitlements: [], intents: [], alerts: [] }))
     ]).then(([{ data: pos }, { data: tok }, auditData, revenueData]) => {
       setPositions((pos ?? []) as LendingPosition[]);
       setTokens((tok ?? []) as GeneratedToken[]);
       setAudits(auditData ?? []);
+      setRevenueAuthRequired(Boolean(revenueData.authRequired));
       setEntitlements((revenueData.entitlements ?? []) as RevenueEntitlement[]);
       setIntents((revenueData.intents ?? []) as LendingAutomationIntent[]);
       setAlerts((revenueData.alerts ?? []) as LendingAlertEvent[]);
@@ -84,7 +91,7 @@ export default function DashboardPage() {
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, textAlign: "center" }}>
           Conecte sua carteira para ver o dashboard
         </h1>
-        <ConnectButton />
+        <WalletConnectButton />
       </main>
     );
   }
@@ -104,7 +111,7 @@ export default function DashboardPage() {
               {address?.slice(0, 6)}...{address?.slice(-4)}
             </p>
           </div>
-          <ConnectButton />
+          <WalletConnectButton />
         </div>
 
         {/* Stats Row */}
@@ -136,7 +143,11 @@ export default function DashboardPage() {
               </div>
               <Link href="/lending" style={{ color: "var(--accent-1)", textDecoration: "none", fontSize: 13 }}>Upgrade</Link>
             </div>
-            {entitlements.length === 0 ? (
+            {revenueAuthRequired ? (
+              <div style={{ color: "var(--accent-1)", fontSize: 14, lineHeight: 1.55 }}>
+                Entre com sua wallet para assinar a sessao e carregar planos, pagamentos e automacoes premium.
+              </div>
+            ) : entitlements.length === 0 ? (
               <div style={{ color: "var(--text-muted)", fontSize: 14 }}>
                 Nenhum plano premium ativo. Ative alertas, risk shield ou Lending Pro quando quiser proteção mais robusta.
               </div>
@@ -160,7 +171,9 @@ export default function DashboardPage() {
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Timeline operacional</h2>
             <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Deleverage, rebalance, risk shield, estratégias e solicitações B2B.</p>
-            {intents.length === 0 ? (
+            {revenueAuthRequired ? (
+              <div style={{ color: "var(--accent-1)", fontSize: 14 }}>Assine a sessao wallet para carregar a timeline premium.</div>
+            ) : intents.length === 0 ? (
               <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhuma intenção premium criada ainda.</div>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
@@ -181,7 +194,9 @@ export default function DashboardPage() {
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Alertas de risco</h2>
             <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Liquidação, risk shield e recomendações geradas por automação.</p>
-            {alerts.length === 0 ? (
+            {revenueAuthRequired ? (
+              <div style={{ color: "var(--accent-1)", fontSize: 14 }}>Assine a sessao wallet para carregar alertas privados.</div>
+            ) : alerts.length === 0 ? (
               <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhum alerta recente.</div>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>

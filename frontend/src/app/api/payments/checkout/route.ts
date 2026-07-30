@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createPagarmeCheckout, createStripeCheckout, validateCheckoutRequest, type CheckoutRequest, type PaymentProvider, type PaymentVertical } from "@/lib/server/payments";
-import { rateLimit } from "@/lib/server/rateLimit";
+import { requireSameOrigin } from "@/lib/server/csrf";
+import { rateLimit, readLimitedJson } from "@/lib/server/rateLimit";
+import { verifyWalletSession } from "@/lib/server/walletAuth";
 
 function isProvider(value: unknown): value is PaymentProvider {
   return value === "stripe" || value === "pagarme";
@@ -12,12 +14,15 @@ function isVertical(value: unknown): value is PaymentVertical {
 
 export async function POST(request: Request) {
   try {
+    const csrfError = requireSameOrigin(request);
+    if (csrfError) return csrfError;
+
     const limited = rateLimit(request, "payments:checkout", 10, 60_000);
     if (!limited.allowed) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429, headers: { "Retry-After": String(limited.retryAfterSeconds) } });
     }
 
-    const body = (await request.json()) as CheckoutRequest;
+    const body = await readLimitedJson<CheckoutRequest>(request, 4096);
     if (!isProvider(body.provider)) {
       return NextResponse.json({ error: "Unsupported payment provider" }, { status: 400 });
     }
@@ -26,6 +31,10 @@ export async function POST(request: Request) {
     }
     if (!body.productCode) {
       return NextResponse.json({ error: "productCode is required" }, { status: 400 });
+    }
+    const session = verifyWalletSession(request);
+    if (!session?.wallet_address || session.wallet_address.toLowerCase() !== String(body.walletAddress ?? "").toLowerCase()) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     await validateCheckoutRequest(body);
 

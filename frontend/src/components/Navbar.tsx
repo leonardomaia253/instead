@@ -1,8 +1,9 @@
 "use client";
 
+import { WalletConnectButton } from "@/components/WalletConnectButton";
+
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/navigation";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Activity, Gauge, Menu, Moon, Sun, Zap, X } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -94,7 +95,7 @@ export function Navbar() {
           <button onClick={toggleTheme} aria-label="Toggle theme">
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <ConnectButton />
+          <WalletConnectButton />
         </div>
 
         <button className="show-mobile proto-menu-button" onClick={() => setOpen((value) => !value)} aria-label="Alternar menu">
@@ -132,7 +133,7 @@ export function Navbar() {
             </Link>
             <button onClick={toggle3D}><Zap size={16} /> 3D</button>
             <button onClick={toggleTheme}>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />} Tema</button>
-            <ConnectButton />
+            <WalletConnectButton />
           </div>
         </div>
       )}

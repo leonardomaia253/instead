@@ -2,13 +2,16 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { REVENUE_SOURCE_COUNT } from "@/lib/revenueCatalog";
 import { createSupabaseAdminClient } from "@/lib/server/supabaseAdmin";
-import { rateLimit } from "@/lib/server/rateLimit";
+import { rateLimit, readLimitedJson } from "@/lib/server/rateLimit";
 
 function hashApiKey(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
 export async function GET(request: Request) {
+  const limited = rateLimit(request, "b2b:widget-config", 60, 60_000);
+  if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+
   const url = new URL(request.url);
   const domain = url.searchParams.get("domain")?.toLowerCase();
   const apiKey = request.headers.get("x-instead-widget-key");
@@ -51,7 +54,7 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "b2b:widget-lead", 30, 60_000);
   if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readLimitedJson<Record<string, unknown>>(request, 4096).catch((): Record<string, unknown> => ({}));
   const domain = String(body.domain ?? "").toLowerCase();
   const apiKey = request.headers.get("x-instead-widget-key") ?? "";
   const walletAddress = String(body.walletAddress ?? "").toLowerCase();
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
     event_type: "lead_created",
     wallet_address: walletAddress,
     source_code: "b2b_lending_widget_api",
-    metadata: { requested_product: body.requestedProduct ?? "lending" },
+    metadata: { requested_product: String(body.requestedProduct ?? "lending").slice(0, 80) },
   });
 
   const { data, error } = await supabase
@@ -89,7 +92,7 @@ export async function POST(request: Request) {
       payload: {
         b2b_client_id: client.id,
         domain,
-        requested_product: body.requestedProduct ?? "lending",
+        requested_product: String(body.requestedProduct ?? "lending").slice(0, 80),
       },
       recommendation: "Lead B2B recebido via widget Instead.",
     })

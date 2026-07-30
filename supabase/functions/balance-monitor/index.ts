@@ -100,7 +100,8 @@ serve(async (req) => {
   if (early) return early;
 
   const cronSecret = Deno.env.get("BALANCE_MONITOR_SECRET");
-  if (cronSecret && req.headers.get("x-monitor-secret") !== cronSecret) return json({ error: "Unauthorized" }, 401);
+  if (!cronSecret) return json({ error: "Service unavailable" }, 503);
+  if (req.headers.get("x-monitor-secret") !== cronSecret) return json({ error: "Unauthorized" }, 401);
 
   const limited = rateLimit(req, "balance-monitor");
   if (limited) return limited;

@@ -9,7 +9,7 @@ const SUPABASE_JWT_SECRET = Deno.env.get("SUPABASE_JWT_SECRET")
 const SIWE_DOMAIN = Deno.env.get("SIWE_DOMAIN") ?? "instead.volupai.com"
 
 function requiredEnv(value: string | undefined, name: string) {
-  if (!value) throw new Error(`${name} is not configured`)
+  if (!value) throw new Error("Service unavailable")
   return value
 }
 
@@ -155,6 +155,10 @@ serve(async (req) => {
 
     return json({ error: "Unknown action" }, 400)
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : "Unexpected error" }, 500)
+    const message = error instanceof Error ? error.message : "Unexpected error"
+    if (message === "Payload too large") return json({ error: message }, 413)
+    if (message === "Service unavailable") return json({ error: message }, 503)
+    console.error("siwe-auth failed", message)
+    return json({ error: "Internal server error" }, 500)
   }
 })

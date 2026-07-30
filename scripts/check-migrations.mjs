@@ -80,6 +80,8 @@ const requiredPolicyFragments = [
   "users read their own payment intents",
   "admins read payment intents",
   "service role manages payment intents",
+  "users read own profile",
+  "admins read user profiles",
 ];
 
 for (const fragment of requiredPolicyFragments) {
@@ -103,6 +105,22 @@ const requiredIndexes = [
 
 for (const index of requiredIndexes) {
   if (!normalized.includes(index.toLowerCase())) failures.push(`index missing: ${index}`);
+}
+
+function hasDropPolicy(table, policyFragment) {
+  const escapedTable = table.replace(".", "\\.");
+  const escapedFragment = policyFragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`drop policy if exists "[^"]*${escapedFragment}[^"]*" on ${escapedTable}`, "i").test(normalized);
+}
+
+for (const [table, policyFragment] of [
+  ["public.users", "perfis"],
+  ["public.audits", "qualquer um pode ler auditorias"],
+  ["public.lending_positions", "públicas para leitura"],
+]) {
+  if (!hasDropPolicy(table, policyFragment)) {
+    failures.push(`${table} must drop permissive policy containing: ${policyFragment}`);
+  }
 }
 
 if (failures.length > 0) {

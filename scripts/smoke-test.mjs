@@ -1,19 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-
-function parseEnvFile(path) {
-  if (!existsSync(path)) return {};
-  return Object.fromEntries(
-    readFileSync(path, "utf8")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const index = line.indexOf("=");
-        return [line.slice(0, index), line.slice(index + 1).replace(/^["']|["']$/g, "")];
-      }),
-  );
-}
+import { parseEnvFile, projectRefFromSupabaseUrl, supabaseEnvDiagnostics } from "./lib/supabase-env.mjs";
 
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
 const env = { ...process.env, ...fileEnv };
@@ -24,6 +10,11 @@ const telegramSecret = env.TELEGRAM_WEBHOOK_SECRET;
 
 const failures = [];
 const warnings = [];
+const protectedBearerFunctions = ["token-ai", "lending-ai"];
+const secretProtectedFunctions = [
+  { name: "balance-monitor", header: "x-monitor-secret" },
+  { name: "lending-automation", header: "x-automation-secret" },
+];
 
 function requireUrl(name, value) {
   if (!value || !/^https?:\/\//.test(value)) {
@@ -32,6 +23,10 @@ function requireUrl(name, value) {
   }
   return value.replace(/\/$/, "");
 }
+
+const supabaseDiagnostics = supabaseEnvDiagnostics({ fileEnv, processEnv: process.env, mergedEnv: env });
+failures.push(...supabaseDiagnostics.failures);
+warnings.push(...supabaseDiagnostics.warnings);
 
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
@@ -49,6 +44,16 @@ async function expectStatus(url, expected = [200]) {
     failures.push(`${url} returned ${response.status}; expected ${expected.join("/")}`);
   }
   return response;
+}
+
+function edgeFunctionFailure(functionName, status, expected) {
+  const expectation = expected.join("/");
+  if (status === 404) {
+    const urlProjectRef = supabaseUrl ? projectRefFromSupabaseUrl(supabaseUrl) : null;
+    const deployHint = urlProjectRef ? `SUPABASE_PROJECT_REF=${urlProjectRef} pnpm edge:functions:deploy` : "SUPABASE_PROJECT_REF=<project-ref> pnpm edge:functions:deploy";
+    return `${functionName} Edge Function returned 404; expected ${expectation}. Deploy it with ${deployHint} or verify SUPABASE_URL points to the intended project`;
+  }
+  return `${functionName} Edge Function returned ${status}; expected ${expectation}`;
 }
 
 const origin = requireUrl("APP_ORIGIN", appOrigin);
@@ -78,15 +83,27 @@ if (origin) {
 }
 
 if (supabaseUrl) {
+  const urlProjectRef = projectRefFromSupabaseUrl(supabaseUrl);
   const functionsBase = `${supabaseUrl.replace(/\/$/, "")}/functions/v1`;
-  for (const functionName of ["token-ai", "lending-ai"]) {
+  for (const functionName of protectedBearerFunctions) {
     const response = await fetchWithTimeout(`${functionsBase}/${functionName}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{}",
     });
     if (response.status !== 401) {
-      failures.push(`${functionName} unauthenticated smoke returned ${response.status}; expected 401`);
+      failures.push(edgeFunctionFailure(functionName, response.status, [401]));
+    }
+  }
+
+  for (const { name, header } of secretProtectedFunctions) {
+    const response = await fetchWithTimeout(`${functionsBase}/${name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (![401, 503].includes(response.status)) {
+      failures.push(edgeFunctionFailure(name, response.status, [401, 503]));
     }
   }
 

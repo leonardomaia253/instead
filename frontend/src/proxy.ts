@@ -24,6 +24,13 @@ async function verifyJwt(token: string) {
 
   const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
   if (!encodedHeader || !encodedPayload || !encodedSignature) return null;
+  let header: { alg?: string; typ?: string };
+  try {
+    header = JSON.parse(new TextDecoder().decode(base64UrlToBytes(encodedHeader)));
+  } catch {
+    return null;
+  }
+  if (header.alg !== 'HS256' || (header.typ && header.typ !== 'JWT')) return null;
 
   const key = await crypto.subtle.importKey(
     'raw',
@@ -37,10 +44,15 @@ async function verifyJwt(token: string) {
   );
   if (!timingSafeEqual(expected, base64UrlToBytes(encodedSignature))) return null;
 
-  const payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(encodedPayload))) as {
+  let payload: {
     exp?: number;
     is_admin?: boolean;
   };
+  try {
+    payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(encodedPayload)));
+  } catch {
+    return null;
+  }
   if (!payload.exp || payload.exp * 1000 < Date.now()) return null;
   return payload;
 }

@@ -1,16 +1,64 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
-import {
-  arbitrum,
-  polygon,
-  bsc,
-  base,
-  optimism,
-  mainnet,
-  avalanche,
-} from "wagmi/chains";
+import type { Chain } from "viem";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "dfab9bf7f9df6ec4e1411c76256bb638";
+
+const mainnet = {
+  id: 1,
+  name: "Ethereum",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://eth.merkle.io"] } },
+  blockExplorers: { default: { name: "Etherscan", url: "https://etherscan.io" } },
+} as const satisfies Chain;
+
+const arbitrum = {
+  id: 42161,
+  name: "Arbitrum One",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://arb1.arbitrum.io/rpc"] } },
+  blockExplorers: { default: { name: "Arbiscan", url: "https://arbiscan.io" } },
+} as const satisfies Chain;
+
+const polygon = {
+  id: 137,
+  name: "Polygon",
+  nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+  rpcUrls: { default: { http: ["https://polygon-rpc.com"] } },
+  blockExplorers: { default: { name: "Polygonscan", url: "https://polygonscan.com" } },
+} as const satisfies Chain;
+
+const bsc = {
+  id: 56,
+  name: "BNB Smart Chain",
+  nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+  rpcUrls: { default: { http: ["https://bsc-dataseed.binance.org"] } },
+  blockExplorers: { default: { name: "BscScan", url: "https://bscscan.com" } },
+} as const satisfies Chain;
+
+const base = {
+  id: 8453,
+  name: "Base",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://mainnet.base.org"] } },
+  blockExplorers: { default: { name: "Basescan", url: "https://basescan.org" } },
+} as const satisfies Chain;
+
+const optimism = {
+  id: 10,
+  name: "OP Mainnet",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["https://mainnet.optimism.io"] } },
+  blockExplorers: { default: { name: "Optimistic Etherscan", url: "https://optimistic.etherscan.io" } },
+} as const satisfies Chain;
+
+const avalanche = {
+  id: 43114,
+  name: "Avalanche C-Chain",
+  nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+  rpcUrls: { default: { http: ["https://api.avax.network/ext/bc/C/rpc"] } },
+  blockExplorers: { default: { name: "Snowtrace", url: "https://snowtrace.io" } },
+} as const satisfies Chain;
 
 export const SUPPORTED_CHAINS = [
   arbitrum,

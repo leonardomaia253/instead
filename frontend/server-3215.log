@@ -1,8 +1,0 @@
-
-> instead-frontend@0.1.0 start C:\Users\Administrator\instead\frontend
-> next start "-p" "3215"
-
-▲ Next.js 16.2.10
-- Local:         http://localhost:3215
-- Network:       http://172.31.39.15:3215
-✓ Ready in 697ms

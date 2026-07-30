@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { getStripe, markPaymentPaid, updatePaymentIntentById } from "@/lib/server/payments";
-import { rateLimit } from "@/lib/server/rateLimit";
+import { getStripe, markPaymentPaid, updateUnpaidPaymentIntentById } from "@/lib/server/payments";
+import { rateLimit, readLimitedText } from "@/lib/server/rateLimit";
 import { captureException } from "@/lib/observability/sentry";
 import { sendSystemAlert } from "@/lib/observability/alerts";
 
@@ -9,7 +9,8 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "payments:webhook:stripe", 120, 60_000);
   if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-  const rawBody = await request.text();
+  const rawBody = await readLimitedText(request, 64 * 1024).catch(() => "");
+  if (!rawBody) return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   const signature = (await headers()).get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
       const session = event.data.object;
       const paymentIntentId = session.metadata?.payment_intent_id;
       if (paymentIntentId) {
-        await updatePaymentIntentById(paymentIntentId, {
+        await updateUnpaidPaymentIntentById(paymentIntentId, {
           status: "canceled",
           provider_reference: session.id,
         });

@@ -17,7 +17,6 @@ const ignoredDirs = new Set([
 ]);
 
 const ignoredFiles = new Set([
-  "build-latest.log",
   "package-lock.json",
   "pnpm-lock.yaml",
   "yarn.lock",
@@ -33,6 +32,7 @@ const textExtensions = new Set([
   ".js",
   ".json",
   ".jsx",
+  ".log",
   ".md",
   ".mjs",
   ".scss",
@@ -79,7 +79,6 @@ function shouldReadFile(path) {
   const name = path.split(/[\\/]/).pop();
   if (ignoredFiles.has(name)) return false;
   if (isIgnoredPath(path)) return false;
-  if (name.endsWith(".local")) return false;
   if (name.startsWith(".env")) return true;
   return textExtensions.has(extname(name));
 }

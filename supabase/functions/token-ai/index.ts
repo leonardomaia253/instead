@@ -6,7 +6,7 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
 
 function requireConfiguredGemini() {
   if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not configured')
+    throw new Error('AI provider unavailable')
   }
 }
 
@@ -15,9 +15,9 @@ serve(async (req) => {
   if (methodResponse) return methodResponse
 
   try {
-    requireConfiguredGemini()
     const unauthorized = requireBearer(req)
     if (unauthorized) return unauthorized
+    requireConfiguredGemini()
     const limited = rateLimit(req, "token-ai")
     if (limited) return limited
 
@@ -69,6 +69,6 @@ serve(async (req) => {
     return json({ tips: text })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error"
-    return json({ error: message }, message === "Payload too large" ? 413 : 500)
+    return json({ error: message }, message === "Payload too large" ? 413 : message === "AI provider unavailable" ? 503 : 500)
   }
 })

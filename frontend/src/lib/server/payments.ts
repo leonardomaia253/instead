@@ -74,7 +74,10 @@ async function getPricesFromDb(): Promise<Record<string, PriceRow>> {
 }
 
 function appOrigin() {
-  return process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3000";
+  const origin = process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_ORIGIN;
+  if (origin) return origin.replace(/\/$/, "");
+  if (process.env.NODE_ENV !== "production") return "http://localhost:3000";
+  throw new Error("APP_ORIGIN is required for production checkout URLs");
 }
 
 function checkoutReturnPath(vertical: PaymentVertical) {
@@ -139,6 +142,16 @@ export async function updatePaymentIntentById(id: string, patch: Record<string, 
   if (error) throw error;
 }
 
+export async function updateUnpaidPaymentIntentById(id: string, patch: Record<string, unknown>) {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("payment_intents")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .neq("status", "paid");
+  if (error) throw error;
+}
+
 export async function getPaymentIntentById(id: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
@@ -172,13 +185,21 @@ export async function markPaymentPaid(input: {
   if (!input.currency) throw new Error("Payment currency is required");
   const payment = await getPaymentIntentById(input.id);
   if (payment.provider !== input.provider) throw new Error("Payment provider mismatch");
+  if (payment.status === "paid" && payment.provider_reference !== input.providerReference) {
+    throw new Error("Payment is already paid with a different provider reference");
+  }
   if (payment.amount_cents !== input.amountCents) throw new Error("Payment amount mismatch");
   if (payment.currency.toLowerCase() !== input.currency.toLowerCase()) throw new Error("Payment currency mismatch");
-  await updatePaymentIntentById(input.id, {
-    status: "paid",
-    provider_reference: input.providerReference,
-    paid_at: new Date().toISOString(),
-  });
+  if (payment.provider_reference && payment.provider_reference !== input.providerReference) {
+    throw new Error("Payment provider reference mismatch");
+  }
+  if (payment.status !== "paid") {
+    await updatePaymentIntentById(input.id, {
+      status: "paid",
+      provider_reference: input.providerReference,
+      paid_at: new Date().toISOString(),
+    });
+  }
 
   const catalogItem = FIAT_REVENUE_SOURCES.find((source) => source.sourceCode === payment.product_code);
   if (catalogItem && payment.wallet_address) {
@@ -205,7 +226,8 @@ export async function markPaymentPaid(input: {
 }
 
 export function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY || "sk_test_dummy";
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
   return new Stripe(key);
 }
 

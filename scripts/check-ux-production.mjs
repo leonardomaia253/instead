@@ -69,6 +69,7 @@ requireContains("frontend/next.config.js", [
   /X-Frame-Options/,
   /Referrer-Policy/,
   /Permissions-Policy/,
+  /Content-Security-Policy/,
   /Strict-Transport-Security/,
 ]);
 
@@ -124,6 +125,18 @@ requireContains("frontend/src/lib/revenueLanding.ts", [
 requireContains("frontend/src/app/[locale]/dashboard/page.tsx", [
   /Meu plano Instead/i,
   /Timeline operacional/i,
+  /revenueAuthRequired/,
+  /res\.status === 401/,
+]);
+
+requireContains("frontend/src/app/[locale]/factory/page.tsx", [
+  /response\.status === 401/,
+  /auth_required/,
+]);
+
+requireContains("frontend/src/app/[locale]/lending/page.tsx", [
+  /response\.status === 401/,
+  /assinar a sess/i,
 ]);
 
 requireContains("frontend/src/app/[locale]/admin/revenue/page.tsx", [

@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
 const WALLET_SESSION_KEY = "instead_wallet_access_token";
-const WALLET_SESSION_COOKIE = "instead_wallet_session";
 
 function validPublicEnv(name: string) {
   const value = process.env[name];
@@ -80,16 +79,21 @@ function getStoredWalletAccessToken() {
   return window.localStorage.getItem(WALLET_SESSION_KEY);
 }
 
-export function setWalletAccessToken(token: string) {
+export async function setWalletAccessToken(token: string) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(WALLET_SESSION_KEY, token);
-  document.cookie = `${WALLET_SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=3600; SameSite=Lax; Secure`;
+  const response = await fetch("/api/auth/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!response.ok) throw new Error("Could not persist wallet session");
 }
 
-export function clearWalletAccessToken() {
+export async function clearWalletAccessToken() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(WALLET_SESSION_KEY);
-  document.cookie = `${WALLET_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; Secure`;
+  await fetch("/api/auth/session", { method: "DELETE" });
 }
 
 export const supabase = isSupabaseConfigured

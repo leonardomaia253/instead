@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { REVENUE_SOURCES } from "@/lib/revenueCatalog";
 import { createSupabaseAdminClient } from "@/lib/server/supabaseAdmin";
+import { noStoreJson } from "@/lib/server/responses";
+import { verifyAdminWallet } from "@/lib/server/walletAuth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authError = await verifyAdminWallet(req);
+  if (authError) return authError;
+
   try {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
@@ -23,7 +28,7 @@ export async function GET() {
       supabase.from("b2b_widget_events").select("id", { count: "exact", head: true }),
     ]);
 
-    return NextResponse.json({
+    return noStoreJson({
       sources: data ?? [],
       count: data?.length ?? 0,
       operations: {
@@ -36,7 +41,7 @@ export async function GET() {
       source: "supabase",
     });
   } catch {
-    return NextResponse.json({
+    return noStoreJson({
       sources: REVENUE_SOURCES.map((source) => ({
         source_code: source.sourceCode,
         label: source.label,

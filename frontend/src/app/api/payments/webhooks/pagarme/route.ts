@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { markPaymentPaid, updatePaymentIntentById, verifyPagarmeWebhook } from "@/lib/server/payments";
-import { rateLimit } from "@/lib/server/rateLimit";
+import { markPaymentPaid, updateUnpaidPaymentIntentById, verifyPagarmeWebhook } from "@/lib/server/payments";
+import { rateLimit, readLimitedText } from "@/lib/server/rateLimit";
 
 function getPaymentIntentId(payload: any) {
   return (
@@ -16,7 +16,8 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "payments:webhook:pagarme", 120, 60_000);
   if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-  const rawBody = await request.text();
+  const rawBody = await readLimitedText(request, 64 * 1024).catch(() => "");
+  if (!rawBody) return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   const headerBag = await headers();
   const signature =
     headerBag.get("x-hub-signature-256") ||
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
       eventType === "order.canceled" ||
       eventType === "checkout.canceled"
     ) {
-      await updatePaymentIntentById(paymentIntentId, {
+      await updateUnpaidPaymentIntentById(paymentIntentId, {
         status: eventType.includes("canceled") ? "canceled" : "failed",
         provider_reference: payload?.data?.id || payload?.data?.order?.id || payload?.data?.charge?.id,
       });

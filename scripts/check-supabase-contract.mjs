@@ -86,8 +86,32 @@ if (!read("frontend/src/app/api/lending/automation-intents/route.ts").includes("
 if (!read("frontend/src/app/api/b2b/widget/route.ts").includes("b2b_widget_clients")) failures.push("B2B widget API is missing");
 if (!read("frontend/src/app/api/admin/b2b-clients/route.ts").includes("apiKey")) failures.push("Admin B2B client provisioning API is missing");
 if (!read("frontend/src/app/api/revenue/me/route.ts").includes("user_revenue_entitlements")) failures.push("User revenue status API is missing");
-if (!read("frontend/src/app/[locale]/login/page.tsx").includes("signInWithWeb3")) failures.push("Wallet login must use Supabase native Web3 auth");
+const loginPage = read("frontend/src/app/[locale]/login/page.tsx");
+for (const expected of ['getSupabaseFunctionUrl("siwe-auth")', "signMessageAsync", "setWalletAccessToken"]) {
+  if (!loginPage.includes(expected)) failures.push(`Wallet login must establish signed SIWE wallet session: ${expected}`);
+}
+if (!read("frontend/src/app/api/auth/session/route.ts").includes("httpOnly: true")) failures.push("Wallet session API must set an HttpOnly cookie");
+if (!read("frontend/src/app/api/auth/session/route.ts").includes("requireSameOrigin")) failures.push("Wallet session API must enforce same-origin requests");
+if (!read("frontend/src/lib/server/csrf.ts").includes("if (!origin) return NextResponse.json")) failures.push("Same-origin guard must reject missing Origin headers for cookie-auth mutations");
+for (const route of [
+  "frontend/src/app/api/admin/prices/route.ts",
+  "frontend/src/app/api/admin/b2b-clients/route.ts",
+  "frontend/src/app/api/lending/automation-intents/route.ts",
+]) {
+  if (!read(route).includes("requireSameOrigin")) failures.push(`${route} must enforce same-origin requests`);
+  if (!read(route).includes("rateLimit")) failures.push(`${route} must rate-limit authenticated mutations`);
+  if (!read(route).includes("readLimitedJson")) failures.push(`${route} must limit JSON request payloads`);
+}
 if (!read("frontend/src/app/api/auth/wallet-profile/route.ts").includes("supabase.auth.getUser")) failures.push("Wallet profile API must validate the Supabase session");
+for (const route of [
+  "frontend/src/app/api/admin/prices/route.ts",
+  "frontend/src/app/api/admin/b2b-clients/route.ts",
+]) {
+  if (!read(route).includes("insertAdminAuditLog")) failures.push(`${route} must write admin audit logs for mutations`);
+}
+if (read("frontend/src/app/api/admin/prices/route.ts").includes("error.message")) {
+  failures.push("Admin prices API must not expose raw Supabase error messages");
+}
 if (!read("supabase/functions/lending-automation/index.ts").includes("lending_alert_events")) failures.push("Lending automation function must create risk alerts");
 if (!read("supabase/functions/lending-automation/index.ts").includes("required_user_signature")) failures.push("Lending automation must preserve user-signature execution boundary");
 if (!read("frontend/src/app/[locale]/lending/page.tsx").includes("Lending Pro Stack")) failures.push("Lending page must expose premium revenue products");

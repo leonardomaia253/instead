@@ -36,6 +36,12 @@ deployments/*.json
 .env.production.local
 
 # Debug
+*.log
+*.err.log
+*.har
+*.tsbuildinfo
+trace_resolution.txt
+frontend/.playwright-cli/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

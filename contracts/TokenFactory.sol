@@ -238,7 +238,8 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         require(sent, "Fee transfer failed");
 
         if (liquidityEth > amountETH) {
-            payable(msg.sender).transfer(liquidityEth - amountETH);
+            (bool refundSent,) = payable(msg.sender).call{ value: liquidityEth - amountETH }("");
+            require(refundSent, "Refund failed");
         }
 
         emit TokenCreated(tokenAddr, msg.sender, name, symbol, supply, supply, false, false, 0, false, 0, feeInEth);
@@ -301,7 +302,8 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
 
         // Refund de excedente
         if (msg.value > feeInEth) {
-            payable(msg.sender).transfer(msg.value - feeInEth);
+            (bool refundSent,) = payable(msg.sender).call{ value: msg.value - feeInEth }("");
+            require(refundSent, "Refund failed");
         }
 
         emit TokenCreated(tokenAddr, msg.sender, name, symbol, initialSupply, maxSupply, isMintable, isTaxable, taxBPS_, burnTax_, maxWalletBPS_, feeInEth);

@@ -1,8 +1,9 @@
 "use client";
+
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useInsteadLending } from "@/hooks/useInsteadLending";
 import { Link } from "@/navigation";
 import { enqueueReconciliation, insertAudit, upsertLendingPosition, supabase } from "@/lib/supabase";
@@ -189,6 +190,10 @@ export default function LendingPage() {
       }),
     });
     const body = await response.json();
+    if (response.status === 401) {
+      setPremiumStatus("Entre com sua wallet para assinar a sessão antes de contratar.");
+      return;
+    }
     if (!response.ok || !body.url) {
       setPremiumStatus("Não foi possível criar checkout agora.");
       return;
@@ -220,6 +225,10 @@ export default function LendingPage() {
       }),
     });
     const body = await response.json();
+    if (response.status === 401) {
+      setPremiumStatus("Entre com sua wallet para assinar a sessão antes de criar a intenção.");
+      return;
+    }
     setPremiumStatus(response.ok ? `Intenção criada: ${body.intent.id}` : "Não foi possível registrar a intenção.");
   }
 
@@ -238,7 +247,7 @@ export default function LendingPage() {
               Acesse liquidez institucional com seus ativos digitais como garantia, sem abrir mão da custódia.
             </p>
           </div>
-          <ConnectButton />
+          <WalletConnectButton />
         </div>
 
         {/* Lending desabilitado — card institucional limpo, sem expor lógica interna */}
@@ -302,7 +311,7 @@ export default function LendingPage() {
                 <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: 15 }}>
                   Conecte sua carteira para acessar o protocolo.
                 </p>
-                <ConnectButton />
+                <WalletConnectButton />
               </div>
             ) : (
               <>

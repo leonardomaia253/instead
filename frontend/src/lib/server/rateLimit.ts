@@ -22,3 +22,21 @@ export function rateLimit(request: Request, scope: string, limit = 20, windowMs 
   }
   return { allowed: true, retryAfterSeconds: 0 };
 }
+
+export async function readLimitedJson<T = unknown>(request: Request, maxBytes = 4096): Promise<T> {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > maxBytes) throw new Error("Payload too large");
+
+  const text = await request.text();
+  if (Buffer.byteLength(text, "utf8") > maxBytes) throw new Error("Payload too large");
+  return JSON.parse(text || "{}") as T;
+}
+
+export async function readLimitedText(request: Request, maxBytes = 64 * 1024): Promise<string> {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > maxBytes) throw new Error("Payload too large");
+
+  const text = await request.text();
+  if (Buffer.byteLength(text, "utf8") > maxBytes) throw new Error("Payload too large");
+  return text;
+}

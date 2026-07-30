@@ -17,23 +17,45 @@ function parseEnvFile(path) {
 }
 
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
-const env = { ...process.env, ...fileEnv };
+const env = { ...fileEnv, ...process.env };
 const target = env.PRODUCTION_TARGET ?? "all";
 const evmNetwork = env.DEPLOYMENT_NETWORK;
+const requireSolanaProduction = env.REQUIRE_SOLANA_PRODUCTION === "true" || target === "solana";
 const failures = [];
 const warnings = [];
 
+function commandInvocation(command, args) {
+  if (command === "pnpm" && process.env.npm_execpath) {
+    return { command: process.execPath, args: [process.env.npm_execpath, ...args] };
+  }
+  if (command === "pnpm" && process.platform === "win32") {
+    return { command: "pnpm.cmd", args };
+  }
+  return { command, args };
+}
+
 function run(label, command, args, options = {}) {
-  const result = spawnSync(command, args, {
+  const invocation = commandInvocation(command, args);
+  const result = spawnSync(invocation.command, invocation.args, {
     cwd: process.cwd(),
     env: { ...env, ...(options.env ?? {}) },
-    shell: process.platform === "win32",
     encoding: "utf8",
     timeout: options.timeout ?? 180_000,
   });
   if (result.status !== 0) {
     failures.push(`${label} failed:\n${(result.stdout ?? "").slice(-1500)}${(result.stderr ?? "").slice(-2500)}`);
   }
+}
+
+function failNow() {
+  if (failures.length === 0) return;
+  console.error("Production gate failed:");
+  for (const failure of failures) console.error(`\n- ${failure}`);
+  if (warnings.length > 0) {
+    console.error("\nWarnings:");
+    for (const warning of warnings) console.error(`- ${warning}`);
+  }
+  process.exit(1);
 }
 
 function requireEnv(name, options = {}) {
@@ -55,16 +77,14 @@ function requireFile(path) {
 }
 
 function commandInstalled(command, args = ["--version"]) {
-  return spawnSync(command, args, { shell: process.platform === "win32", encoding: "utf8" }).status === 0;
+  const invocation = commandInvocation(command, args);
+  return spawnSync(invocation.command, invocation.args, { encoding: "utf8" }).status === 0;
 }
 
 function wslSolanaToolchainInstalled() {
   if (process.platform !== "win32") return false;
-  const result = spawnSync(
-    "pnpm",
-    ["solana:wsl:versions"],
-    { shell: true, encoding: "utf8", timeout: 120_000 },
-  );
+  const invocation = commandInvocation("pnpm", ["solana:wsl:versions"]);
+  const result = spawnSync(invocation.command, invocation.args, { encoding: "utf8", timeout: 120_000 });
   return result.status === 0;
 }
 
@@ -72,13 +92,25 @@ function hasRealExternalAudit() {
   const auditPath = resolve(process.cwd(), "SMART_CONTRACT_SECURITY_AUDIT.md");
   if (!existsSync(auditPath)) return false;
   const audit = readFileSync(auditPath, "utf8");
-  return /External Audit:\s*(Complete|Completed|Passed)/i.test(audit);
+  const statusLine = audit
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => /^External Audit:/i.test(line));
+  if (!statusLine) return false;
+  const status = statusLine.replace(/^External Audit:\s*/i, "").trim().toLowerCase();
+  return ["complete", "completed", "passed"].includes(status);
 }
 
 run("address config", "pnpm", ["addresses:check"], { timeout: 60_000 });
+run("workspace hygiene", "pnpm", ["workspace:hygiene"], { timeout: 60_000 });
+run("performance budget check", "pnpm", ["performance:check"], { timeout: 60_000 });
 run("UX production check", "pnpm", ["ux:check"], { timeout: 60_000 });
 run("secret scan", "pnpm", ["secrets:check"], { timeout: 60_000 });
+run("API security check", "pnpm", ["api:security"], { timeout: 60_000 });
+run("Edge Function contract check", "pnpm", ["edge:functions:check"], { timeout: 60_000 });
+run("revenue source check", "pnpm", ["revenue:check"], { timeout: 60_000 });
 run("production readiness", "pnpm", ["readiness"], { timeout: 120_000 });
+failNow();
 
 if (target === "all" || target === "evm") {
   if (!evmNetwork) {
@@ -90,6 +122,7 @@ if (target === "all" || target === "evm") {
     run("deployment manifest verification", "pnpm", ["deployments:verify"], { timeout: 120_000 });
     run("ownership verification", "pnpm", ["ownership:verify"], { timeout: 120_000 });
   }
+  run("contract security check", "pnpm", ["contracts:security"], { timeout: 60_000 });
   run("contracts test suite", "pnpm", ["contracts:test"], { timeout: 180_000 });
   if (env.REQUIRE_LENDING_FORK_TEST === "true" || env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true") {
     requireEnv("HARDHAT_FORK_RPC_URL", { https: true });
@@ -99,7 +132,7 @@ if (target === "all" || target === "evm") {
   }
 }
 
-if (target === "all" || target === "solana") {
+if (requireSolanaProduction) {
   requireEnv("SOLANA_RPC_URL", { https: true });
   requireEnv("NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID", { solanaPublicKey: true });
   run("Solana config", "pnpm", ["solana:check"], { timeout: 60_000 });
@@ -116,6 +149,8 @@ if (target === "all" || target === "solana") {
     run("Solana Anchor build", "pnpm", ["solana:wsl:build"], { timeout: 600_000 });
     warnings.push("Solana Anchor tests require a local validator flow; WSL build was enforced");
   }
+} else if (target === "all") {
+  warnings.push("Solana production gate is disabled because REQUIRE_SOLANA_PRODUCTION is not true");
 }
 
 if (env.REQUIRE_EXTERNAL_AUDIT === "true" && !hasRealExternalAudit()) {
@@ -126,6 +161,10 @@ if (env.APP_ORIGIN) {
   run("production smoke", "pnpm", ["smoke:test"], { timeout: 120_000 });
 } else {
   warnings.push("APP_ORIGIN not set; skipped production smoke");
+}
+
+if (env.REQUIRE_STRICT_PRODUCTION_GATE === "true" && warnings.length > 0) {
+  failures.push(`Strict production gate does not allow warnings:\n${warnings.map((warning) => `- ${warning}`).join("\n")}`);
 }
 
 if (failures.length > 0) {

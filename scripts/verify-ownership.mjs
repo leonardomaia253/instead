@@ -53,12 +53,39 @@ async function ethCall(to, data) {
 }
 
 const failures = [];
-for (const [label, address] of targets) {
-  const result = await ethCall(address, "0x8da5cb5b");
-  const owner = `0x${result.slice(-40)}`;
-  if (owner.toLowerCase() !== expectedOwner.toLowerCase()) {
-    failures.push(`${label} owner is ${owner}, expected ${expectedOwner}`);
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function ethCallWithRetry(to, data) {
+  const attempts = Number(process.env.OWNERSHIP_VERIFY_RPC_ATTEMPTS ?? 3);
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await ethCall(to, data);
+    } catch (error) {
+      lastError = error;
+      const message = String(error?.message ?? error);
+      const retryable = /rate limit|too many requests|timeout|temporarily unavailable/i.test(message);
+      if (!retryable || attempt === attempts) break;
+      await sleep(750 * attempt);
+    }
   }
+  throw lastError;
+}
+
+try {
+  for (const [label, address] of targets) {
+    const result = await ethCallWithRetry(address, "0x8da5cb5b");
+    if (!/^0x[a-fA-F0-9]{64}$/.test(String(result ?? ""))) {
+      failures.push(`${label} owner() returned invalid data`);
+      continue;
+    }
+    const owner = `0x${result.slice(-40)}`;
+    if (owner.toLowerCase() !== expectedOwner.toLowerCase()) {
+      failures.push(`${label} owner is ${owner}, expected ${expectedOwner}`);
+    }
+  }
+} catch (error) {
+  failures.push(`RPC ownership check failed: ${error?.message ?? error}`);
 }
 
 if (failures.length > 0) {

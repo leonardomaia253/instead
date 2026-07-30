@@ -1,6 +1,7 @@
 "use client";
+
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSignMessage } from "wagmi";
@@ -58,7 +59,7 @@ export default function AdminLoginPage() {
           throw new Error("Access denied. This wallet is not registered as an administrator.");
         }
 
-        setWalletAccessToken(sessionData.access_token);
+        await setWalletAccessToken(sessionData.access_token);
         router.push(nextPath.startsWith(`/${locale}/admin`) ? nextPath : `/${locale}/admin`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unexpected error occurred during admin verification.");
@@ -107,7 +108,7 @@ export default function AdminLoginPage() {
             </p>
 
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <ConnectButton />
+              <WalletConnectButton />
             </div>
 
             {loading && (

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { rateLimit } from "@/lib/server/rateLimit";
+import { rateLimit, readLimitedJson } from "@/lib/server/rateLimit";
 
 const TELEGRAM_API = "https://api.telegram.org";
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const update = await request.json();
+    const update = await readLimitedJson<any>(request, 64 * 1024);
     const message = update?.message;
     if (!message || !message.chat?.id) {
       return NextResponse.json({ ok: true });

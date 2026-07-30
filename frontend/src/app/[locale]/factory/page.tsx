@@ -1,9 +1,10 @@
 "use client";
 
+import { WalletConnectButton } from "@/components/WalletConnectButton";
+
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, useChainId, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatEther, parseEther } from "ethers";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
@@ -518,7 +519,7 @@ function StepReview({
   txHash?: string;
   error: Error | null;
   onFiatCheckout: (provider: "stripe" | "pagarme", productCode: string) => void;
-  fiatCheckoutStatus: "idle" | "loading" | "error";
+  fiatCheckoutStatus: "idle" | "loading" | "auth_required" | "error";
 }) {
   const chainMeta = CHAIN_META[form.chainId];
   const rows = [
@@ -629,6 +630,11 @@ function StepReview({
             Nao foi possivel abrir o checkout agora.
           </div>
         )}
+        {fiatCheckoutStatus === "auth_required" && (
+          <div style={{ color: "var(--accent-1)", fontSize: 12, marginTop: 10 }}>
+            Entre com sua wallet para assinar a sessao antes de abrir o checkout.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -713,7 +719,7 @@ export default function FactoryPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 42161 });
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "auth_required" | "error">("idle");
   const [telegramIntentId, setTelegramIntentId] = useState<string | null>(null);
 
   const factoryAddress = (CHAIN_META[form.chainId]?.factoryAddress || "0x0") as `0x${string}`;
@@ -947,6 +953,10 @@ export default function FactoryPage() {
         }),
       });
       const body = await response.json();
+      if (response.status === 401) {
+        setFiatCheckoutStatus("auth_required");
+        return;
+      }
       if (!response.ok || !body.url) throw new Error(body.error || "Checkout unavailable");
       window.location.href = body.url;
     } catch (checkoutError) {
@@ -966,7 +976,7 @@ export default function FactoryPage() {
               🏭 <span className="gradient-text">Token Factory</span>
             </h1>
           </div>
-          <ConnectButton />
+          <WalletConnectButton />
         </div>
 
         {/* Progress Steps */}
@@ -1034,7 +1044,7 @@ export default function FactoryPage() {
                 </button>
               )}
               {!isConnected ? (
-                <ConnectButton />
+                <WalletConnectButton />
               ) : (
                 <button
                   className="btn-primary"

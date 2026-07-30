@@ -1,4 +1,6 @@
 "use client";
+
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
@@ -7,7 +9,6 @@ import { CHAIN_META } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
 import { useTranslations } from "next-intl";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function RegisterPage() {
   const { address, isConnected } = useAccount();
@@ -72,7 +73,7 @@ export default function RegisterPage() {
               Precisamos da sua wallet para vincular seu perfil na rede.
             </p>
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <ConnectButton />
+              <WalletConnectButton />
             </div>
           </div>
         ) : (

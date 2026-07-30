@@ -33,7 +33,7 @@ const AUTOMATION_PRODUCTS = [
 function supabaseAdmin() {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) throw new Error("Supabase service role is not configured");
+  if (!url || !key) throw new Error("Service unavailable");
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
@@ -78,19 +78,21 @@ serve(async (req) => {
   const early = preflight(req);
   if (early) return early;
 
-  const secret = Deno.env.get("LENDING_AUTOMATION_SECRET") || Deno.env.get("BALANCE_MONITOR_SECRET");
-  if (secret && req.headers.get("x-automation-secret") !== secret) return json({ error: "Unauthorized" }, 401);
+  try {
+    const secret = Deno.env.get("LENDING_AUTOMATION_SECRET") || Deno.env.get("BALANCE_MONITOR_SECRET");
+    if (!secret) return json({ error: "Service unavailable" }, 503);
+    if (req.headers.get("x-automation-secret") !== secret) return json({ error: "Unauthorized" }, 401);
 
-  const limited = rateLimit(req, "lending-automation");
-  if (limited) return limited;
+    const limited = rateLimit(req, "lending-automation");
+    if (limited) return limited;
 
-  const supabase = supabaseAdmin();
-  const [{ data: positions, error: posError }, { data: entitlements, error: entError }] = await Promise.all([
-    supabase.from("lending_positions").select("*").gt("borrowed_amount", 0).order("updated_at", { ascending: false }).limit(500),
-    supabase.from("user_revenue_entitlements").select("wallet_address,source_code,status,expires_at").eq("status", "active"),
-  ]);
-  if (posError) throw posError;
-  if (entError) throw entError;
+    const supabase = supabaseAdmin();
+    const [{ data: positions, error: posError }, { data: entitlements, error: entError }] = await Promise.all([
+      supabase.from("lending_positions").select("*").gt("borrowed_amount", 0).order("updated_at", { ascending: false }).limit(500),
+      supabase.from("user_revenue_entitlements").select("wallet_address,source_code,status,expires_at").eq("status", "active"),
+    ]);
+    if (posError) throw posError;
+    if (entError) throw entError;
 
   const entitlementsByWallet = new Map<string, Set<string>>();
   for (const entitlement of (entitlements ?? []) as Entitlement[]) {
@@ -170,10 +172,16 @@ serve(async (req) => {
     }
   }
 
-  return json({
-    ok: true,
-    scannedPositions: positions?.length ?? 0,
-    alertsCreated: createdAlerts.length,
-    intentsCreated: createdIntents.length,
-  });
+    return json({
+      ok: true,
+      scannedPositions: positions?.length ?? 0,
+      alertsCreated: createdAlerts.length,
+      intentsCreated: createdIntents.length,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected error";
+    if (message === "Service unavailable") return json({ error: message }, 503);
+    console.error("lending-automation failed", message);
+    return json({ error: "Internal server error" }, 500);
+  }
 });

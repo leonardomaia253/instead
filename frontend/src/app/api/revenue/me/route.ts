@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/server/supabaseAdmin";
 import { rateLimit } from "@/lib/server/rateLimit";
+import { noStoreJson } from "@/lib/server/responses";
+import { verifyWalletSession } from "@/lib/server/walletAuth";
 
 const EVM_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function GET(request: Request) {
   const limited = rateLimit(request, "revenue:me", 60, 60_000);
-  if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  if (!limited.allowed) return noStoreJson({ error: "Rate limit exceeded" }, { status: 429 });
 
   const wallet = new URL(request.url).searchParams.get("wallet")?.toLowerCase() ?? "";
-  if (!EVM_ADDRESS_RE.test(wallet)) return NextResponse.json({ error: "Invalid wallet" }, { status: 400 });
+  if (!EVM_ADDRESS_RE.test(wallet)) return noStoreJson({ error: "Invalid wallet" }, { status: 400 });
+  const session = verifyWalletSession(request);
+  if (!session?.wallet_address || session.wallet_address.toLowerCase() !== wallet) {
+    return noStoreJson({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const supabase = createSupabaseAdminClient();
   const [entitlements, intents, alerts] = await Promise.all([
@@ -36,7 +42,7 @@ export async function GET(request: Request) {
   if (intents.error) throw intents.error;
   if (alerts.error) throw alerts.error;
 
-  return NextResponse.json({
+  return noStoreJson({
     entitlements: entitlements.data ?? [],
     intents: intents.data ?? [],
     alerts: alerts.data ?? [],

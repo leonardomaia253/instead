@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/server/supabaseAdmin";
-import { rateLimit } from "@/lib/server/rateLimit";
+import { rateLimit, readLimitedJson } from "@/lib/server/rateLimit";
 
 const EVM_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await request.json().catch(() => ({}));
+  const body = await readLimitedJson<Record<string, unknown>>(request, 4096).catch((): Record<string, unknown> => ({}));
   const walletAddress = String(body.walletAddress ?? "").toLowerCase();
   if (!EVM_ADDRESS_RE.test(walletAddress)) return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
 
