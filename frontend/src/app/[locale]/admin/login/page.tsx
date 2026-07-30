@@ -1,12 +1,12 @@
 "use client";
 
-import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useAccount } from "wagmi";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSignMessage } from "wagmi";
 import { getSupabaseFunctionUrl, setWalletAccessToken } from "@/lib/supabase";
 import Link from "next/link";
+import { WalletHelpCard } from "@/components/ElderFriendly";
 
 export default function AdminLoginPage() {
   const { address, isConnected } = useAccount();
@@ -82,11 +82,11 @@ export default function AdminLoginPage() {
           <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 36, fontWeight: 800, marginBottom: 8 }}>
             <span className="gradient-text">Instead</span> Admin
           </div>
-          <p style={{ color: "var(--text-muted)" }}>Platform Administration Portal</p>
+          <p style={{ color: "var(--text-muted)" }}>Painel restrito para operadores autorizados</p>
         </div>
 
         <div className="card" style={{ padding: "40px 32px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "24px" }}>Admin Authentication</h2>
+          <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "24px" }}>Autenticacao de administrador</h2>
           
           {error && (
             <div style={{ 
@@ -104,11 +104,11 @@ export default function AdminLoginPage() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-              Please connect your authorized administrator wallet to access the control panel.
+              Esta area nao e para usuarios finais. Conecte apenas uma carteira cadastrada como administradora para acessar operacoes internas.
             </p>
 
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <WalletConnectButton />
+              <WalletHelpCard compact />
             </div>
 
             {loading && (

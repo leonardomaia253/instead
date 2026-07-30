@@ -45,7 +45,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ type, contextData }) =
   // But to avoid too many API calls, we keep it manual or triggered by a specific button.
 
   return (
-    <div style={{ position: "fixed", bottom: 30, right: 30, zIndex: 1000 }}>
+    <div className="ai-assistant">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -54,7 +54,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ type, contextData }) =
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="glass-morphism"
             style={{
-              width: 320,
               borderRadius: 20,
               padding: 20,
               marginBottom: 16,
@@ -134,8 +133,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ type, contextData }) =
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          width: 56,
-          height: 56,
           borderRadius: 18,
           background: "var(--accent-grad)",
           border: "none",

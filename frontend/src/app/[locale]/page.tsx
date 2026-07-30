@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { GlobeCdn } from "@/components/GlobeCdn";
+import { PlainLanguageGlossary, SimpleModeNotice } from "@/components/ElderFriendly";
 import { CHAIN_META } from "@/lib/wagmi";
 import { getPlatformStats, type PlatformStat } from "@/lib/supabase";
 import { useSettings } from "@/hooks/useSettings";
@@ -69,6 +70,9 @@ export default function Home() {
               <p>
                 Um front-end DeFi mais direto: lending, token factory, staking e inteligência operacional no mesmo painel. Brutal no visual, cuidadoso na execução.
               </p>
+              <SimpleModeNotice title="Novo em cripto? Comece por aqui.">
+                Escolha uma ação simples: criar um ativo, acompanhar risco ou ver planos assistidos. A plataforma sempre mostra uma revisão antes de qualquer assinatura ou custo.
+              </SimpleModeNotice>
               <div className="hero-actions">
                 <Link href="/lending" className="btn-primary brutal-button">Abrir lending</Link>
                 <Link href="/factory" className="btn-outline brutal-button">Criar token</Link>
@@ -126,6 +130,11 @@ export default function Home() {
             </div>
 
             <div className="brutal-grid">
+              <div className="brutal-panel" style={{ cursor: "default" }}>
+                <span className="panel-index">GUIA</span>
+                <h3>Modo simples</h3>
+                <p>Use as traduções e checklists nas telas para entender cada passo antes de conectar carteira ou assinar.</p>
+              </div>
               <Link href="/lending" className="brutal-panel brutal-panel--large">
                 <span className="panel-index">LND</span>
                 <h3>Lending hub</h3>
@@ -157,6 +166,13 @@ export default function Home() {
                 <p>Escolha entre criação de token, lending, alertas, proteção de risco e painel multichain.</p>
               </Link>
             </div>
+            <PlainLanguageGlossary
+              items={[
+                { term: "Carteira", meaning: "Sua forma de entrar e confirmar ações. Ela não envia dinheiro sem uma confirmação separada." },
+                { term: "Token", meaning: "Um ativo digital configurável, parecido com uma ficha ou unidade própria do seu projeto." },
+                { term: "Lending", meaning: "Emprestar ou tomar emprestado usando ativos digitais como garantia, com risco de liquidação." },
+              ]}
+            />
           </div>
         </section>
 

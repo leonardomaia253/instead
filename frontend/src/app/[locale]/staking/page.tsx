@@ -28,6 +28,7 @@ import {
 import { useInsteadStaking } from "@/hooks/useInsteadStaking";
 import { ROICalculator } from "@/components/ROICalculator";
 import { useToast } from "@/components/Toast";
+import { PlainLanguageGlossary, RiskWarning, SafetyChecklist, SimpleModeNotice } from "@/components/ElderFriendly";
 
 // Mapper para ícones do Lucide baseado no banco de dados
 const IconMapper: Record<string, React.ReactNode> = {
@@ -155,8 +156,18 @@ export default function StakingPage() {
               Ajude a garantir a liquidez do protocolo e receba recompensas em tempo real. 
               Sua estratégia, seu rendimento.
             </p>
+            <SimpleModeNotice title="Staking em linguagem simples">
+              Voce deixa tokens bloqueados por um periodo para buscar rendimento. Antes de depositar, confira prazo, taxa de saida e se pode esperar ate o fim do bloqueio.
+            </SimpleModeNotice>
           </motion.div>
         </section>
+        <PlainLanguageGlossary
+          items={[
+            { term: "APR", meaning: "Estimativa anual de rendimento. Pode mudar e nao e promessa de lucro." },
+            { term: "Lock", meaning: "Periodo em que o valor fica bloqueado ou tem custo para sair." },
+            { term: "TVL", meaning: "Total depositado naquele pool por todos os usuarios." },
+          ]}
+        />
 
         {/* Stats Grid */}
         <div style={styles.statsGrid}>
@@ -257,6 +268,16 @@ export default function StakingPage() {
                     <span>0.5%</span>
                   </div>
                 </div>
+                <RiskWarning>
+                  Depositar em staking envolve risco de contrato inteligente e variacao do token. Use apenas valores que voce entende e pode manter pelo periodo de lock.
+                </RiskWarning>
+                <SafetyChecklist
+                  items={[
+                    "Confira o periodo de lock antes de depositar.",
+                    "Veja a taxa de saida antes de sair antecipadamente.",
+                    "A carteira sempre pede confirmacao antes da transacao.",
+                  ]}
+                />
 
                 <button 
                   className="btn-primary" 

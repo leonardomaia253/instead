@@ -9,6 +9,7 @@ import { useSignMessage } from "wagmi";
 import { Link } from "@/navigation";
 import { useToast } from "@/components/Toast";
 import { assertSupabaseConfigured, getSupabaseFunctionUrl, setWalletAccessToken, supabase } from "@/lib/supabase";
+import { PlainLanguageGlossary, SafetyChecklist } from "@/components/ElderFriendly";
 
 export default function LoginPage() {
   const { address, isConnected } = useAccount();
@@ -113,7 +114,7 @@ export default function LoginPage() {
             </div>
           </Link>
           <h1>Entrar na plataforma</h1>
-          <p>Use sua wallet ou email para acessar sua conta.</p>
+          <p>Use sua carteira digital ou e-mail para acessar sua conta.</p>
         </div>
 
         <div className="auth-toggle" role="tablist" aria-label="Modo de login">
@@ -134,8 +135,21 @@ export default function LoginPage() {
           {mode === "wallet" ? (
             <div className="auth-stack">
               <p>
-                Conecte sua wallet para assinar uma mensagem SIWE. Nenhuma transação é enviada.
+                Conecte sua carteira para assinar uma mensagem de entrada. Nenhuma transação é enviada.
               </p>
+              <PlainLanguageGlossary
+                items={[
+                  { term: "Carteira", meaning: "Aplicativo usado para provar que a conta pertence a voce." },
+                  { term: "Assinar", meaning: "Confirmar sua identidade. Nao e pagamento." },
+                ]}
+              />
+              <SafetyChecklist
+                items={[
+                  "Nao pedimos sua frase secreta.",
+                  "Nao movimentamos fundos no login.",
+                  "Voce pode usar e-mail se preferir uma entrada tradicional.",
+                ]}
+              />
 
               {!isConnected ? (
                 <div className="auth-connect">

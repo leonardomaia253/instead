@@ -2,6 +2,7 @@ import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "@/navigation";
 import { PUBLIC_OFFER_LANDINGS, formatLandingPrice } from "@/lib/revenueLanding";
+import { PlainLanguageGlossary, SimpleModeNotice } from "@/components/ElderFriendly";
 
 const groups = [
   {
@@ -45,6 +46,9 @@ export default function SolutionsPage() {
               <p>
                 Crie tokens, opere lending, receba alertas de risco ou acompanhe posições multichain com uma interface feita para decisão clara antes da assinatura.
               </p>
+              <SimpleModeNotice title="Como escolher sem conhecer cripto">
+                Se quer criar um ativo, use Token. Se quer credito, comece por planos assistidos. Se ja tem posicoes, escolha alertas e painel de risco.
+              </SimpleModeNotice>
               <div className="hero-actions">
                 <Link href="/lending" className="btn-primary brutal-button">Entrar no lending</Link>
                 <Link href="/factory" className="btn-outline brutal-button">Criar token</Link>
@@ -62,6 +66,17 @@ export default function SolutionsPage() {
                 <small>ACOMPANHAR RISCO</small>
               </div>
             </div>
+          </div>
+        </section>
+        <section className="protocol-section" style={{ paddingTop: 24, paddingBottom: 24 }}>
+          <div className="container">
+            <PlainLanguageGlossary
+              items={[
+                { term: "Criar token", meaning: "Configurar e publicar um ativo digital para um projeto." },
+                { term: "Credito", meaning: "Usar ativos como garantia para acessar liquidez, com risco de liquidacao." },
+                { term: "Alertas", meaning: "Avisos para agir antes que uma posicao fique perigosa." },
+              ]}
+            />
           </div>
         </section>
 

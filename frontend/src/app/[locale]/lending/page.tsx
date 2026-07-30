@@ -14,6 +14,7 @@ import { HealthGauge } from "@/components/HealthGauge";
 import { CHAIN_META } from "@/lib/wagmi";
 import { Shield } from "lucide-react";
 import { formatRevenuePrice, LENDING_PREMIUM_PRODUCTS, liquidationRecommendation, liquidationRiskLabel } from "@/lib/lendingPremium";
+import { PlainLanguageGlossary, RiskWarning, SafetyChecklist, SimpleModeNotice, WalletHelpCard } from "@/components/ElderFriendly";
 
 const LENDING_ASSETS = {
   USDC: {
@@ -249,6 +250,19 @@ export default function LendingPage() {
           </div>
           <WalletConnectButton />
         </div>
+        <SimpleModeNotice title="Credito com garantia, explicado">
+          Voce deposita um ativo como garantia e pode tomar outro emprestado. Se o valor da garantia cair demais, a posicao pode ser liquidada automaticamente.
+        </SimpleModeNotice>
+        <RiskWarning>
+          Lending nao e indicado para iniciantes sem simulacao. Antes de tomar emprestado, confira o fator de saude, o limite de liquidacao e quanto voce pode perder.
+        </RiskWarning>
+        <PlainLanguageGlossary
+          items={[
+            { term: "Garantia", meaning: "O ativo que voce deixa bloqueado para poder pegar credito." },
+            { term: "Liquidacao", meaning: "Venda automatica da garantia quando a posicao fica arriscada demais." },
+            { term: "Fator de saude", meaning: "Indicador de seguranca. Quanto maior, mais distante da liquidacao." },
+          ]}
+        />
 
         {/* Lending desabilitado — card institucional limpo, sem expor lógica interna */}
         {!isLendingEnabled && (
@@ -309,9 +323,9 @@ export default function LendingPage() {
             {!isConnected ? (
               <div style={{ textAlign: "center", padding: "32px 0" }}>
                 <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: 15 }}>
-                  Conecte sua carteira para acessar o protocolo.
+                  Conecte sua carteira para ver valores reais e simular com seus ativos. Nenhuma operação acontece sem uma confirmação separada.
                 </p>
-                <WalletConnectButton />
+                <WalletHelpCard compact />
               </div>
             ) : (
               <>
@@ -491,6 +505,13 @@ export default function LendingPage() {
             <p style={{ color: "var(--text-muted)", maxWidth: 780, lineHeight: 1.6 }}>
               Recursos extras da Instead para alertas, simulações, redução de risco, estratégias guiadas, rebalanceamento, painel multichain e proteção recorrente.
             </p>
+            <SafetyChecklist
+              items={[
+                "Alertas e automações são apoio operacional; não movimentam fundos sem autorização.",
+                "Serviços assistidos são melhores para usuários com pouca experiência.",
+                "Use simulação antes de criar intenção ou contratar proteção.",
+              ]}
+            />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 14 }}>
             {LENDING_PREMIUM_PRODUCTS.map((product) => (

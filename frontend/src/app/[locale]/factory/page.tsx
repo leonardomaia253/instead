@@ -18,6 +18,7 @@ import {
 } from "@/lib/supabase";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { AIAssistant } from "@/components/shared/AIAssistant";
+import { PlainLanguageGlossary, SafetyChecklist, SimpleModeNotice, WalletHelpCard } from "@/components/ElderFriendly";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type TokenForm = {
@@ -157,6 +158,13 @@ function StepNetwork({ form, setForm }: { form: TokenForm; setForm: (f: TokenFor
       <p style={styles.stepDesc}>
         Selecione a rede onde o seu token será lançado. Cada rede tem características distintas de custo e ecossistema.
       </p>
+      <PlainLanguageGlossary
+        items={[
+          { term: "Rede", meaning: "O lugar onde o token vai existir. Redes diferentes cobram taxas diferentes." },
+          { term: "Gas", meaning: "A taxa de operação da rede. Quanto menor, mais barato confirmar ações." },
+          { term: "Liquidez", meaning: "Facilidade para outras pessoas comprarem ou venderem o token depois." },
+        ]}
+      />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16, marginTop: 24 }}>
         {Object.entries(CHAIN_META).map(([id, meta]) => {
           const chainId = parseInt(id);
@@ -181,7 +189,7 @@ function StepNetwork({ form, setForm }: { form: TokenForm; setForm: (f: TokenFor
         })}
       </div>
       <InfoBox color="blue">
-        💡 <strong>Recomendação:</strong> Para maior liquidez e ecossistema DeFi ativo, o <strong>Arbitrum</strong> ou <strong>Base</strong> são as melhores escolhas com taxas ultrabaixas.
+        <strong>Recomendação simples:</strong> se estiver em dúvida, comece por <strong>Base</strong> ou <strong>Arbitrum</strong>. Elas costumam ser baratas e populares para novos projetos.
       </InfoBox>
     </div>
   );
@@ -978,6 +986,16 @@ export default function FactoryPage() {
           </div>
           <WalletConnectButton />
         </div>
+        <SimpleModeNotice title="Criar token sem pressa">
+          Este assistente guarda o modo avançado, mas explica cada decisão em linguagem simples. O token só é publicado depois da etapa de revisão final.
+        </SimpleModeNotice>
+        <SafetyChecklist
+          items={[
+            "Nada é publicado enquanto você não chegar na revisão final.",
+            "Nome, símbolo e regras ficam permanentes depois do deploy.",
+            "Se preferir, use checkout com cartão/PIX e deploy assistido.",
+          ]}
+        />
 
         {/* Progress Steps */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: 40, gap: 0 }}>
@@ -1044,7 +1062,7 @@ export default function FactoryPage() {
                 </button>
               )}
               {!isConnected ? (
-                <WalletConnectButton />
+                <WalletHelpCard compact />
               ) : (
                 <button
                   className="btn-primary"

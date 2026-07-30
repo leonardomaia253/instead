@@ -9,6 +9,7 @@ import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
 import { supabase, getAuditsByWallet, type GeneratedToken, type Audit, type RevenueEntitlement, type LendingAutomationIntent, type LendingAlertEvent } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { useTranslations } from "next-intl";
+import { WalletHelpCard } from "@/components/ElderFriendly";
 
 type LendingPosition = {
   collateral_asset: string;
@@ -89,9 +90,14 @@ export default function DashboardPage() {
     return (
       <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, textAlign: "center" }}>
-          Conecte sua carteira para ver o dashboard
+          Conecte sua carteira para ver seu painel
         </h1>
-        <WalletConnectButton />
+        <p style={{ color: "var(--text-muted)", maxWidth: 460, textAlign: "center", lineHeight: 1.6, padding: "0 20px" }}>
+          O painel mostra tokens criados, posicoes de credito, alertas e historico. A conexao serve apenas para identificar sua conta.
+        </p>
+        <div style={{ width: "min(440px, calc(100vw - 32px))" }}>
+          <WalletHelpCard compact />
+        </div>
       </main>
     );
   }
