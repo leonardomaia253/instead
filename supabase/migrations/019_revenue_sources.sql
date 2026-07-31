@@ -1,5 +1,5 @@
 -- Migration 019: revenue_sources
--- Fonte unica da verdade para contabilizar e auditar todas as fontes de receita da Instead.
+-- Canonical source of truth for Instead revenue sources and fiat prices.
 
 CREATE TABLE IF NOT EXISTS public.revenue_sources (
   source_code       TEXT        PRIMARY KEY,
@@ -38,20 +38,20 @@ INSERT INTO public.revenue_sources (
   production_ready, amount_usd_cents, amount_brl_cents, take_rate_bps, notes
 )
 VALUES
-  ('token_deploy_basic', 'Token Deploy Basic', 'token_factory', 'transactional', 'Preço fixo por deploy assistido básico', 'one_time', 'active', TRUE, 9900, 49900, NULL, 'Checkout Stripe/Pagar.me e execução via factory EVM.'),
-  ('token_deploy_premium', 'Token Deploy Premium', 'token_factory', 'service', 'Pacote premium com configuração, publicação e validação', 'one_time', 'active', TRUE, 29900, 149900, NULL, 'Deploy com suporte humano.'),
-  ('token_fair_launch_assisted', 'Fair Launch Assistido', 'token_factory', 'service', 'Serviço assistido de lançamento e liquidez inicial', 'one_time', 'active', TRUE, 49900, 249900, NULL, 'Preparação, checklist e acompanhamento de lançamento.'),
-  ('lending_borrow_fee', 'Lending Borrow Fee', 'lending', 'spread_or_fee', 'Taxa de conveniência cobrada no borrow on-chain', 'per_transaction', 'active', TRUE, NULL, NULL, 50, 'Configurado no contrato de lending; 50 bps por borrow.'),
-  ('lending_pro_subscription', 'Lending Pro', 'lending', 'subscription', 'Assinatura mensal para alertas, analytics e limites avançados', 'monthly', 'ready', TRUE, 4900, 24900, NULL, 'Camada premium de acompanhamento.'),
-  ('liquidation_alerts_premium', 'Alertas Premium de Liquidação', 'lending', 'subscription', 'Assinatura de alertas multicanal para health factor e risco', 'monthly', 'ready', TRUE, 1900, 9900, NULL, 'Aproveita Telegram e monitoramento.'),
-  ('deleverage_assisted', 'Deleverage Assistido', 'lending', 'service', 'Serviço pontual para reduzir risco de posição alavancada', 'one_time', 'ready', TRUE, 14900, 74900, NULL, 'Suporte operacional em momentos de stress.'),
-  ('leverage_strategy_execution', 'Execução de Estratégia Alavancada', 'lending', 'service', 'Taxa por execução guiada de estratégia de lending', 'per_transaction', 'ready', TRUE, 9900, 49900, NULL, 'Rota operacional com suporte.'),
-  ('auto_rebalance_protection', 'Proteção Auto-Rebalance', 'lending', 'subscription', 'Assinatura para automações de proteção e rebalanceamento', 'monthly', 'ready', TRUE, 7900, 39900, NULL, 'Começa como alerta/recomendação e evolui para automação autorizada.'),
-  ('wealth_dashboard_subscription', 'Wealth Dashboard', 'services', 'subscription', 'Assinatura de dashboard patrimonial DeFi/multichain', 'monthly', 'ready', TRUE, 4900, 24900, NULL, 'Leitura consolidada de posições, saldos e risco.'),
-  ('white_glove_lending', 'White-glove Lending Desk', 'lending', 'service', 'Atendimento premium para estruturação de crédito com colateral', 'one_time', 'ready', TRUE, 99900, 499900, NULL, 'Serviço humano para tickets maiores.'),
-  ('b2b_lending_widget_api', 'B2B Lending Widget/API', 'services', 'b2b', 'Licença mensal ou uso para parceiros embedarem lending', 'monthly', 'ready', TRUE, 49900, 249900, NULL, 'Fonte B2B para comunidades, wallets, agências e fintechs.'),
-  ('multi_protocol_routing_fee', 'Taxa de Roteamento Multi-protocolo', 'lending', 'spread_or_fee', 'Fee por roteamento para melhor mercado/protocolo', 'per_transaction', 'ready', TRUE, NULL, NULL, 20, 'Monetiza roteador e curadoria de execução.'),
-  ('risk_shield_membership', 'Risk Shield Membership', 'lending', 'subscription', 'Membro premium com relatórios, limites e playbooks de risco', 'monthly', 'ready', TRUE, 9900, 49900, NULL, 'Análise de risco, alertas e suporte recorrente.')
+  ('token_deploy_basic', 'Token Deploy Basic', 'token_factory', 'transactional', 'Preco fixo por deploy assistido basico', 'one_time', 'active', TRUE, 1900, 9900, NULL, 'Checkout Stripe/Pagar.me e execucao via factory EVM.'),
+  ('token_deploy_premium', 'Token Deploy Premium', 'token_factory', 'service', 'Pacote premium com configuracao, publicacao e validacao', 'one_time', 'active', TRUE, 4900, 19900, NULL, 'Deploy com suporte humano.'),
+  ('token_fair_launch_assisted', 'Fair Launch Assistido', 'token_factory', 'service', 'Servico assistido de lancamento e liquidez inicial', 'one_time', 'active', TRUE, 15900, 79900, NULL, 'Preparacao, checklist e acompanhamento de lancamento.'),
+  ('lending_borrow_fee', 'Lending Borrow Fee', 'lending', 'spread_or_fee', 'Taxa de conveniencia cobrada no borrow on-chain', 'per_transaction', 'active', TRUE, NULL, NULL, 150, 'Configurado no contrato de lending; 150 bps por borrow.'),
+  ('lending_pro_subscription', 'Lending Pro', 'lending', 'subscription', 'Assinatura mensal para alertas, analytics e limites avancados', 'monthly', 'ready', TRUE, 2900, 14900, NULL, 'Camada premium de acompanhamento.'),
+  ('liquidation_alerts_premium', 'Alertas Premium de Liquidacao', 'lending', 'subscription', 'Assinatura de alertas multicanal para health factor e risco', 'monthly', 'ready', TRUE, 900, 4900, NULL, 'Aproveita Telegram e monitoramento.'),
+  ('deleverage_assisted', 'Deleverage Assistido', 'lending', 'service', 'Servico pontual para reduzir risco de posicao alavancada', 'one_time', 'ready', TRUE, 5900, 74900, NULL, 'Suporte operacional em momentos de stress.'),
+  ('leverage_strategy_execution', 'Execucao de Estrategia Alavancada', 'lending', 'service', 'Taxa por execucao guiada de estrategia de lending', 'per_transaction', 'ready', TRUE, 9900, 49900, NULL, 'Rota operacional com suporte.'),
+  ('auto_rebalance_protection', 'Protecao Auto-Rebalance', 'lending', 'subscription', 'Assinatura para automacoes de protecao e rebalanceamento', 'monthly', 'ready', TRUE, 7900, 39900, NULL, 'Comeca como alerta/recomendacao e evolui para automacao autorizada.'),
+  ('wealth_dashboard_subscription', 'Wealth Dashboard', 'services', 'subscription', 'Assinatura de dashboard patrimonial DeFi/multichain', 'monthly', 'ready', TRUE, 2900, 14900, NULL, 'Leitura consolidada de posicoes, saldos e risco.'),
+  ('white_glove_lending', 'White-glove Lending Desk', 'lending', 'service', 'Atendimento premium para estruturacao de credito com colateral', 'one_time', 'ready', TRUE, 29900, 149900, NULL, 'Servico humano para tickets maiores.'),
+  ('b2b_lending_widget_api', 'B2B Lending Widget/API', 'services', 'b2b', 'Licenca mensal ou uso para parceiros embedarem lending', 'monthly', 'ready', TRUE, 19900, 99900, NULL, 'Fonte B2B para comunidades, wallets, agencias e fintechs.'),
+  ('multi_protocol_routing_fee', 'Taxa de Roteamento Multi-protocolo', 'lending', 'spread_or_fee', 'Fee por roteamento para melhor mercado/protocolo', 'per_transaction', 'ready', TRUE, NULL, NULL, 120, 'Monetiza roteador e curadoria de execucao.'),
+  ('risk_shield_membership', 'Risk Shield Membership', 'lending', 'subscription', 'Membro premium com relatorios, limites e playbooks de risco', 'monthly', 'ready', TRUE, 3900, 19900, NULL, 'Analise de risco, alertas e suporte recorrente.')
 ON CONFLICT (source_code) DO UPDATE SET
   label = EXCLUDED.label,
   vertical = EXCLUDED.vertical,
@@ -68,15 +68,15 @@ ON CONFLICT (source_code) DO UPDATE SET
 
 INSERT INTO public.platform_prices (product_code, label, amount_usd_cents, amount_brl_cents)
 VALUES
-  ('lending_pro_subscription', 'Instead Lending Pro', 4900, 24900),
-  ('liquidation_alerts_premium', 'Instead Alertas Premium de Liquidação', 1900, 9900),
-  ('deleverage_assisted', 'Instead Deleverage Assistido', 14900, 74900),
-  ('leverage_strategy_execution', 'Instead Execução de Estratégia Alavancada', 9900, 49900),
-  ('auto_rebalance_protection', 'Instead Proteção Auto-Rebalance', 7900, 39900),
-  ('wealth_dashboard_subscription', 'Instead Wealth Dashboard', 4900, 24900),
-  ('white_glove_lending', 'Instead White-glove Lending Desk', 99900, 499900),
-  ('b2b_lending_widget_api', 'Instead B2B Lending Widget/API', 49900, 249900),
-  ('risk_shield_membership', 'Instead Risk Shield Membership', 9900, 49900)
+  ('lending_pro_subscription', 'Instead Lending Pro', 2900, 14900),
+  ('liquidation_alerts_premium', 'Instead Alertas Premium de Liquidacao', 900, 4900),
+  ('deleverage_assisted', 'Instead Deleverage Assistido', 5900, 74900),
+  ('leverage_strategy_execution', 'Instead Execucao de Estrategia Alavancada', 9900, 49900),
+  ('auto_rebalance_protection', 'Instead Protecao Auto-Rebalance', 7900, 39900),
+  ('wealth_dashboard_subscription', 'Instead Wealth Dashboard', 2900, 14900),
+  ('white_glove_lending', 'Instead White-glove Lending Desk', 29900, 149900),
+  ('b2b_lending_widget_api', 'Instead B2B Lending Widget/API', 19900, 99900),
+  ('risk_shield_membership', 'Instead Risk Shield Membership', 3900, 19900)
 ON CONFLICT (product_code) DO UPDATE SET
   label = EXCLUDED.label,
   amount_usd_cents = EXCLUDED.amount_usd_cents,

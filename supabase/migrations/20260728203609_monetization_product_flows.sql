@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.b2b_widget_clients (
   api_key_hash    TEXT        NOT NULL,
   status          TEXT        NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused', 'cancelled')),
   revenue_share_bps INTEGER   NOT NULL DEFAULT 2000 CHECK (revenue_share_bps >= 0 AND revenue_share_bps <= 10000),
-  monthly_fee_usd_cents INTEGER NOT NULL DEFAULT 49900 CHECK (monthly_fee_usd_cents >= 0),
+  monthly_fee_usd_cents INTEGER NOT NULL DEFAULT 19900 CHECK (monthly_fee_usd_cents >= 0),
   metadata        JSONB       NOT NULL DEFAULT '{}'::jsonb,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),

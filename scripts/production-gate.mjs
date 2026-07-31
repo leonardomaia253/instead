@@ -100,6 +100,7 @@ run("secret scan", "pnpm", ["secrets:check"], { timeout: 60_000 });
 run("API security check", "pnpm", ["api:security"], { timeout: 60_000 });
 run("Edge Function contract check", "pnpm", ["edge:functions:check"], { timeout: 60_000 });
 run("revenue source check", "pnpm", ["revenue:check"], { timeout: 60_000 });
+run("live platform price verification", "pnpm", ["prices:verify"], { timeout: 60_000 });
 run("production readiness", "pnpm", ["readiness"], { timeout: 120_000 });
 failNow();
 
@@ -117,6 +118,7 @@ if (target === "all" || target === "evm") {
   run("contracts test suite", "pnpm", ["contracts:test"], { timeout: 180_000 });
   if (env.REQUIRE_LENDING_FORK_TEST === "true" || env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true") {
     requireEnv("HARDHAT_FORK_RPC_URL", { https: true });
+    run("lending fee verification", "pnpm", ["lending:fees:check"], { timeout: 120_000 });
     run("lending fork test", "pnpm", ["contracts:test:fork"], { timeout: 240_000 });
   } else {
     warnings.push("Lending fork test is not enforced because lending production flags are disabled");

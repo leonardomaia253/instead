@@ -32,7 +32,7 @@ CREATE POLICY "platform_prices_write_service_role"
 -- Seed inicial — espelha exatamente o objeto TOKEN_FACTORY_PRODUCTS de payments.ts
 INSERT INTO public.platform_prices (product_code, label, amount_usd_cents, amount_brl_cents)
 VALUES
-  ('token_deploy_basic',         'Instead Token Deploy Basic',         9900,  49900),
-  ('token_deploy_premium',       'Instead Token Deploy Premium',      29900, 149900),
-  ('token_fair_launch_assisted', 'Instead Fair Launch Assistido',     49900, 249900)
+  ('token_deploy_basic',         'Instead Token Deploy Basic',         1900,  9900),
+  ('token_deploy_premium',       'Instead Token Deploy Premium',       4900, 19900),
+  ('token_fair_launch_assisted', 'Instead Fair Launch Assistido',     15900, 79900)
 ON CONFLICT (product_code) DO NOTHING;

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   const domain = normalizeDomain(body.domain);
   const contactEmail = String(body.contactEmail ?? "").trim() || null;
   const revenueShareBps = Number(body.revenueShareBps ?? 2000);
-  const monthlyFeeUsdCents = Number(body.monthlyFeeUsdCents ?? 49900);
+  const monthlyFeeUsdCents = Number(body.monthlyFeeUsdCents ?? 19900);
 
   if (name.length < 2 || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain)) {
     return NextResponse.json({ error: "Invalid B2B client" }, { status: 400 });

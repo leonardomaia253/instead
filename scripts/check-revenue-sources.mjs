@@ -22,7 +22,7 @@ const uniqueSources = new Set(sourceMatches);
 
 if (sourceMatches.length !== uniqueSources.size) failures.push("Revenue catalog contains duplicated sourceCode values");
 if (uniqueSources.size < 14) failures.push(`Revenue catalog must contain at least 14 sources; found ${uniqueSources.size}`);
-if (!catalog.includes("lending_borrow_fee") || !catalog.includes("takeRateBps: 50")) failures.push("Lending borrow fee must be represented as a 50 bps revenue source");
+if (!catalog.includes("lending_borrow_fee") || !catalog.includes("takeRateBps: 150")) failures.push("Lending borrow fee must be represented as a 150 bps revenue source");
 if (!catalog.includes("multi_protocol_routing_fee")) failures.push("Multi-protocol routing fee must be represented");
 if (!migration.includes("CREATE TABLE IF NOT EXISTS public.revenue_sources")) failures.push("revenue_sources migration is missing");
 if (!migration.includes("INSERT INTO public.platform_prices")) failures.push("Fiat revenue products must be seeded into platform_prices");

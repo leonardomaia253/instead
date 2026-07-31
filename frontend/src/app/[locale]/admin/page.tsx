@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
@@ -36,7 +36,7 @@ type PipelineStage = {
 const revenueLevers: RevenueLever[] = [
   {
     name: "Deploy assistido",
-    price: 299,
+    price: 49,
     monthlyGoal: 35,
     closeRate: 0.18,
     responsible: "Comercial",
@@ -44,7 +44,7 @@ const revenueLevers: RevenueLever[] = [
   },
   {
     name: "Premium launch",
-    price: 799,
+    price: 159,
     monthlyGoal: 12,
     closeRate: 0.08,
     responsible: "Produto/Admin",
@@ -52,7 +52,7 @@ const revenueLevers: RevenueLever[] = [
   },
   {
     name: "Creator dashboard",
-    price: 49,
+    price: 29,
     monthlyGoal: 160,
     closeRate: 0.12,
     responsible: "Suporte/Admin",
@@ -60,7 +60,7 @@ const revenueLevers: RevenueLever[] = [
   },
   {
     name: "Setup agencia",
-    price: 1500,
+    price: 199,
     monthlyGoal: 6,
     closeRate: 0.05,
     responsible: "Parcerias",
@@ -148,13 +148,13 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-// Margens líquidas por produto (gas + Stripe 2.9% + suporte humano + infra)
+// Margens lÃ­quidas por produto (gas + Stripe 2.9% + suporte humano + infra)
 const PRODUCT_MARGINS = {
-  onchain: 0.95,    // $5.00 on-chain — custo só gas ~$0.25
-  dashboard: 0.85,  // $49/mês — custo infra + CS ~$7
-  assisted: 0.70,   // $299 — ~2h suporte humano incluídas
-  premium: 0.65,    // $799 — multi-chain + auditoria automática
-  agency: 0.60,     // $1.500 — white-glove onboarding ~3h
+  onchain: 0.95,    // $5.00 on-chain â€” custo sÃ³ gas ~$0.25
+  dashboard: 0.85,  // $29/mÃªs â€” custo infra + CS ~$7
+  assisted: 0.70,   // $49 â€” ~2h suporte humano incluÃ­das
+  premium: 0.65,    // $159 â€” multi-chain + auditoria automÃ¡tica
+  agency: 0.60,     // $199 â€” white-glove onboarding ~3h
 } as const;
 
 export default function AdminDashboard() {
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
   const [salesConversion, setSalesConversion] = useState(0.22);
   const [averageTicket, setAverageTicket] = useState(420);
 
-  // Simulador $1.000/dia — mix mensal de produtos
+  // Simulador $1.000/dia â€” mix mensal de produtos
   const [qOnchain, setQOnchain] = useState(400);
   const [qDashboard, setQDashboard] = useState(200);
   const [qAssisted, setQAssisted] = useState(45);
@@ -172,10 +172,10 @@ export default function AdminDashboard() {
 
   const dailyProfitBreakdown = useMemo(() => {
     const onchain   = { qty: qOnchain,   price: 5,    profit: qOnchain   * 5    * PRODUCT_MARGINS.onchain   };
-    const dashboard = { qty: qDashboard, price: 49,   profit: qDashboard * 49   * PRODUCT_MARGINS.dashboard };
-    const assisted  = { qty: qAssisted,  price: 299,  profit: qAssisted  * 299  * PRODUCT_MARGINS.assisted  };
-    const premium   = { qty: qPremium,   price: 799,  profit: qPremium   * 799  * PRODUCT_MARGINS.premium   };
-    const agency    = { qty: qAgency,    price: 1500, profit: qAgency    * 1500 * PRODUCT_MARGINS.agency    };
+    const dashboard = { qty: qDashboard, price: 29,  profit: qDashboard * 29  * PRODUCT_MARGINS.dashboard };
+    const assisted  = { qty: qAssisted,  price: 49,  profit: qAssisted  * 49  * PRODUCT_MARGINS.assisted  };
+    const premium   = { qty: qPremium,   price: 159, profit: qPremium   * 159 * PRODUCT_MARGINS.premium   };
+    const agency    = { qty: qAgency,    price: 199, profit: qAgency    * 199 * PRODUCT_MARGINS.agency    };
     const totalMonthly = onchain.profit + dashboard.profit + assisted.profit + premium.profit + agency.profit;
     const daily = totalMonthly / 30;
     return { onchain, dashboard, assisted, premium, agency, totalMonthly, daily };
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
               fontWeight: 700,
             }}
           >
-            💲 Gerenciar Preços
+            ðŸ’² Gerenciar PreÃ§os
           </a>
         </div>
       </header>
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
         <MetricCard
           title="Lucro/dia simulado"
           value={`$${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}`}
-          note={dailyProfitBreakdown.daily >= dailyGoal ? "✅ Meta $1.000/dia atingida" : `${dailyProgress}% da meta de $1.000/dia`}
+          note={dailyProfitBreakdown.daily >= dailyGoal ? "âœ… Meta $1.000/dia atingida" : `${dailyProgress}% da meta de $1.000/dia`}
           icon={<DollarSign size={20} />}
           highlight={dailyProfitBreakdown.daily >= dailyGoal}
         />
@@ -250,10 +250,10 @@ export default function AdminDashboard() {
       <section className="card" style={styles.fullSection}>
         <div style={styles.sectionHeader}>
           <div>
-            <h2 style={styles.sectionTitle}>Simulador — $1.000 de lucro por dia</h2>
+            <h2 style={styles.sectionTitle}>Simulador â€” $1.000 de lucro por dia</h2>
             <p style={styles.sectionNote}>
-              Ajuste o volume mensal de cada produto e veja em tempo real quantas conversões são necessárias para
-              atingir <strong style={{ color: "var(--accent-1)" }}>$1.000/dia líquido</strong>.
+              Ajuste o volume mensal de cada produto e veja em tempo real quantas conversÃµes sÃ£o necessÃ¡rias para
+              atingir <strong style={{ color: "var(--accent-1)" }}>$1.000/dia lÃ­quido</strong>.
             </p>
           </div>
           <Zap size={22} color="var(--accent-1)" />
@@ -262,17 +262,17 @@ export default function AdminDashboard() {
         <div style={styles.dailySimGrid}>
           {/* Sliders da esquerda */}
           <div style={{ display: "grid", gap: 20 }}>
-            <Slider label="Token Deploy On-chain ($5 × 95%)" value={qOnchain} min={0} max={2000} step={10} suffix=" deploys/mês" onChange={setQOnchain} />
-            <Slider label="Creator Dashboard ($49/mês × 85%)" value={qDashboard} min={0} max={1000} step={5} suffix=" assinaturas ativas" onChange={setQDashboard} />
-            <Slider label="Deploy Assistido ($299 × 70%)" value={qAssisted} min={0} max={200} step={1} suffix=" vendas/mês" onChange={setQAssisted} />
-            <Slider label="Premium Launch ($799 × 65%)" value={qPremium} min={0} max={100} step={1} suffix=" vendas/mês" onChange={setQPremium} />
-            <Slider label="Setup Agência ($1.500 × 60%)" value={qAgency} min={0} max={50} step={1} suffix=" agências/mês" onChange={setQAgency} />
+            <Slider label="Token Deploy On-chain ($5 Ã— 95%)" value={qOnchain} min={0} max={2000} step={10} suffix=" deploys/mÃªs" onChange={setQOnchain} />
+            <Slider label="Creator Dashboard ($29/mÃªs Ã— 85%)" value={qDashboard} min={0} max={1000} step={5} suffix=" assinaturas ativas" onChange={setQDashboard} />
+            <Slider label="Deploy Assistido ($49 Ã— 70%)" value={qAssisted} min={0} max={200} step={1} suffix=" vendas/mÃªs" onChange={setQAssisted} />
+            <Slider label="Premium Launch ($159 Ã— 65%)" value={qPremium} min={0} max={100} step={1} suffix=" vendas/mÃªs" onChange={setQPremium} />
+            <Slider label="Setup AgÃªncia ($199 Ã— 60%)" value={qAgency} min={0} max={50} step={1} suffix=" agÃªncias/mÃªs" onChange={setQAgency} />
           </div>
 
           {/* Painel de resultados da direita */}
           <div style={styles.dailyResultPanel}>
             <div style={styles.dailyBigNumber}>
-              <span style={styles.dailyLabel}>Lucro Líquido / Dia</span>
+              <span style={styles.dailyLabel}>Lucro LÃ­quido / Dia</span>
               <strong style={{
                 ...styles.dailyValue,
                 color: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-1)"
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                 ${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}
               </strong>
               <span style={styles.dailyMonthly}>
-                {currencyFormatter.format(Math.round(dailyProfitBreakdown.totalMonthly))}/mês
+                {currencyFormatter.format(Math.round(dailyProfitBreakdown.totalMonthly))}/mÃªs
               </span>
             </div>
 
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
                 { label: "Dashboard",  profit: dailyProfitBreakdown.dashboard.profit, qty: dailyProfitBreakdown.dashboard.qty, unit: "assin." },
                 { label: "Assistido",  profit: dailyProfitBreakdown.assisted.profit,  qty: dailyProfitBreakdown.assisted.qty,  unit: "vendas" },
                 { label: "Premium",    profit: dailyProfitBreakdown.premium.profit,   qty: dailyProfitBreakdown.premium.qty,   unit: "vendas" },
-                { label: "Agência",    profit: dailyProfitBreakdown.agency.profit,    qty: dailyProfitBreakdown.agency.qty,    unit: "setup" },
+                { label: "AgÃªncia",    profit: dailyProfitBreakdown.agency.profit,    qty: dailyProfitBreakdown.agency.qty,    unit: "setup" },
               ] as const).map(({ label, profit, qty, unit }) => (
                 <div key={label} style={styles.breakdownRow}>
                   <span>{label}</span>
@@ -310,7 +310,7 @@ export default function AdminDashboard() {
             </div>
 
             {dailyProfitBreakdown.daily >= dailyGoal && (
-              <div style={styles.goalBadge}>🎯 $1.000/dia atingido com este mix!</div>
+              <div style={styles.goalBadge}>ðŸŽ¯ $1.000/dia atingido com este mix!</div>
             )}
           </div>
         </div>
@@ -764,3 +764,4 @@ const styles: Record<string, CSSProperties> = {
     gap: 8,
   },
 };
+

@@ -76,7 +76,7 @@ describe("InsteadLendingRouter", function () {
     await router.connect(user).borrow(await adapter.getAddress(), await token.getAddress(), amount);
 
     expect(await pool.lastBorrowOnBehalfOf()).to.equal(user.address);
-    expect(await token.balanceOf(treasury.address)).to.equal(ethers.parseEther("0.5"));
-    expect(await token.balanceOf(user.address)).to.equal(ethers.parseEther("1099.5"));
+    expect(await token.balanceOf(treasury.address)).to.equal(ethers.parseEther("1.5"));
+    expect(await token.balanceOf(user.address)).to.equal(ethers.parseEther("1098.5"));
   });
 });

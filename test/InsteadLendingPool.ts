@@ -51,7 +51,7 @@ describe("InsteadLendingPool", function () {
   it("borrows on behalf of the user and sends only the fee to treasury", async function () {
     const { user, treasury, token, debtToken, pool, adapter } = await deployFixture();
     const amount = ethers.parseEther("100");
-    const expectedFee = ethers.parseEther("0.5");
+    const expectedFee = ethers.parseEther("1.5");
 
     await debtToken.connect(user).approveDelegation(await adapter.getAddress(), amount);
     await adapter.connect(user).borrow(await token.getAddress(), amount);
@@ -59,7 +59,7 @@ describe("InsteadLendingPool", function () {
     expect(await pool.lastBorrowOnBehalfOf()).to.equal(user.address);
     expect(await pool.lastBorrowOnBehalfOf()).to.not.equal(await adapter.getAddress());
     expect(await token.balanceOf(treasury.address)).to.equal(expectedFee);
-    expect(await token.balanceOf(user.address)).to.equal(ethers.parseEther("1099.5"));
+    expect(await token.balanceOf(user.address)).to.equal(ethers.parseEther("1098.5"));
   });
 
   it("rejects borrow without enough Aave credit delegation", async function () {

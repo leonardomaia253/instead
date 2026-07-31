@@ -64,7 +64,7 @@ contract InsteadLendingPool is
 
     IPoolAddressesProvider public addressesProvider;
     address public treasury;
-    uint256 public convenienceFee; // 50 = 0.50%
+    uint256 public convenienceFee; // 150 = 1.50%
 
     mapping(address => bool) public supportedAssets;
     mapping(address => address) public aTokenByAsset;
@@ -100,7 +100,7 @@ contract InsteadLendingPool is
 
         addressesProvider = IPoolAddressesProvider(_addressesProvider);
         treasury = _treasury;
-        convenienceFee = 50;
+        convenienceFee = 150;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
