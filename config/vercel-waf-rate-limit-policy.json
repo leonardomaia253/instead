@@ -3,6 +3,30 @@
   "provider": "vercel-waf",
   "scope": "production",
   "description": "Distributed rate limit policy for public Instead API, auth, webhook, and AI surfaces on Vercel WAF.",
+  "deployedVercelRule": {
+    "name": "instead-prod-api-abuse-v1",
+    "project": "instead",
+    "projectId": "prj_QSB3qLIFPJV4r1oe4Vy6iGynrKN6",
+    "version": 1,
+    "planConstraint": "Vercel Hobby allows one rate-limit rule per project, so the Vercel production rule consolidates the Vercel-routed API surfaces below into one active rule.",
+    "match": {
+      "pathPrefixes": [
+        "/api/auth",
+        "/api/payments",
+        "/api/lending",
+        "/api/b2b",
+        "/api/revenue",
+        "/api/telegram"
+      ]
+    },
+    "rateLimit": {
+      "algorithm": "fixed-window",
+      "key": "ip",
+      "limit": 60,
+      "window": "60s",
+      "mitigationStatus": 429
+    }
+  },
   "rules": [
     {
       "name": "instead-api-public-write",
