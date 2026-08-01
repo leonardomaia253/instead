@@ -3,6 +3,7 @@ import { createPagarmeCheckout, createStripeCheckout, validateCheckoutRequest, t
 import { requireSameOrigin } from "@/lib/server/csrf";
 import { rateLimit, readLimitedJson } from "@/lib/server/rateLimit";
 import { verifyWalletSession } from "@/lib/server/walletAuth";
+import { hasApprovedCompliance } from "@/lib/server/didit";
 
 function isProvider(value: unknown): value is PaymentProvider {
   return value === "stripe" || value === "pagarme";
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429, headers: { "Retry-After": String(limited.retryAfterSeconds) } });
     }
 
-    const body = await readLimitedJson<CheckoutRequest>(request, 4096);
+    const body = await readLimitedJson<CheckoutRequest>(request, 8192);
     if (!isProvider(body.provider)) {
       return NextResponse.json({ error: "Unsupported payment provider" }, { status: 400 });
     }
@@ -35,6 +36,9 @@ export async function POST(request: Request) {
     const session = verifyWalletSession(request);
     if (!session?.wallet_address || session.wallet_address.toLowerCase() !== String(body.walletAddress ?? "").toLowerCase()) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!(await hasApprovedCompliance(session.wallet_address))) {
+      return NextResponse.json({ error: "KYC required", code: "kyc_required" }, { status: 403 });
     }
     await validateCheckoutRequest(body);
 

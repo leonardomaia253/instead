@@ -6,17 +6,42 @@ import { createSupabaseAdminClient } from "./supabaseAdmin";
 export type PaymentProvider = "stripe" | "pagarme";
 export type PaymentVertical = "token_factory" | "lending" | "staking" | "services";
 
+export type CheckoutAddress = {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
+export type CheckoutCustomer = {
+  name: string;
+  document?: string;
+  documentType?: "CPF" | "CNPJ" | "PASSPORT";
+  phoneCountryCode?: string;
+  phoneAreaCode?: string;
+  phoneNumber?: string;
+  billingAddress?: CheckoutAddress;
+  shippingAddress?: CheckoutAddress;
+};
+
 export type CheckoutRequest = {
   provider: PaymentProvider;
   vertical: PaymentVertical;
   productCode: string;
   walletAddress?: string;
   email?: string;
+  customer?: CheckoutCustomer;
   metadata?: Record<string, unknown>;
 };
 
 const EVM_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const BR_POSTAL_CODE_RE = /^\d{8}$/;
+const BR_STATE_RE = /^[A-Z]{2}$/;
+const PHONE_DIGITS_RE = /^\d{8,11}$/;
+const COUNTRY_CODE_RE = /^\d{1,3}$/;
 
 // ─── Fallback hardcoded (usado se Supabase inacessível) ─────────────────────
 const FALLBACK_PRICES: Record<string, { label: string; amountUsd: number; amountBrl: number }> = {
@@ -90,7 +115,83 @@ export async function validateCheckoutRequest(input: CheckoutRequest) {
   if (!input.walletAddress || !EVM_ADDRESS_RE.test(input.walletAddress)) throw new Error("Invalid wallet address");
   if (input.email && !EMAIL_RE.test(input.email)) throw new Error("Invalid email");
   if (JSON.stringify(input.metadata ?? {}).length > 2_000) throw new Error("Metadata is too large");
+  if (input.provider === "pagarme") validatePagarmeCustomer(input);
   await getPaymentProduct(input.vertical, input.productCode, input.provider);
+}
+
+function onlyDigits(value?: string) {
+  return (value ?? "").replace(/\D/g, "");
+}
+
+function requireText(value: unknown, message: string) {
+  if (typeof value !== "string" || !value.trim()) throw new Error(message);
+  return value.trim();
+}
+
+function normalizeAddress(address: CheckoutAddress) {
+  const country = requireText(address.country, "Invalid country").toUpperCase();
+  const state = requireText(address.state, "Invalid state").toUpperCase();
+  const postalCode = onlyDigits(address.postalCode);
+  if (country === "BR" && !BR_POSTAL_CODE_RE.test(postalCode)) throw new Error("Invalid postal code");
+  if (country === "BR" && !BR_STATE_RE.test(state)) throw new Error("Invalid state");
+  return {
+    line_1: requireText(address.line1, "Invalid address line"),
+    line_2: address.line2?.trim() || undefined,
+    zip_code: postalCode || requireText(address.postalCode, "Invalid postal code"),
+    city: requireText(address.city, "Invalid city"),
+    state,
+    country,
+  };
+}
+
+function normalizePagarmeCustomer(input: CheckoutRequest) {
+  const customer = input.customer;
+  if (!customer) throw new Error("Customer data is required for Pagar.me checkout");
+  const document = onlyDigits(customer.document);
+  const documentType = customer.documentType ?? (document.length === 14 ? "CNPJ" : "CPF");
+  const phoneCountryCode = onlyDigits(customer.phoneCountryCode || "55");
+  const phoneAreaCode = onlyDigits(customer.phoneAreaCode);
+  const phoneNumber = onlyDigits(customer.phoneNumber);
+  if (!input.email || !EMAIL_RE.test(input.email)) throw new Error("Email is required for Pagar.me checkout");
+  if (!document || !["CPF", "CNPJ", "PASSPORT"].includes(documentType)) throw new Error("Document is required for Pagar.me checkout");
+  if (documentType === "CPF" && document.length !== 11) throw new Error("Invalid CPF");
+  if (documentType === "CNPJ" && document.length !== 14) throw new Error("Invalid CNPJ");
+  if (!COUNTRY_CODE_RE.test(phoneCountryCode) || !/^\d{2,3}$/.test(phoneAreaCode) || !PHONE_DIGITS_RE.test(phoneNumber)) {
+    throw new Error("Valid phone is required for Pagar.me checkout");
+  }
+  if (!customer.billingAddress) throw new Error("Billing address is required for Pagar.me checkout");
+
+  return {
+    name: requireText(customer.name, "Customer name is required"),
+    email: input.email,
+    document,
+    document_type: documentType,
+    type: documentType === "CNPJ" ? "company" : "individual",
+    phones: {
+      mobile_phone: {
+        country_code: phoneCountryCode,
+        area_code: phoneAreaCode,
+        number: phoneNumber,
+      },
+    },
+    address: normalizeAddress(customer.billingAddress),
+  };
+}
+
+function validatePagarmeCustomer(input: CheckoutRequest) {
+  normalizePagarmeCustomer(input);
+}
+
+function pagarmeShipping(input: CheckoutRequest, productLabel: string) {
+  const address = input.customer?.shippingAddress ?? input.customer?.billingAddress;
+  if (!address) return undefined;
+  return {
+    amount: 0,
+    description: `Digital delivery - ${productLabel}`,
+    recipient_name: input.customer?.name,
+    recipient_phone: `${onlyDigits(input.customer?.phoneCountryCode || "55")}${onlyDigits(input.customer?.phoneAreaCode)}${onlyDigits(input.customer?.phoneNumber)}`,
+    address: normalizeAddress(address),
+  };
 }
 
 export async function getPaymentProduct(vertical: PaymentVertical, productCode: string, provider: PaymentProvider) {
@@ -248,6 +349,10 @@ export async function createStripeCheckout(input: CheckoutRequest) {
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: input.email || undefined,
+    billing_address_collection: "required",
+    phone_number_collection: { enabled: true },
+    customer_creation: "if_required",
+    client_reference_id: payment.id,
     line_items: [
       {
         quantity: 1,
@@ -265,6 +370,14 @@ export async function createStripeCheckout(input: CheckoutRequest) {
       vertical: input.vertical,
       product_code: input.productCode,
       wallet_address: input.walletAddress?.toLowerCase() ?? "",
+    },
+    payment_intent_data: {
+      metadata: {
+        payment_intent_id: payment.id,
+        vertical: input.vertical,
+        product_code: input.productCode,
+        wallet_address: input.walletAddress?.toLowerCase() ?? "",
+      },
     },
   });
 
@@ -314,6 +427,7 @@ export async function createPagarmeCheckout(input: CheckoutRequest) {
         product_code: input.productCode,
         wallet_address: input.walletAddress?.toLowerCase() ?? "",
       },
+      customer: normalizePagarmeCustomer(input),
       payment_settings: {
         accepted_payment_methods: ["credit_card", "pix"],
         credit_card_settings: { operation_type: "auth_and_capture" },
@@ -328,6 +442,7 @@ export async function createPagarmeCheckout(input: CheckoutRequest) {
           },
         ],
       },
+      shipping: pagarmeShipping(input, product.label),
     }),
   });
 

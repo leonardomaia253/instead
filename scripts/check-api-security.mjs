@@ -61,8 +61,39 @@ for (const route of [
 }
 
 const checkoutRoute = "frontend/src/app/api/payments/checkout/route.ts";
-for (const expected of ["requireSameOrigin", "rateLimit", "readLimitedJson", "verifyWalletSession"]) {
+for (const expected of ["requireSameOrigin", "rateLimit", "readLimitedJson", "verifyWalletSession", "hasApprovedCompliance", "kyc_required"]) {
   requireIncludes(checkoutRoute, expected, `${checkoutRoute} must include ${expected}`);
+}
+
+const paymentsLib = "frontend/src/lib/server/payments.ts";
+for (const expected of [
+  'billing_address_collection: "required"',
+  "phone_number_collection",
+  "client_reference_id",
+  "payment_intent_data",
+  "normalizePagarmeCustomer",
+  "billingAddress",
+  "document_type",
+  "phones",
+  "shipping",
+]) {
+  requireIncludes(paymentsLib, expected, `${paymentsLib} must include gateway checkout field ${expected}`);
+}
+
+for (const [route, expected] of [
+  ["frontend/src/app/api/compliance/verification/session/route.ts", "createDiditSession"],
+  ["frontend/src/app/api/compliance/verification/session/route.ts", "requireSameOrigin"],
+  ["frontend/src/app/api/compliance/verification/session/route.ts", "verifyWalletSession"],
+  ["frontend/src/app/api/compliance/verification/status/route.ts", "noStoreJson"],
+  ["frontend/src/app/api/compliance/verification/webhooks/didit/route.ts", "verifyDiditWebhook"],
+  ["frontend/src/app/api/compliance/verification/webhooks/didit/route.ts", "readLimitedText"],
+]) {
+  requireIncludes(route, expected, `${route} must include ${expected}`);
+}
+
+const diditLib = "frontend/src/lib/server/didit.ts";
+for (const expected of ["https://verification.didit.me/v3/session/", "x-api-key", "vendor_data", "callback_method", "DIDIT_WEBHOOK_SECRET", "timingSafeEqual"]) {
+  requireIncludes(diditLib, expected, `${diditLib} must include ${expected}`);
 }
 
 for (const route of [

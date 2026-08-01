@@ -1,5 +1,5 @@
 "use client";
-import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from "wagmi";
+import { usePublicClient, useWriteContract, useReadContract } from "wagmi";
 import { CONTRACTS, TOKEN_FACTORY_ABI } from "@/lib/wagmi";
 import { enqueueReconciliation, insertAudit, insertGeneratedToken } from "@/lib/supabase";
 
@@ -11,7 +11,7 @@ const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "42161");
  */
 export function useTokenFactory() {
   const { writeContractAsync, isPending, error } = useWriteContract();
-  const publicClient = (require("wagmi")).usePublicClient(); // Dynamic import or just add at top
+  const publicClient = usePublicClient();
 
   // Leitura ao vivo da taxa de criação em ETH (baseada no preço Chainlink do ETH/USD)
   const { data: feeInEth, refetch: refetchFee } = useReadContract({
@@ -58,7 +58,7 @@ export function useTokenFactory() {
     try {
       const { Interface } = await import("ethers");
       const iface = new Interface(TOKEN_FACTORY_ABI as any);
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
       
       for (const log of receipt.logs) {
         try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { parseUnits } from "ethers";
 import { AAVE_VARIABLE_DEBT_TOKEN_ABI, CONTRACTS, ERC20_ABI, LENDING_POOL_ABI, LENDING_ROUTER_ABI } from "@/lib/wagmi";
 
@@ -12,7 +12,7 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
   const { address } = useAccount();
   const { writeContract, writeContractAsync, data: txHash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
-  const publicClient = (require("wagmi")).usePublicClient();
+  const publicClient = usePublicClient();
 
   const { data: accountData } = useReadContract({
     address: CONTRACTS.LENDING_POOL,
@@ -68,7 +68,7 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
       functionName: "approve",
       args: [spender, amountBN],
     });
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
+    await publicClient!.waitForTransactionReceipt({ hash: approveHash });
 
     if (CONTRACTS.LENDING_ROUTER) {
       return writeContractAsync({
@@ -150,13 +150,17 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
     if (!debtToken) throw new Error("Variable debt token is not configured for this asset.");
     const amountBN = parseUnits(amount, decimals);
 
+    // Credit delegation must target the contract that will call Aave.borrow():
+    // when the router is configured, borrow is routed through it, so delegate to the router.
+    const borrowDelegatee = CONTRACTS.LENDING_ROUTER || CONTRACTS.LENDING_POOL;
+
     const delegationHash = await writeContractAsync({
       address: debtToken,
       abi: AAVE_VARIABLE_DEBT_TOKEN_ABI,
       functionName: "approveDelegation",
-      args: [CONTRACTS.LENDING_POOL, amountBN],
+      args: [borrowDelegatee, amountBN],
     });
-    await publicClient.waitForTransactionReceipt({ hash: delegationHash });
+    await publicClient!.waitForTransactionReceipt({ hash: delegationHash });
 
     if (CONTRACTS.LENDING_ROUTER) {
       return writeContractAsync({
@@ -186,7 +190,7 @@ export function useInsteadLending(assetAddress?: `0x${string}`) {
       functionName: "approve",
       args: [spender, amountBN],
     });
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
+    await publicClient!.waitForTransactionReceipt({ hash: approveHash });
 
     if (CONTRACTS.LENDING_ROUTER) {
       return writeContractAsync({

@@ -15,6 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         '/en/admin/',
         '/en/login/',
         '/en/register/',
+        '/api/admin/',
       ],
     },
     sitemap: 'https://instead.volupai.com/sitemap.xml',

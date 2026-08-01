@@ -527,7 +527,7 @@ function StepReview({
   txHash?: string;
   error: Error | null;
   onFiatCheckout: (provider: "stripe" | "pagarme", productCode: string) => void;
-  fiatCheckoutStatus: "idle" | "loading" | "auth_required" | "error";
+  fiatCheckoutStatus: "idle" | "loading" | "auth_required" | "kyc_required" | "error";
 }) {
   const chainMeta = CHAIN_META[form.chainId];
   const rows = [
@@ -643,6 +643,11 @@ function StepReview({
             Entre com sua wallet para assinar a sessao antes de abrir o checkout.
           </div>
         )}
+        {fiatCheckoutStatus === "kyc_required" && (
+          <div style={{ color: "var(--accent-1)", fontSize: 12, marginTop: 10 }}>
+            Verificacao KYC necessaria. Abrimos a sessao segura da Didit para concluir antes do pagamento.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -714,6 +719,46 @@ function percentToBps(value: string) {
   return BigInt(Math.round(percent * 100));
 }
 
+function collectPagarmeCustomer() {
+  const name = window.prompt("Nome completo ou razao social para o checkout Pagar.me")?.trim();
+  if (!name) return null;
+  const email = window.prompt("E-mail do pagador")?.trim();
+  if (!email) return null;
+  const document = window.prompt("CPF ou CNPJ do pagador, somente numeros")?.replace(/\D/g, "");
+  if (!document) return null;
+  const phoneAreaCode = window.prompt("DDD do telefone, somente numeros")?.replace(/\D/g, "");
+  if (!phoneAreaCode) return null;
+  const phoneNumber = window.prompt("Telefone, somente numeros")?.replace(/\D/g, "");
+  if (!phoneNumber) return null;
+  const line1 = window.prompt("Endereco de cobranca: rua, numero e complemento")?.trim();
+  if (!line1) return null;
+  const city = window.prompt("Cidade")?.trim();
+  if (!city) return null;
+  const state = window.prompt("UF, exemplo SP")?.trim().toUpperCase();
+  if (!state) return null;
+  const postalCode = window.prompt("CEP, somente numeros")?.replace(/\D/g, "");
+  if (!postalCode) return null;
+
+  return {
+    email,
+    customer: {
+      name,
+      document,
+      documentType: document.length === 14 ? "CNPJ" : "CPF",
+      phoneCountryCode: "55",
+      phoneAreaCode,
+      phoneNumber,
+      billingAddress: {
+        line1,
+        city,
+        state,
+        postalCode,
+        country: "BR",
+      },
+    },
+  };
+}
+
 const styles = {
   stepTitle: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 700, marginBottom: 8 } as React.CSSProperties,
   stepDesc: { fontSize: 15, color: "var(--text-muted)", lineHeight: 1.65, marginBottom: 8 } as React.CSSProperties,
@@ -727,7 +772,7 @@ export default function FactoryPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 42161 });
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "auth_required" | "error">("idle");
+  const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "auth_required" | "kyc_required" | "error">("idle");
   const [telegramIntentId, setTelegramIntentId] = useState<string | null>(null);
 
   const factoryAddress = (CHAIN_META[form.chainId]?.factoryAddress || "0x0") as `0x${string}`;
@@ -941,6 +986,8 @@ export default function FactoryPage() {
 
   async function handleFiatCheckout(provider: "stripe" | "pagarme", productCode: string) {
     if (!address) return;
+    const pagarmeCustomer = provider === "pagarme" ? collectPagarmeCustomer() : null;
+    if (provider === "pagarme" && !pagarmeCustomer) return;
     setFiatCheckoutStatus("loading");
     try {
       const response = await fetch("/api/payments/checkout", {
@@ -951,6 +998,8 @@ export default function FactoryPage() {
           vertical: "token_factory",
           productCode,
           walletAddress: address,
+          email: pagarmeCustomer?.email,
+          customer: pagarmeCustomer?.customer,
           metadata: {
             token_template: form.template,
             name: form.name,
@@ -964,6 +1013,25 @@ export default function FactoryPage() {
       if (response.status === 401) {
         setFiatCheckoutStatus("auth_required");
         return;
+      }
+      if (response.status === 403 && body.code === "kyc_required") {
+        const kycResponse = await fetch("/api/compliance/verification/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletAddress: address,
+            email: pagarmeCustomer?.email,
+            kind: "kyc",
+            consent: true,
+            metadata: { trigger: "token_factory_checkout", product_code: productCode },
+          }),
+        });
+        const kycBody = await kycResponse.json();
+        if (kycResponse.ok && kycBody.verification?.url) {
+          setFiatCheckoutStatus("kyc_required");
+          window.location.href = kycBody.verification.url;
+          return;
+        }
       }
       if (!response.ok || !body.url) throw new Error(body.error || "Checkout unavailable");
       window.location.href = body.url;

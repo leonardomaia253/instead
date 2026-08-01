@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { markPaymentPaid, updateUnpaidPaymentIntentById, verifyPagarmeWebhook } from "@/lib/server/payments";
 import { rateLimit, readLimitedText } from "@/lib/server/rateLimit";
+import { captureException } from "@/lib/observability/sentry";
+import { sendSystemAlert } from "@/lib/observability/alerts";
 
 function getPaymentIntentId(payload: any) {
   return (
@@ -44,7 +46,13 @@ export async function POST(request: Request) {
         amountCents: Number(amountCents),
         currency: "brl",
       }).catch((err) => {
-        console.warn("Failed to mark payment paid in Pagarme webhook:", err);
+        captureException(err, { context: "markPaymentPaid", provider: "pagarme", paymentIntentId });
+        sendSystemAlert({
+          title: "Pagar.me Webhook Payment Processing Failed",
+          severity: "warning",
+          source: "api/payments/webhooks/pagarme",
+          details: { paymentIntentId, error: String(err) },
+        });
       });
     }
 
@@ -62,7 +70,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Pagar.me webhook failed", error);
+    captureException(error, { context: "pagarme_webhook_handler" });
+    sendSystemAlert({
+      title: "Invalid Pagar.me Webhook Request",
+      severity: "warning",
+      source: "api/payments/webhooks/pagarme",
+      details: { error: error instanceof Error ? error.message : String(error) },
+    });
     return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   }
 }

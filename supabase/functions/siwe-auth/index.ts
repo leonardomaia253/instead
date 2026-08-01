@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
-import { verifyMessage } from "npm:viem@2"
+import { verifyMessage } from "npm:viem@2.47.5"
 import { cleanText, json, preflight, rateLimit, readJsonBody } from "../_shared/security.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")

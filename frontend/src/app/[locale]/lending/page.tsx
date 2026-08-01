@@ -33,6 +33,46 @@ const WETH_ADDRESS = LENDING_ASSETS.WETH.address;
 
 type Tab = "deposit" | "borrow" | "repay";
 
+function collectPagarmeCustomer(defaultEmail: string) {
+  const name = window.prompt("Nome completo ou razao social para o checkout Pagar.me")?.trim();
+  if (!name) return null;
+  const email = window.prompt("E-mail do pagador", defaultEmail)?.trim();
+  if (!email) return null;
+  const document = window.prompt("CPF ou CNPJ do pagador, somente numeros")?.replace(/\D/g, "");
+  if (!document) return null;
+  const phoneAreaCode = window.prompt("DDD do telefone, somente numeros")?.replace(/\D/g, "");
+  if (!phoneAreaCode) return null;
+  const phoneNumber = window.prompt("Telefone, somente numeros")?.replace(/\D/g, "");
+  if (!phoneNumber) return null;
+  const line1 = window.prompt("Endereco de cobranca: rua, numero e complemento")?.trim();
+  if (!line1) return null;
+  const city = window.prompt("Cidade")?.trim();
+  if (!city) return null;
+  const state = window.prompt("UF, exemplo SP")?.trim().toUpperCase();
+  if (!state) return null;
+  const postalCode = window.prompt("CEP, somente numeros")?.replace(/\D/g, "");
+  if (!postalCode) return null;
+
+  return {
+    email,
+    customer: {
+      name,
+      document,
+      documentType: document.length === 14 ? "CNPJ" as const : "CPF" as const,
+      phoneCountryCode: "55",
+      phoneAreaCode,
+      phoneNumber,
+      billingAddress: {
+        line1,
+        city,
+        state,
+        postalCode,
+        country: "BR",
+      },
+    },
+  };
+}
+
 export default function LendingPage() {
   const t = useTranslations("Common");
   const { isConnected, address } = useAccount();
@@ -172,6 +212,8 @@ export default function LendingPage() {
       setPremiumStatus("Conecte sua carteira antes de contratar.");
       return;
     }
+    const pagarmeCustomer = premiumProvider === "pagarme" ? collectPagarmeCustomer(premiumEmail) : null;
+    if (premiumProvider === "pagarme" && !pagarmeCustomer) return;
     setPremiumStatus("Criando checkout seguro...");
     const response = await fetch("/api/payments/checkout", {
       method: "POST",
@@ -181,7 +223,8 @@ export default function LendingPage() {
         vertical,
         productCode,
         walletAddress: address,
-        email: premiumEmail || undefined,
+        email: pagarmeCustomer?.email || premiumEmail || undefined,
+        customer: pagarmeCustomer?.customer,
         metadata: {
           chain_id: chainId,
           health_factor: liveHF,
@@ -194,6 +237,25 @@ export default function LendingPage() {
     if (response.status === 401) {
       setPremiumStatus("Entre com sua wallet para assinar a sessão antes de contratar.");
       return;
+    }
+    if (response.status === 403 && body.code === "kyc_required") {
+      const kycResponse = await fetch("/api/compliance/verification/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: address,
+          email: pagarmeCustomer?.email || premiumEmail || undefined,
+          kind: "kyc",
+          consent: true,
+          metadata: { trigger: "lending_checkout", product_code: productCode, vertical },
+        }),
+      });
+      const kycBody = await kycResponse.json();
+      if (kycResponse.ok && kycBody.verification?.url) {
+        setPremiumStatus("Verificacao KYC necessaria. Abrindo sessao segura da Didit...");
+        window.location.href = kycBody.verification.url;
+        return;
+      }
     }
     if (!response.ok || !body.url) {
       setPremiumStatus("Não foi possível criar checkout agora.");

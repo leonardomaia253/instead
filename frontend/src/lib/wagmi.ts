@@ -2,7 +2,10 @@ import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
 import type { Chain } from "viem";
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "dfab9bf7f9df6ec4e1411c76256bb638";
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
+if (!projectId && typeof window !== "undefined") {
+  console.error("[Instead] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. WalletConnect will not work.");
+}
 
 const mainnet = {
   id: 1,

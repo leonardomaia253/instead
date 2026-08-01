@@ -127,8 +127,12 @@ for (const requiredFile of [
   "frontend/src/app/api/b2b/widget/route.ts",
   "frontend/src/app/api/admin/b2b-clients/route.ts",
   "frontend/src/app/api/revenue/me/route.ts",
+  "frontend/src/app/api/compliance/verification/session/route.ts",
+  "frontend/src/app/api/compliance/verification/status/route.ts",
+  "frontend/src/app/api/compliance/verification/webhooks/didit/route.ts",
   "frontend/src/app/api/auth/wallet-profile/route.ts",
   "frontend/src/app/api/auth/session/route.ts",
+  "frontend/src/lib/server/didit.ts",
   "frontend/src/lib/server/csrf.ts",
   "frontend/src/lib/server/responses.ts",
   "frontend/next.config.js",
@@ -158,6 +162,11 @@ if (env.REQUIRE_FIAT_PAYMENTS === "true") {
   warnIfMissing("STRIPE_WEBHOOK_SECRET");
   warnIfMissing("PAGARME_SECRET_KEY");
   warnIfMissing("PAGARME_WEBHOOK_SECRET");
+}
+if (env.REQUIRE_KYC === "true" || env.REQUIRE_FIAT_PAYMENTS === "true") {
+  warnIfMissing("DIDIT_API_KEY");
+  warnIfMissing("DIDIT_WEBHOOK_SECRET");
+  warnIfMissing("DIDIT_KYC_WORKFLOW_ID");
 }
 if (env.REQUIRE_MONITORING === "true") {
   warnIfMissing("SENTRY_DSN");
@@ -212,6 +221,9 @@ if (env.REQUIRE_FIAT_PAYMENTS === "true") {
   requireHttpsUrl("APP_ORIGIN");
   requireEnv("SUPABASE_URL");
   requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  requireEnv("DIDIT_API_KEY");
+  requireMinLength("DIDIT_WEBHOOK_SECRET", 32);
+  requireEnv("DIDIT_KYC_WORKFLOW_ID");
   requireEnv("STRIPE_SECRET_KEY");
   requireEnv("STRIPE_WEBHOOK_SECRET");
   requireEnv("PAGARME_SECRET_KEY");
@@ -219,6 +231,16 @@ if (env.REQUIRE_FIAT_PAYMENTS === "true") {
   rejectPattern("APP_ORIGIN", /^https:\/\/localhost\b|^http:\/\//i, "must be a public HTTPS production origin");
   rejectPattern("STRIPE_SECRET_KEY", /^sk_test_|dummy|changeme/i, "must be a live production key when fiat payments are required");
   rejectPattern("PAGARME_SECRET_KEY", /dummy|changeme/i, "must be a real production key when fiat payments are required");
+}
+
+if (env.REQUIRE_KYC === "true") {
+  requireHttpsUrl("APP_ORIGIN");
+  requireEnv("SUPABASE_URL");
+  requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  requireEnv("DIDIT_API_KEY");
+  requireMinLength("DIDIT_WEBHOOK_SECRET", 32);
+  requireEnv("DIDIT_KYC_WORKFLOW_ID");
+  rejectPattern("DIDIT_API_KEY", /dummy|changeme/i, "must be a real Didit API key when KYC is required");
 }
 
 const factoryVars = [
