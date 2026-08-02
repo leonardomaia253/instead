@@ -19,6 +19,7 @@ export function Footer() {
         <div className="proto-footer__columns">
           <FooterColumn title="Protocol">
             <FooterLink href="/lending">Lending Hub</FooterLink>
+            <FooterLink href="/os">Instead OS</FooterLink>
             <FooterLink href="/factory">Token Factory</FooterLink>
             <FooterLink href="/solutions">Planos e serviços</FooterLink>
             <FooterLink href="/staking">Staking Vaults</FooterLink>

@@ -29,6 +29,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/lending", label: locale === "en" ? "Lending" : "Lending" },
+    { href: "/os", label: locale === "en" ? "OS" : "OS" },
     { href: "/solutions", label: locale === "en" ? "Plans" : "Planos" },
     { href: "/factory", label: locale === "en" ? "Factory" : "Fábrica" },
     { href: "/tokens", label: locale === "en" ? "Explore" : "Explorar" },

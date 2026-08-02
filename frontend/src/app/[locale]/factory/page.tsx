@@ -19,6 +19,7 @@ import {
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { AIAssistant } from "@/components/shared/AIAssistant";
 import { PlainLanguageGlossary, SafetyChecklist, SimpleModeNotice, WalletHelpCard } from "@/components/ElderFriendly";
+import { analyzeTokenConfig, type TokenRiskLevel } from "@/lib/tokenIntelligence";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type TokenForm = {
@@ -530,6 +531,7 @@ function StepReview({
   fiatCheckoutStatus: "idle" | "loading" | "auth_required" | "kyc_required" | "error";
 }) {
   const chainMeta = CHAIN_META[form.chainId];
+  const intelligence = analyzeTokenConfig(form);
   const rows = [
     ["Rede", `${chainMeta?.icon} ${chainMeta?.name}`],
     ["Nome", form.name || "—"],
@@ -564,6 +566,8 @@ function StepReview({
           </div>
         ))}
       </div>
+
+      <TokenIntelligencePanel report={intelligence} />
 
       {!!feeInEth && (
         <div style={{
@@ -654,6 +658,89 @@ function StepReview({
 }
 
 // ─── Componentes Auxiliares ───────────────────────────────────────────────────
+function TokenIntelligencePanel({ report }: { report: ReturnType<typeof analyzeTokenConfig> }) {
+  const color = tokenRiskColor(report.riskLevel);
+  return (
+    <section style={{ border: `1px solid ${color}`, background: "rgba(255,255,255,0.02)", borderRadius: 14, padding: 18, marginTop: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
+        <div>
+          <div style={{ color: "var(--accent-1)", fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace", fontSize: 11, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            Token Intelligence / revisao automatica
+          </div>
+          <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: "8px 0 4px", textTransform: "uppercase" }}>
+            {report.templateLabel}
+          </h3>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55 }}>{report.docs.oneLiner}</p>
+        </div>
+        <div style={{ minWidth: 120, textAlign: "right" }}>
+          <span style={{ display: "inline-flex", border: `1px solid ${color}`, color, padding: "5px 9px", fontSize: 11, fontWeight: 900, textTransform: "uppercase" }}>
+            risco {report.riskLevel}
+          </span>
+          <strong style={{ display: "block", marginTop: 8, fontFamily: "'Space Grotesk', sans-serif", fontSize: 30, color }}>
+            {report.snapshot.trustScore}/100
+          </strong>
+          <small style={{ color: "var(--text-muted)", textTransform: "uppercase" }}>trust score</small>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 10, marginTop: 16 }}>
+        <Metric label="Supply inicial" value={`${report.snapshot.initialSupplyShare.toFixed(1)}%`} />
+        <Metric label="Reserva/cap" value={formatNumber(String(report.snapshot.reserveSupply))} />
+        <Metric label="Taxa" value={`${(report.snapshot.transferTaxBps / 100).toFixed(2)}%`} />
+        <Metric label="Admin power" value={`${report.snapshot.adminPowerScore}/100`} />
+      </div>
+
+      {report.findings.length > 0 ? (
+        <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+          {report.findings.map((finding) => {
+            const findingColor = tokenRiskColor(finding.level);
+            return (
+              <div key={`${finding.title}:${finding.level}`} style={{ border: `1px solid ${findingColor}`, background: `${findingColor}12`, padding: 12 }}>
+                <strong style={{ color: findingColor }}>{finding.title}</strong>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.45, marginTop: 5 }}>{finding.detail}</p>
+                <p style={{ color: "var(--text-primary)", fontSize: 13, lineHeight: 1.45, marginTop: 5 }}>{finding.mitigation}</p>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ color: "var(--green)", marginTop: 16, fontSize: 13 }}>Nenhum alerta critico detectado nesta revisao automatica inicial.</div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 12, marginTop: 16 }}>
+        <div>
+          <strong>Checklist antes de assinar</strong>
+          <ul style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55, margin: "8px 0 0", paddingLeft: 18 }}>
+            {report.checklist.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+        <div>
+          <strong>Resumo publico sugerido</strong>
+          <ul style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55, margin: "8px 0 0", paddingLeft: 18 }}>
+            {report.docs.parameterSummary.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ border: "1px solid var(--border)", padding: 10, background: "rgba(5,6,4,0.35)" }}>
+      <span style={{ display: "block", color: "var(--text-muted)", fontSize: 11, textTransform: "uppercase" }}>{label}</span>
+      <strong style={{ display: "block", marginTop: 5 }}>{value}</strong>
+    </div>
+  );
+}
+
+function tokenRiskColor(level: TokenRiskLevel) {
+  if (level === "critical") return "var(--red)";
+  if (level === "high") return "#f59e0b";
+  if (level === "medium") return "var(--accent-1)";
+  return "var(--green)";
+}
+
 function FieldGroup({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 24 }}>

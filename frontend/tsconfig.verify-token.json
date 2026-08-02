@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/lib/tokenIntelligence.ts",
+    "src/lib/intentEngine.ts",
+    "src/lib/visionRoadmap.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

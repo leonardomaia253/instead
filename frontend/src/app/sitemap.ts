@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     '',
     '/lending',
+    '/os',
     '/factory',
     '/solutions',
     ...PUBLIC_OFFER_LANDINGS.map((landing) => `/solutions/${landing.slug}`),

@@ -35,6 +35,18 @@ deployments/*.json
 .env.test.local
 .env.production.local
 
+# Mobile signing and store credentials
+*.jks
+*.keystore
+*.aab
+*.apk
+*service*publisher*.json
+*servicerpublisher*.json
+google-play-credentials*.json
+.gradle-local/
+mobile/android/.gradle/
+mobile/android/**/build/
+
 # Debug
 *.log
 *.err.log

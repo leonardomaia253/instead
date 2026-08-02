@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/app/[locale]/os/**/*.tsx",
+    "src/app/[locale]/factory/page.tsx",
+    "src/app/api/os/**/*.ts",
+    "src/lib/intentEngine.ts",
+    "src/lib/tokenIntelligence.ts",
+    "src/lib/visionRoadmap.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}
