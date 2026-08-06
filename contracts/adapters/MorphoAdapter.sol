@@ -61,13 +61,13 @@ contract MorphoAdapter is IInsteadLendingAdapter, Ownable {
     function withdrawFor(address user, address asset, uint256 amount) external override returns (uint256 withdrawn) {
         require(supportedAssets[asset], "Asset unsupported");
         MarketParams memory params = assetMarketParams[asset];
-        (withdrawn, ) = IMorpho(morpho).withdraw(params, amount, 0, msg.sender, user);
+        (withdrawn, ) = IMorpho(morpho).withdraw(params, amount, 0, user, user);
     }
 
     function borrowFor(address user, address asset, uint256 amount) external override {
         require(supportedAssets[asset], "Asset unsupported");
         MarketParams memory params = assetMarketParams[asset];
-        IMorpho(morpho).borrow(params, amount, 0, msg.sender, user);
+        IMorpho(morpho).borrow(params, amount, 0, user, user);
     }
 
     function repayFor(address user, address asset, uint256 amount) external override returns (uint256 repaid) {

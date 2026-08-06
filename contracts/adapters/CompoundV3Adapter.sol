@@ -48,7 +48,7 @@ contract CompoundV3Adapter is IInsteadLendingAdapter, Ownable {
     function withdrawFor(address user, address asset, uint256 amount) external override returns (uint256 withdrawn) {
         address comet = assetToComet[asset];
         require(comet != address(0), "Asset unsupported");
-        IComet(comet).withdrawFrom(msg.sender, user, asset, amount);
+        IComet(comet).withdrawFrom(user, user, asset, amount);
         return amount;
     }
 

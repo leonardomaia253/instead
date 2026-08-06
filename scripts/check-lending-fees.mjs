@@ -8,6 +8,9 @@ const publicRpcs = {
   base: "https://base-rpc.publicnode.com",
   arbitrum: "https://arbitrum-one-rpc.publicnode.com",
   avalanche: "https://avalanche-c-chain-rpc.publicnode.com",
+  polygon: "https://polygon-bor-rpc.publicnode.com",
+  optimism: "https://mainnet.optimism.io",
+  bsc: "https://bsc-dataseed.binance.org",
 };
 
 function readManifest(network) {
@@ -30,7 +33,7 @@ async function ethCall(rpcUrl, to, data) {
   return BigInt(body.result);
 }
 
-const requestedNetworks = (process.env.LENDING_FEE_NETWORKS || "base,arbitrum,avalanche")
+const requestedNetworks = (process.env.LENDING_FEE_NETWORKS || "base,arbitrum,avalanche,polygon,optimism,bsc")
   .split(",")
   .map((item) => item.trim())
   .filter(Boolean);

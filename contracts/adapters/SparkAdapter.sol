@@ -13,6 +13,15 @@ interface ISparkPool {
     function repay(address asset, uint256 amount, uint256 interestRateMode, address onBehalfOf) external returns (uint256);
 }
 
+interface ISparkAToken is IERC20 {
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+}
+
+interface ISparkVariableDebtToken {
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+    function borrowAllowance(address fromUser, address toUser) external view returns (uint256);
+}
+
 contract SparkAdapter is IInsteadLendingAdapter, Ownable {
     using SafeERC20 for IERC20;
 
@@ -21,8 +30,10 @@ contract SparkAdapter is IInsteadLendingAdapter, Ownable {
 
     address public immutable sparkPool;
     mapping(address => bool) public supportedAssets;
+    mapping(address => address) public aTokenByAsset;
+    mapping(address => address) public variableDebtTokenByAsset;
 
-    event AssetSupportUpdated(address indexed asset, bool supported);
+    event AssetConfigured(address indexed asset, address indexed aToken, address indexed variableDebtToken, bool supported);
 
     constructor(address _sparkPool, address _owner) Ownable(_owner) {
         require(_sparkPool != address(0), "Invalid Spark pool");
@@ -32,7 +43,24 @@ contract SparkAdapter is IInsteadLendingAdapter, Ownable {
     function setAssetSupport(address asset, bool supported) external onlyOwner {
         require(asset != address(0), "Invalid asset");
         supportedAssets[asset] = supported;
-        emit AssetSupportUpdated(asset, supported);
+        emit AssetConfigured(asset, aTokenByAsset[asset], variableDebtTokenByAsset[asset], supported);
+    }
+
+    function configureAsset(address asset, address aToken, address variableDebtToken, bool supported) external onlyOwner {
+        require(asset != address(0), "Invalid asset");
+        require(!supported || aToken != address(0), "Invalid aToken");
+        require(!supported || variableDebtToken != address(0), "Invalid debt token");
+        if (aToken != address(0)) {
+            require(ISparkAToken(aToken).UNDERLYING_ASSET_ADDRESS() == asset, "aToken mismatch");
+        }
+        if (variableDebtToken != address(0)) {
+            require(ISparkVariableDebtToken(variableDebtToken).UNDERLYING_ASSET_ADDRESS() == asset, "debt token mismatch");
+        }
+
+        supportedAssets[asset] = supported;
+        aTokenByAsset[asset] = aToken;
+        variableDebtTokenByAsset[asset] = variableDebtToken;
+        emit AssetConfigured(asset, aToken, variableDebtToken, supported);
     }
 
     function supportsAsset(address asset) external view override returns (bool) {
@@ -48,12 +76,21 @@ contract SparkAdapter is IInsteadLendingAdapter, Ownable {
 
     function withdrawFor(address user, address asset, uint256 amount) external override returns (uint256 withdrawn) {
         require(supportedAssets[asset], "Asset unsupported");
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        address aToken = aTokenByAsset[asset];
+        require(aToken != address(0), "aToken not configured");
+        IERC20(aToken).safeTransferFrom(user, address(this), amount);
+        IERC20(aToken).forceApprove(sparkPool, amount);
         withdrawn = ISparkPool(sparkPool).withdraw(asset, amount, user);
     }
 
     function borrowFor(address user, address asset, uint256 amount) external override {
         require(supportedAssets[asset], "Asset unsupported");
+        address variableDebtToken = variableDebtTokenByAsset[asset];
+        require(variableDebtToken != address(0), "Debt token not configured");
+        require(
+            ISparkVariableDebtToken(variableDebtToken).borrowAllowance(user, address(this)) >= amount,
+            "Insufficient credit delegation"
+        );
         ISparkPool(sparkPool).borrow(asset, amount, 2, 0, user); // Variable rate (mode 2)
     }
 

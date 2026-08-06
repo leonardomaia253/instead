@@ -56,7 +56,7 @@ const STEPS = [
 
 const INITIAL_FORM: TokenForm = {
   template: "standard",
-  chainId: 42161,
+  chainId: 8453,
   name: "",
   symbol: "",
   description: "",
@@ -857,7 +857,7 @@ export default function FactoryPage() {
   const { isConnected, address } = useAccount();
   const chainId = useChainId();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 42161 });
+  const [form, setForm] = useState<TokenForm>({ ...INITIAL_FORM, chainId: chainId || 8453 });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "auth_required" | "kyc_required" | "error">("idle");
   const [telegramIntentId, setTelegramIntentId] = useState<string | null>(null);
