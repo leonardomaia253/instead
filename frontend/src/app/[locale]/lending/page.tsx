@@ -226,6 +226,7 @@ export default function LendingPage() {
         email: pagarmeCustomer?.email || premiumEmail || undefined,
         customer: pagarmeCustomer?.customer,
         metadata: {
+          referral_code: typeof window !== "undefined" ? localStorage.getItem("instead_referral_code") : null,
           chain_id: chainId,
           health_factor: liveHF,
           risk_label: riskLabel,

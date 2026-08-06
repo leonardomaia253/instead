@@ -25,7 +25,7 @@ if (manifest.tokenFactory) {
   assertAddress("tokenFactory.ethUsdFeed", manifest.tokenFactory.ethUsdFeed);
   assertAddress("tokenFactory.treasury", manifest.tokenFactory.treasury);
   assertAddress("tokenFactory.dexRouter", manifest.tokenFactory.dexRouter);
-  if (manifest.tokenFactory.version !== 3) failures.push("tokenFactory.version must be 3 for Fair Launch on-chain support");
+  if (manifest.tokenFactory.version !== 4) failures.push("tokenFactory.version must be 4 for relayed token deployment support");
 }
 if (manifest.lending) {
   assertAddress("lending.proxy", manifest.lending.proxy);
@@ -96,7 +96,7 @@ if (failures.length === 0 && rpcUrl) {
   if (manifest.tokenFactory?.address) {
     const version = await ethCall(manifest.tokenFactory.address, "0xbd382b40");
     const router = await ethCall(manifest.tokenFactory.address, "0x0758d924");
-    if (!version || version === "0x" || BigInt(version) !== 3n) failures.push("tokenFactory on-chain FACTORY_VERSION() must be 3");
+    if (!version || version === "0x" || BigInt(version) !== 4n) failures.push("tokenFactory on-chain FACTORY_VERSION() must be 4");
     if (!router || router.length !== 66 || router.toLowerCase().endsWith("0000000000000000000000000000000000000000")) {
       failures.push("tokenFactory on-chain dexRouter() must be configured");
     }

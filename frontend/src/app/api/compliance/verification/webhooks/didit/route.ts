@@ -4,6 +4,7 @@ import { captureException } from "@/lib/observability/sentry";
 import { sendSystemAlert } from "@/lib/observability/alerts";
 import { rateLimit, readLimitedText } from "@/lib/server/rateLimit";
 import { upsertDiditWebhookEvent, verifyDiditWebhook } from "@/lib/server/didit";
+import { logWebhookEvent } from "@/lib/server/webhookEvents";
 
 export async function POST(request: Request) {
   const limited = rateLimit(request, "compliance:webhook:didit", 120, 60_000);
@@ -22,11 +23,27 @@ export async function POST(request: Request) {
     if (!verifyDiditWebhook(rawBody, signature, payload)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
+    await logWebhookEvent({
+      provider: "didit",
+      eventType: payload.webhook_type ?? payload.status ?? "unknown",
+      providerEventId: payload.id ?? payload.session_id ?? payload.verification_id ?? null,
+      status: "validated",
+      relatedWalletAddress: payload.vendor_data ?? payload.wallet_address ?? null,
+      payload: { webhook_type: payload.webhook_type, status: payload.status },
+    });
     if (payload.webhook_type === "status.updated" || payload.status) {
       await upsertDiditWebhookEvent(payload);
+      await logWebhookEvent({
+        provider: "didit",
+        eventType: payload.webhook_type ?? payload.status ?? "unknown",
+        providerEventId: payload.id ?? payload.session_id ?? payload.verification_id ?? null,
+        status: "processed",
+        relatedWalletAddress: payload.vendor_data ?? payload.wallet_address ?? null,
+      });
     }
     return NextResponse.json({ received: true });
   } catch (error) {
+    await logWebhookEvent({ provider: "didit", eventType: "unknown", status: "failed", errorMessage: error instanceof Error ? error.message : String(error) });
     captureException(error, { context: "didit_webhook_handler" });
     sendSystemAlert({
       title: "Invalid Didit Webhook Request",

@@ -164,8 +164,13 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "telegram:webhook", 60, 60_000);
   if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
+  if (!BOT_TOKEN || !WEBHOOK_SECRET) {
+    console.error("Telegram webhook is not configured");
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+  }
+
   const secretToken = request.headers.get("x-telegram-bot-api-secret-token");
-  if (WEBHOOK_SECRET && secretToken !== WEBHOOK_SECRET) {
+  if (secretToken !== WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

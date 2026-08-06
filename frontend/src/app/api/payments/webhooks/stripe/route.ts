@@ -4,6 +4,7 @@ import { getStripe, markPaymentPaid, updateUnpaidPaymentIntentById } from "@/lib
 import { rateLimit, readLimitedText } from "@/lib/server/rateLimit";
 import { captureException } from "@/lib/observability/sentry";
 import { sendSystemAlert } from "@/lib/observability/alerts";
+import { logWebhookEvent } from "@/lib/server/webhookEvents";
 
 export async function POST(request: Request) {
   const limited = rateLimit(request, "payments:webhook:stripe", 120, 60_000);
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
   try {
     const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    await logWebhookEvent({ provider: "stripe", eventType: event.type, providerEventId: event.id, status: "validated", payload: { id: event.id, type: event.type } });
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
             details: { paymentIntentId, error: String(err) },
           });
         });
+        await logWebhookEvent({ provider: "stripe", eventType: event.type, providerEventId: event.id, status: "processed", relatedPaymentIntentId: paymentIntentId, payload: { session_id: session.id } });
       }
     }
 
@@ -52,11 +55,13 @@ export async function POST(request: Request) {
           status: "canceled",
           provider_reference: session.id,
         });
+        await logWebhookEvent({ provider: "stripe", eventType: event.type, providerEventId: event.id, status: "processed", relatedPaymentIntentId: paymentIntentId, payload: { session_id: session.id } });
       }
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
+    await logWebhookEvent({ provider: "stripe", eventType: "unknown", status: "failed", errorMessage: error instanceof Error ? error.message : String(error) });
     captureException(error, { context: "stripe_webhook_handler" });
     sendSystemAlert({
       title: "Invalid Stripe Webhook Request",

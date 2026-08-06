@@ -49,6 +49,42 @@ describe("InsteadTokenFactory advanced presets", function () {
     expect(await token.burnTax()).to.equal(true);
   });
 
+  it("lets the token owner update tax recipient for non-burn taxes", async function () {
+    const { creator, holder, factory } = await deployFixture();
+    const fee = await factory.getCreationFeeInEth();
+
+    const tx = await factory.connect(creator).createTokenAdvanced(
+      "Tax Recipient Demo",
+      "TAX",
+      1_000_000,
+      1_000_000,
+      false,
+      true,
+      200,
+      false,
+      false,
+      0,
+      { value: fee },
+    );
+    const receipt = await tx.wait();
+    const event = receipt?.logs
+      .map((log) => {
+        try {
+          return factory.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed) => parsed?.name === "TokenCreated");
+
+    const token = await ethers.getContractAt("GenericToken", event!.args.tokenAddress);
+    await token.connect(creator).setTaxRecipient(holder.address);
+    await token.connect(creator).transfer(holder.address, ethers.parseEther("1000"));
+
+    expect(await token.taxRecipient()).to.equal(holder.address);
+    expect(await token.balanceOf(holder.address)).to.equal(ethers.parseEther("1000"));
+  });
+
   it("enforces max wallet percentage for non-owner recipients", async function () {
     const { creator, holder, factory } = await deployFixture();
     const fee = await factory.getCreationFeeInEth();
@@ -119,5 +155,99 @@ describe("InsteadTokenFactory advanced presets", function () {
     expect(await token.pendingOwner()).to.equal(creator.address);
     expect(await router.lastTo()).to.equal(holder.address);
     expect(await router.lastEthAmount()).to.equal(liquidityEth);
+  });
+
+  it("lets a relayer create a token for the customer's wallet", async function () {
+    const { owner: relayer, creator: customer, factory } = await deployFixture();
+    const fee = await factory.getCreationFeeInEth();
+    await expect(
+      factory.connect(relayer).createTokenFor(
+        "Relayed Demo",
+        "RLY",
+        1_000_000,
+        2_000_000,
+        true,
+        false,
+        0,
+        false,
+        false,
+        0,
+        customer.address,
+        { value: fee },
+      ),
+    ).to.be.revertedWith("relayer");
+
+    await factory.setRelayer(relayer.address, true);
+
+    const tx = await factory.connect(relayer).createTokenFor(
+      "Relayed Demo",
+      "RLY",
+      1_000_000,
+      2_000_000,
+      true,
+      false,
+      0,
+      false,
+      false,
+      0,
+      customer.address,
+      { value: fee },
+    );
+    const receipt = await tx.wait();
+    const event = receipt?.logs
+      .map((log) => {
+        try {
+          return factory.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed) => parsed?.name === "TokenCreated");
+
+    const token = await ethers.getContractAt("GenericToken", event!.args.tokenAddress);
+
+    expect(event!.args.creator).to.equal(customer.address);
+    expect(await token.owner()).to.equal(customer.address);
+    expect(await token.balanceOf(customer.address)).to.equal(ethers.parseEther("1000000"));
+    expect(await factory.tokensByCreator(customer.address, 0)).to.equal(await token.getAddress());
+    await expect(token.connect(relayer).mint(relayer.address, 1)).to.be.reverted;
+  });
+
+  it("lets an authorized relayer create a fair launch for the customer's wallet", async function () {
+    const { owner: relayer, creator: customer, holder, router, factory } = await deployFixture();
+    await factory.setRelayer(relayer.address, true);
+    const fee = await factory.getCreationFeeInEth();
+    const liquidityEth = ethers.parseEther("1");
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+
+    const tx = await factory.connect(relayer).createFairLaunchTokenETHFor(
+      "Relayed Fair",
+      "RFAIR",
+      1_000_000,
+      ethers.parseEther("1000000"),
+      liquidityEth,
+      customer.address,
+      holder.address,
+      deadline,
+      { value: fee + liquidityEth },
+    );
+    const receipt = await tx.wait();
+    const event = receipt?.logs
+      .map((log) => {
+        try {
+          return factory.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed) => parsed?.name === "FairLaunchCreated");
+
+    const token = await ethers.getContractAt("GenericToken", event!.args.tokenAddress);
+
+    expect(event!.args.creator).to.equal(customer.address);
+    expect(await token.pendingOwner()).to.equal(customer.address);
+    expect(await router.lastTo()).to.equal(holder.address);
+    expect(await router.lastEthAmount()).to.equal(liquidityEth);
+    expect(await factory.tokensByCreator(customer.address, 0)).to.equal(await token.getAddress());
   });
 });

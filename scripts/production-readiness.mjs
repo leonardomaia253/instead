@@ -96,6 +96,8 @@ for (const requiredFile of [
   "RUNBOOK.md",
   ".env.production.example",
   "scripts/deploy-token-factory.ts",
+  "scripts/configure-assisted-relayer.ts",
+  "scripts/execute-assisted-token-deployments.mjs",
   "scripts/deploy-lending.ts",
   "scripts/deploy-lending-router.ts",
   "scripts/configure-lending-assets.ts",
@@ -228,6 +230,8 @@ if (env.REQUIRE_FIAT_PAYMENTS === "true") {
   requireEnv("STRIPE_WEBHOOK_SECRET");
   requireEnv("PAGARME_SECRET_KEY");
   requireMinLength("PAGARME_WEBHOOK_SECRET", 32);
+  requireEnv("ASSISTED_DEPLOYER_ADDRESS", { address: true });
+  requireMinLength("ASSISTED_DEPLOYER_PRIVATE_KEY", 64);
   rejectPattern("APP_ORIGIN", /^https:\/\/localhost\b|^http:\/\//i, "must be a public HTTPS production origin");
   rejectPattern("STRIPE_SECRET_KEY", /^sk_test_|dummy|changeme/i, "must be a live production key when fiat payments are required");
   rejectPattern("PAGARME_SECRET_KEY", /dummy|changeme/i, "must be a real production key when fiat payments are required");

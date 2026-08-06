@@ -29,7 +29,7 @@ async function main() {
   const manifest = writeDeploymentManifest(network.name, {
     tokenFactory: {
       address,
-      version: 3,
+      version: 4,
       ethUsdFeed,
       treasury,
       dexRouter,

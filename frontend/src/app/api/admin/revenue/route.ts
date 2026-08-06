@@ -20,12 +20,13 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    const [{ count: entitlementCount }, { count: intentCount }, { count: b2bCount }, { count: alertCount }, { count: b2bEventCount }] = await Promise.all([
+    const [{ count: entitlementCount }, { count: intentCount }, { count: b2bCount }, { count: alertCount }, { count: b2bEventCount }, { count: assistedDeployCount }] = await Promise.all([
       supabase.from("user_revenue_entitlements").select("id", { count: "exact", head: true }),
       supabase.from("lending_automation_intents").select("id", { count: "exact", head: true }),
       supabase.from("b2b_widget_clients").select("id", { count: "exact", head: true }),
       supabase.from("lending_alert_events").select("id", { count: "exact", head: true }),
       supabase.from("b2b_widget_events").select("id", { count: "exact", head: true }),
+      supabase.from("assisted_token_deployments").select("id", { count: "exact", head: true }),
     ]);
 
     return noStoreJson({
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
         b2bClients: b2bCount ?? 0,
         alerts: alertCount ?? 0,
         b2bEvents: b2bEventCount ?? 0,
+        assistedDeployments: assistedDeployCount ?? 0,
       },
       source: "supabase",
     });
@@ -63,6 +65,7 @@ export async function GET(req: NextRequest) {
         b2bClients: 0,
         alerts: 0,
         b2bEvents: 0,
+        assistedDeployments: 0,
       },
       source: "fallback",
     });

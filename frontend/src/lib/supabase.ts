@@ -192,6 +192,51 @@ export type RevenueEntitlement = {
   } | null;
 };
 
+export type AssistedTokenDeployment = {
+  id: string;
+  payment_intent_id: string;
+  wallet_address: string;
+  chain_id: number;
+  factory_address: string;
+  status: "queued" | "executing" | "confirmed" | "failed" | "cancelled";
+  token_name: string;
+  token_symbol: string;
+  initial_supply: number;
+  max_supply: number;
+  mintable: boolean;
+  taxable: boolean;
+  tax_bps: number;
+  has_blacklist: boolean;
+  burn_tax: boolean;
+  max_wallet_bps: number;
+  relayer_wallet: string | null;
+  tx_hash: string | null;
+  token_address: string | null;
+  error_message: string | null;
+  attempts: number;
+  next_attempt_at: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AffiliateProfile = {
+  id: string;
+  wallet_address: string;
+  referral_code: string;
+  display_name: string | null;
+  email: string | null;
+  status: "pending" | "active" | "suspended" | "rejected";
+  default_commission_bps: number;
+  payout_wallet: string | null;
+  payout_method: string;
+  tax_status: "not_collected" | "pending" | "verified" | "rejected";
+  kyc_status: "not_required" | "pending" | "approved" | "rejected";
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LendingAutomationIntent = {
   id: string;
   source_code: string;

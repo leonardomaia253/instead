@@ -35,6 +35,9 @@ for (const expected of ['httpOnly: true', 'secure: true', 'sameSite: "lax"', "re
 for (const route of [
   "frontend/src/app/api/admin/prices/route.ts",
   "frontend/src/app/api/admin/b2b-clients/route.ts",
+  "frontend/src/app/api/admin/assisted-deployments/route.ts",
+  "frontend/src/app/api/admin/operations/route.ts",
+  "frontend/src/app/api/admin/affiliates/route.ts",
   "frontend/src/app/api/lending/automation-intents/route.ts",
 ]) {
   for (const expected of ["requireSameOrigin", "rateLimit", "readLimitedJson"]) {
@@ -53,6 +56,7 @@ for (const [route, signatureCheck] of [
 
 for (const route of [
   "frontend/src/app/api/auth/wallet-profile/route.ts",
+  "frontend/src/app/api/affiliates/click/route.ts",
   "frontend/src/app/api/b2b/widget/route.ts",
   "frontend/src/app/api/telegram/webhook/route.ts",
 ]) {
@@ -79,6 +83,13 @@ for (const expected of [
 ]) {
   requireIncludes(paymentsLib, expected, `${paymentsLib} must include gateway checkout field ${expected}`);
 }
+for (const expected of ["assisted_token_deployments", "payment_intent_id", "factory_address", "initial_supply"]) {
+  requireIncludes(paymentsLib, expected, `${paymentsLib} must enqueue assisted token deployments with ${expected}`);
+}
+
+for (const expected of ["createTokenFor", "createFairLaunchTokenETHFor", "ASSISTED_DEPLOYER_PRIVATE_KEY", "requireRelayerBalance", "InsufficientRelayerBalanceError", "assisted_token_deployments", "generated_tokens", "audits"]) {
+  requireIncludes("scripts/execute-assisted-token-deployments.mjs", expected, `assisted deployment executor must include ${expected}`);
+}
 
 for (const [route, expected] of [
   ["frontend/src/app/api/compliance/verification/session/route.ts", "createDiditSession"],
@@ -89,6 +100,14 @@ for (const [route, expected] of [
   ["frontend/src/app/api/compliance/verification/webhooks/didit/route.ts", "readLimitedText"],
 ]) {
   requireIncludes(route, expected, `${route} must include ${expected}`);
+}
+
+for (const route of [
+  "frontend/src/app/api/payments/webhooks/stripe/route.ts",
+  "frontend/src/app/api/payments/webhooks/pagarme/route.ts",
+  "frontend/src/app/api/compliance/verification/webhooks/didit/route.ts",
+]) {
+  requireIncludes(route, "logWebhookEvent", `${route} must write webhook event logs`);
 }
 
 const diditLib = "frontend/src/lib/server/didit.ts";

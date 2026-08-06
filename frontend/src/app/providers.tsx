@@ -151,6 +151,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const referralCode = params.get("ref")?.trim().toLowerCase();
+      if (!referralCode || !/^[a-z0-9][a-z0-9_-]{2,31}$/.test(referralCode)) return;
+      localStorage.setItem("instead_referral_code", referralCode);
+      fetch("/api/affiliates/click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referralCode, landingPath: window.location.pathname }),
+      }).catch(() => undefined);
+    } catch {
+      // Referral tracking is best-effort and must never block the app.
+    }
+  }, [pathname]);
+
   function dismissOnboarding() {
     try {
       localStorage.setItem("instead_onboarding_dismissed", "1");

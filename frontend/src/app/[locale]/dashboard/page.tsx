@@ -6,7 +6,7 @@ import { useAccount } from "wagmi";
 import { Link } from "@/navigation";
 import { HealthGauge } from "@/components/HealthGauge";
 import { PositionCardSkeleton, TokenCardSkeleton } from "@/components/Skeleton";
-import { supabase, getAuditsByWallet, type GeneratedToken, type Audit, type RevenueEntitlement, type LendingAutomationIntent, type LendingAlertEvent } from "@/lib/supabase";
+import { supabase, getAuditsByWallet, type GeneratedToken, type Audit, type RevenueEntitlement, type AssistedTokenDeployment, type LendingAutomationIntent, type LendingAlertEvent } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { useTranslations } from "next-intl";
 import { WalletHelpCard } from "@/components/ElderFriendly";
@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [tokens, setTokens] = useState<GeneratedToken[]>([]);
   const [audits, setAudits] = useState<Audit[]>([]);
   const [entitlements, setEntitlements] = useState<RevenueEntitlement[]>([]);
+  const [assistedDeployments, setAssistedDeployments] = useState<AssistedTokenDeployment[]>([]);
   const [intents, setIntents] = useState<LendingAutomationIntent[]>([]);
   const [alerts, setAlerts] = useState<LendingAlertEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,15 +44,16 @@ export default function DashboardPage() {
       supabase.from("generated_tokens").select("*").eq("creator_wallet", wallet).order("created_at", { ascending: false }).limit(6),
       getAuditsByWallet(wallet),
       fetch(`/api/revenue/me?wallet=${encodeURIComponent(wallet)}`).then(async (res) => {
-        if (res.status === 401) return { authRequired: true, entitlements: [], intents: [], alerts: [] };
+        if (res.status === 401) return { authRequired: true, entitlements: [], assistedDeployments: [], intents: [], alerts: [] };
         return res.json();
-      }).catch(() => ({ entitlements: [], intents: [], alerts: [] }))
+      }).catch(() => ({ entitlements: [], assistedDeployments: [], intents: [], alerts: [] }))
     ]).then(([{ data: pos }, { data: tok }, auditData, revenueData]) => {
       setPositions((pos ?? []) as LendingPosition[]);
       setTokens((tok ?? []) as GeneratedToken[]);
       setAudits(auditData ?? []);
       setRevenueAuthRequired(Boolean(revenueData.authRequired));
       setEntitlements((revenueData.entitlements ?? []) as RevenueEntitlement[]);
+      setAssistedDeployments((revenueData.assistedDeployments ?? []) as AssistedTokenDeployment[]);
       setIntents((revenueData.intents ?? []) as LendingAutomationIntent[]);
       setAlerts((revenueData.alerts ?? []) as LendingAlertEvent[]);
       setLoading(false);
@@ -170,6 +172,44 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Deploys assistidos</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Tokens pagos via Pix/cartao e executados pelo relayer da plataforma.</p>
+            {revenueAuthRequired ? (
+              <div style={{ color: "var(--accent-1)", fontSize: 14 }}>Assine a sessao wallet para carregar seus deploys assistidos.</div>
+            ) : assistedDeployments.length === 0 ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhum deploy assistido em andamento.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {assistedDeployments.slice(0, 5).map((deployment) => {
+                  const chain = CHAIN_META[deployment.chain_id];
+                  return (
+                    <div key={deployment.id} style={{ border: "1px solid var(--border)", padding: 14, background: "rgba(255,255,255,0.02)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                        <div>
+                          <strong>{deployment.token_name} <span style={{ color: "var(--accent-1)" }}>${deployment.token_symbol}</span></strong>
+                          <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 5 }}>{chain?.icon} {chain?.name ?? `Chain ${deployment.chain_id}`} · {new Date(deployment.created_at).toLocaleString("pt-BR")}</div>
+                        </div>
+                        <span style={{ color: statusColor(deployment.status), fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>{deployment.status}</span>
+                      </div>
+                      {deployment.error_message && (
+                        <div style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{deployment.error_message}</div>
+                      )}
+                      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                        {deployment.token_address && (
+                          <Link href={`/token/${deployment.token_address}?chain=${deployment.chain_id}`} style={{ color: "var(--accent-1)", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>Ver token</Link>
+                        )}
+                        {deployment.tx_hash && (
+                          <a href={explorerTxUrl(deployment.chain_id, deployment.tx_hash)} target="_blank" rel="noreferrer" style={{ color: "var(--accent-1)", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>Ver tx</a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -445,9 +485,9 @@ function formatNum(n: number) {
 }
 
 function statusColor(status: string) {
-  if (["executed", "active", "paid"].includes(status)) return "var(--green)";
+  if (["executed", "active", "paid", "confirmed"].includes(status)) return "var(--green)";
   if (["failed", "cancelled"].includes(status)) return "var(--red)";
-  if (["awaiting_payment", "signed"].includes(status)) return "var(--accent-1)";
+  if (["awaiting_payment", "signed", "executing", "queued"].includes(status)) return "var(--accent-1)";
   return "var(--text-muted)";
 }
 
@@ -455,4 +495,14 @@ function alertSeverityColor(severity: string) {
   if (severity === "critical") return "var(--red)";
   if (severity === "warning") return "var(--accent-1)";
   return "var(--green)";
+}
+
+function explorerTxUrl(chainId: number, txHash: string) {
+  if (chainId === 1) return `https://etherscan.io/tx/${txHash}`;
+  if (chainId === 10) return `https://optimistic.etherscan.io/tx/${txHash}`;
+  if (chainId === 137) return `https://polygonscan.com/tx/${txHash}`;
+  if (chainId === 42161) return `https://arbiscan.io/tx/${txHash}`;
+  if (chainId === 8453) return `https://basescan.org/tx/${txHash}`;
+  if (chainId === 11155111) return `https://sepolia.etherscan.io/tx/${txHash}`;
+  return `https://etherscan.io/tx/${txHash}`;
 }

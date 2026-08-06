@@ -20,7 +20,7 @@ function parseEnvFile(path) {
 
 const env = { ...parseEnvFile(frontendEnvPath), ...process.env };
 
-const EVM_ADDRESS = env.BALANCE_MONITOR_EVM_ADDRESS || env.PRODUCTION_MULTISIG_ADDRESS;
+const EVM_ADDRESS = env.BALANCE_MONITOR_EVM_ADDRESS || env.ASSISTED_DEPLOYER_ADDRESS || env.PRODUCTION_MULTISIG_ADDRESS;
 const SOLANA_ADDRESS = env.BALANCE_MONITOR_SOLANA_ADDRESS || env.NEXT_PUBLIC_SOLANA_DEPLOYER_ADDRESS;
 
 const EVM_NETWORKS = [
@@ -70,7 +70,7 @@ async function rpc(url, method, params) {
 }
 
 async function checkEvm(network) {
-  if (!EVM_ADDRESS) return { ...network, status: "skipped", reason: "BALANCE_MONITOR_EVM_ADDRESS/PRODUCTION_MULTISIG_ADDRESS missing" };
+  if (!EVM_ADDRESS) return { ...network, status: "skipped", reason: "BALANCE_MONITOR_EVM_ADDRESS/ASSISTED_DEPLOYER_ADDRESS/PRODUCTION_MULTISIG_ADDRESS missing" };
   const rpcUrl = env[network.rpcEnv] || network.fallbackRpc;
   const balanceHex = await rpc(rpcUrl, "eth_getBalance", [EVM_ADDRESS, "latest"]);
   const balanceWei = BigInt(balanceHex);

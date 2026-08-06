@@ -83,7 +83,7 @@ async function main() {
 
   // Write deployment manifest
   const manifest = writeDeploymentManifest(network.name, {
-    tokenFactory: { address: factoryAddress, version: 3, deployedAt: new Date().toISOString() },
+    tokenFactory: { address: factoryAddress, version: 4, deployedAt: new Date().toISOString() },
     lendingRouter: { address: lendingRouterAddress, deployedAt: new Date().toISOString() },
     lendingPoolImpl: { address: implAddress, deployedAt: new Date().toISOString() },
     lendingPoolProxy: { address: proxyAddress, deployedAt: new Date().toISOString() },

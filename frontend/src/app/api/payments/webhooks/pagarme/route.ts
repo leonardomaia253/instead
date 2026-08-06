@@ -4,6 +4,7 @@ import { markPaymentPaid, updateUnpaidPaymentIntentById, verifyPagarmeWebhook } 
 import { rateLimit, readLimitedText } from "@/lib/server/rateLimit";
 import { captureException } from "@/lib/observability/sentry";
 import { sendSystemAlert } from "@/lib/observability/alerts";
+import { logWebhookEvent } from "@/lib/server/webhookEvents";
 
 function getPaymentIntentId(payload: any) {
   return (
@@ -34,7 +35,12 @@ export async function POST(request: Request) {
     const payload = JSON.parse(rawBody);
     const eventType = payload?.type || payload?.event;
     const paymentIntentId = getPaymentIntentId(payload);
-    if (!paymentIntentId) return NextResponse.json({ received: true, ignored: true });
+    const providerEventId = payload?.id || payload?.data?.id || null;
+    await logWebhookEvent({ provider: "pagarme", eventType: eventType || "unknown", providerEventId, status: "validated", relatedPaymentIntentId: paymentIntentId, payload: { id: providerEventId, eventType } });
+    if (!paymentIntentId) {
+      await logWebhookEvent({ provider: "pagarme", eventType: eventType || "unknown", providerEventId, status: "ignored", payload: { reason: "missing payment_intent_id" } });
+      return NextResponse.json({ received: true, ignored: true });
+    }
 
     if (eventType === "order.paid" || eventType === "charge.paid") {
       const providerReference = payload?.data?.id || payload?.data?.order?.id || payload?.data?.charge?.id;
@@ -52,8 +58,9 @@ export async function POST(request: Request) {
           severity: "warning",
           source: "api/payments/webhooks/pagarme",
           details: { paymentIntentId, error: String(err) },
+          });
         });
-      });
+      await logWebhookEvent({ provider: "pagarme", eventType, providerEventId, status: "processed", relatedPaymentIntentId: paymentIntentId });
     }
 
     if (
@@ -66,10 +73,12 @@ export async function POST(request: Request) {
         status: eventType.includes("canceled") ? "canceled" : "failed",
         provider_reference: payload?.data?.id || payload?.data?.order?.id || payload?.data?.charge?.id,
       });
+      await logWebhookEvent({ provider: "pagarme", eventType, providerEventId, status: "processed", relatedPaymentIntentId: paymentIntentId });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
+    await logWebhookEvent({ provider: "pagarme", eventType: "unknown", status: "failed", errorMessage: error instanceof Error ? error.message : String(error) });
     captureException(error, { context: "pagarme_webhook_handler" });
     sendSystemAlert({
       title: "Invalid Pagar.me Webhook Request",

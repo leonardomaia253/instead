@@ -28,7 +28,7 @@ interface IUniswapV2RouterLike {
  *  - Refund de excedente de taxa
  */
 contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
-    uint256 public constant FACTORY_VERSION = 3;
+    uint256 public constant FACTORY_VERSION = 4;
     uint256 public feeUSD = 500_000_000; // $5.00 em 8 decimais
     AggregatorV3Interface public immutable ethUsdFeed;
     address public immutable treasury; // Gnosis Safe — IMUTÁVEL
@@ -56,6 +56,7 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
     mapping(address => address[]) public tokensByCreator;
     // Impede registro de tokens falsos com mesmo endereço
     mapping(address => bool) public tokenRegistered;
+    mapping(address => bool) public authorizedRelayers;
 
     event TokenCreated(
         address indexed tokenAddress,
@@ -74,11 +75,17 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
     event FeeUpdated(uint256 oldFeeUSD, uint256 newFeeUSD);
     event FeesWithdrawn(address indexed to, uint256 amount);
     event FairLaunchCreated(address indexed tokenAddress, address indexed creator, uint256 tokenAmount, uint256 ethAmount, uint256 liquidity, address indexed lpRecipient);
+    event RelayerUpdated(address indexed relayer, bool authorized);
+
+    modifier onlyAuthorizedRelayer() {
+        require(authorizedRelayers[msg.sender], "relayer");
+        _;
+    }
 
     constructor(address _ethUsdFeed, address _treasury, address _dexRouter) Ownable(msg.sender) {
-        require(_ethUsdFeed != address(0), "Invalid feed");
-        require(_treasury != address(0), "Invalid treasury");
-        require(_dexRouter != address(0), "Invalid router");
+        require(_ethUsdFeed != address(0), "feed");
+        require(_treasury != address(0), "treasury");
+        require(_dexRouter != address(0), "router");
         ethUsdFeed = AggregatorV3Interface(_ethUsdFeed);
         treasury   = _treasury;
         dexRouter  = IUniswapV2RouterLike(_dexRouter);
@@ -92,7 +99,7 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
             require(
                 (b[i] >= 0x41 && b[i] <= 0x5A) || // A-Z
                 (b[i] >= 0x30 && b[i] <= 0x39),    // 0-9
-                "Symbol: only A-Z 0-9"
+                "sym chars"
             );
         }
     }
@@ -105,9 +112,9 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
     // ─── Fee ─────────────────────────────────────────────────────────────────
     function getCreationFeeInEth() public view returns (uint256) {
         (uint80 roundId, int256 ethPrice, , uint256 updatedAt, uint80 answeredInRound) = ethUsdFeed.latestRoundData();
-        require(ethPrice > 0, "Invalid ETH price");
-        require(answeredInRound >= roundId, "Stale round");
-        require(block.timestamp - updatedAt <= MAX_PRICE_DELAY, "Price stale");
+        require(ethPrice > 0, "price");
+        require(answeredInRound >= roundId, "round");
+        require(block.timestamp - updatedAt <= MAX_PRICE_DELAY, "stale");
         return (feeUSD * 1e18) / uint256(ethPrice);
     }
 
@@ -162,6 +169,47 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         );
     }
 
+    function createTokenFor(
+        string memory name,
+        string memory symbol,
+        uint256 initialSupply,
+        uint256 maxSupply,
+        bool isMintable,
+        bool isTaxable,
+        uint256 taxBPS_,
+        bool hasBlacklist_,
+        bool burnTax_,
+        uint256 maxWalletBPS_,
+        address owner_
+    ) external payable nonReentrant whenNotPaused onlyAuthorizedRelayer returns (address) {
+        return _createTokenFor(
+            name,
+            symbol,
+            initialSupply,
+            maxSupply,
+            isMintable,
+            isTaxable,
+            taxBPS_,
+            hasBlacklist_,
+            burnTax_,
+            maxWalletBPS_,
+            owner_
+        );
+    }
+
+    function createFairLaunchTokenETHFor(
+        string memory name,
+        string memory symbol,
+        uint256 supply,
+        uint256 minTokenAmount,
+        uint256 minEthAmount,
+        address owner_,
+        address lpRecipient,
+        uint256 deadline
+    ) external payable nonReentrant whenNotPaused onlyAuthorizedRelayer returns (address tokenAddr, uint256 liquidity) {
+        return _createFairLaunchTokenETHFor(name, symbol, supply, minTokenAmount, minEthAmount, owner_, lpRecipient, deadline);
+    }
+
     function createFairLaunchTokenETH(
         string memory name,
         string memory symbol,
@@ -171,14 +219,28 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         address lpRecipient,
         uint256 deadline
     ) external payable nonReentrant whenNotPaused returns (address tokenAddr, uint256 liquidity) {
+        return _createFairLaunchTokenETHFor(name, symbol, supply, minTokenAmount, minEthAmount, msg.sender, lpRecipient, deadline);
+    }
+
+    function _createFairLaunchTokenETHFor(
+        string memory name,
+        string memory symbol,
+        uint256 supply,
+        uint256 minTokenAmount,
+        uint256 minEthAmount,
+        address owner_,
+        address lpRecipient,
+        uint256 deadline
+    ) internal returns (address tokenAddr, uint256 liquidity) {
         _validateName(name);
         _validateSymbol(symbol);
-        require(supply > 0, "Supply must be > 0");
-        require(lpRecipient != address(0), "Invalid LP recipient");
-        require(deadline >= block.timestamp, "Deadline expired");
+        require(supply > 0, "supply");
+        require(owner_ != address(0), "owner");
+        require(lpRecipient != address(0), "lp");
+        require(deadline >= block.timestamp, "deadline");
 
         uint256 feeInEth = getCreationFeeInEth();
-        require(msg.value > feeInEth, "Liquidity ETH required");
+        require(msg.value > feeInEth, "liq eth");
         uint256 liquidityEth = msg.value - feeInEth;
 
         GenericToken token = new GenericToken(
@@ -196,7 +258,7 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         );
 
         tokenAddr = address(token);
-        require(!tokenRegistered[tokenAddr], "Already registered");
+        require(!tokenRegistered[tokenAddr], "registered");
         tokenRegistered[tokenAddr] = true;
 
         uint256 tokenAmount = token.balanceOf(address(this));
@@ -209,10 +271,10 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
             lpRecipient,
             deadline
         );
-        require(amountToken == tokenAmount, "Not all tokens pooled");
-        require(token.balanceOf(address(this)) == 0, "Token residue");
+        require(amountToken == tokenAmount, "pooled");
+        require(token.balanceOf(address(this)) == 0, "residue");
 
-        token.transferOwnership(msg.sender);
+        token.transferOwnership(owner_);
         liquidity = lpLiquidity;
 
         createdTokens.push(TokenMeta({
@@ -227,23 +289,23 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
             hasBlacklist: false,
             burnTax:      false,
             maxWalletBPS: 0,
-            creator:      msg.sender,
+            creator:      owner_,
             chainId:      block.chainid,
             createdAt:    block.timestamp
         }));
 
-        tokensByCreator[msg.sender].push(tokenAddr);
+        tokensByCreator[owner_].push(tokenAddr);
 
         (bool sent,) = treasury.call{ value: feeInEth }("");
-        require(sent, "Fee transfer failed");
+        require(sent, "fee send");
 
         if (liquidityEth > amountETH) {
             (bool refundSent,) = payable(msg.sender).call{ value: liquidityEth - amountETH }("");
-            require(refundSent, "Refund failed");
+            require(refundSent, "refund");
         }
 
-        emit TokenCreated(tokenAddr, msg.sender, name, symbol, supply, supply, false, false, 0, false, 0, feeInEth);
-        emit FairLaunchCreated(tokenAddr, msg.sender, amountToken, amountETH, lpLiquidity, lpRecipient);
+        emit TokenCreated(tokenAddr, owner_, name, symbol, supply, supply, false, false, 0, false, 0, feeInEth);
+        emit FairLaunchCreated(tokenAddr, owner_, amountToken, amountETH, lpLiquidity, lpRecipient);
     }
 
     function _createToken(
@@ -258,23 +320,52 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
         bool burnTax_,
         uint256 maxWalletBPS_
     ) internal returns (address) {
+        return _createTokenFor(
+            name,
+            symbol,
+            initialSupply,
+            maxSupply,
+            isMintable,
+            isTaxable,
+            taxBPS_,
+            hasBlacklist_,
+            burnTax_,
+            maxWalletBPS_,
+            msg.sender
+        );
+    }
+
+    function _createTokenFor(
+        string memory name,
+        string memory symbol,
+        uint256 initialSupply,
+        uint256 maxSupply,
+        bool isMintable,
+        bool isTaxable,
+        uint256 taxBPS_,
+        bool hasBlacklist_,
+        bool burnTax_,
+        uint256 maxWalletBPS_,
+        address owner_
+    ) internal returns (address) {
         _validateName(name);
         _validateSymbol(symbol);
-        require(initialSupply > 0, "Supply must be > 0");
-        require(maxSupply >= initialSupply, "Max < initial");
-        require(taxBPS_ <= 2500, "Tax max 25%");
-        require(maxWalletBPS_ <= 10000, "Max wallet max 100%");
-        require(!burnTax_ || isTaxable, "Burn tax requires tax");
+        require(initialSupply > 0, "supply");
+        require(maxSupply >= initialSupply, "max");
+        require(taxBPS_ <= 2500, "tax");
+        require(maxWalletBPS_ <= 10000, "wallet");
+        require(!burnTax_ || isTaxable, "burn tax");
+        require(owner_ != address(0), "owner");
 
         uint256 feeInEth = getCreationFeeInEth();
-        require(msg.value >= feeInEth, "Insufficient fee");
+        require(msg.value >= feeInEth, "fee");
 
         GenericToken token = new GenericToken(
             name, symbol, initialSupply, maxSupply,
-            msg.sender, isMintable, isTaxable, taxBPS_, hasBlacklist_, burnTax_, maxWalletBPS_
+            owner_, isMintable, isTaxable, taxBPS_, hasBlacklist_, burnTax_, maxWalletBPS_
         );
         address tokenAddr = address(token);
-        require(!tokenRegistered[tokenAddr], "Already registered");
+        require(!tokenRegistered[tokenAddr], "registered");
         tokenRegistered[tokenAddr] = true;
 
         createdTokens.push(TokenMeta({
@@ -289,30 +380,36 @@ contract InsteadTokenFactory is Ownable, ReentrancyGuard, Pausable {
             hasBlacklist: hasBlacklist_,
             burnTax:      burnTax_,
             maxWalletBPS: maxWalletBPS_,
-            creator:      msg.sender,
+            creator:      owner_,
             chainId:      block.chainid,
             createdAt:    block.timestamp
         }));
 
-        tokensByCreator[msg.sender].push(tokenAddr);
+        tokensByCreator[owner_].push(tokenAddr);
 
         // Fees sempre para treasury multi-sig (imutável)
         (bool sent,) = treasury.call{ value: feeInEth }("");
-        require(sent, "Fee transfer failed");
+        require(sent, "fee send");
 
         // Refund de excedente
         if (msg.value > feeInEth) {
             (bool refundSent,) = payable(msg.sender).call{ value: msg.value - feeInEth }("");
-            require(refundSent, "Refund failed");
+            require(refundSent, "refund");
         }
 
-        emit TokenCreated(tokenAddr, msg.sender, name, symbol, initialSupply, maxSupply, isMintable, isTaxable, taxBPS_, burnTax_, maxWalletBPS_, feeInEth);
+        emit TokenCreated(tokenAddr, owner_, name, symbol, initialSupply, maxSupply, isMintable, isTaxable, taxBPS_, burnTax_, maxWalletBPS_, feeInEth);
         return tokenAddr;
     }
 
     function setFeeUSD(uint256 newFeeUSD) external onlyOwner {
         emit FeeUpdated(feeUSD, newFeeUSD);
         feeUSD = newFeeUSD;
+    }
+
+    function setRelayer(address relayer, bool authorized) external onlyOwner {
+        require(relayer != address(0), "relayer");
+        authorizedRelayers[relayer] = authorized;
+        emit RelayerUpdated(relayer, authorized);
     }
 
     function totalTokensCreated() external view returns (uint256) { return createdTokens.length; }

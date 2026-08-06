@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Banknote, CheckCircle2, CircleDollarSign, RefreshCw, TrendingUp } from "lucide-react";
+import { AlertTriangle, Banknote, CheckCircle2, CircleDollarSign, Play, RefreshCw, RotateCcw, TrendingUp, XCircle } from "lucide-react";
 import { REVENUE_SOURCE_COUNT } from "@/lib/revenueCatalog";
 
 type RevenueRow = {
@@ -20,6 +20,24 @@ type RevenueRow = {
   notes: string;
 };
 
+type AssistedDeployment = {
+  id: string;
+  wallet_address: string;
+  chain_id: number;
+  factory_address: string;
+  status: "queued" | "executing" | "confirmed" | "failed" | "cancelled";
+  token_name: string;
+  token_symbol: string;
+  relayer_wallet: string | null;
+  tx_hash: string | null;
+  token_address: string | null;
+  error_message: string | null;
+  attempts: number;
+  next_attempt_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
@@ -28,6 +46,9 @@ export default function AdminRevenuePage() {
   const [operations, setOperations] = useState({ entitlements: 0, automationIntents: 0, b2bClients: 0, alerts: 0, b2bEvents: 0 });
   const [source, setSource] = useState<"supabase" | "fallback" | "loading">("loading");
   const [error, setError] = useState<string | null>(null);
+  const [deployments, setDeployments] = useState<AssistedDeployment[]>([]);
+  const [deploymentFilters, setDeploymentFilters] = useState({ status: "all", chainId: "all", wallet: "" });
+  const [deploymentBusyId, setDeploymentBusyId] = useState<string | null>(null);
   const [b2bForm, setB2bForm] = useState({ name: "", domain: "", contactEmail: "" });
   const [b2bResult, setB2bResult] = useState<{ domain: string; apiKey: string } | null>(null);
 
@@ -44,9 +65,27 @@ export default function AdminRevenuePage() {
     setSource(body.source ?? "supabase");
   }
 
+  async function loadDeployments() {
+    const params = new URLSearchParams();
+    params.set("status", deploymentFilters.status);
+    params.set("chainId", deploymentFilters.chainId);
+    if (deploymentFilters.wallet.trim()) params.set("wallet", deploymentFilters.wallet.trim());
+    const res = await fetch(`/api/admin/assisted-deployments?${params.toString()}`, { cache: "no-store" });
+    const body = await res.json();
+    if (!res.ok) {
+      setError(body?.error ?? "Falha ao carregar deploys assistidos");
+      return;
+    }
+    setDeployments(body.deployments ?? []);
+  }
+
   useEffect(() => {
     loadRevenue().catch((err) => setError(err instanceof Error ? err.message : "Erro inesperado"));
   }, []);
+
+  useEffect(() => {
+    loadDeployments().catch((err) => setError(err instanceof Error ? err.message : "Erro inesperado"));
+  }, [deploymentFilters.status, deploymentFilters.chainId]);
 
   const metrics = useMemo(() => {
     const active = sources.filter((item) => item.status === "active").length;
@@ -55,6 +94,14 @@ export default function AdminRevenuePage() {
     const feeBased = sources.filter((item) => item.take_rate_bps !== null).length;
     return { active, ready, checkoutProducts, feeBased };
   }, [sources]);
+
+  const deploymentMetrics = useMemo(() => {
+    const queued = deployments.filter((item) => item.status === "queued").length;
+    const executing = deployments.filter((item) => item.status === "executing").length;
+    const failed = deployments.filter((item) => item.status === "failed").length;
+    const cancelled = deployments.filter((item) => item.status === "cancelled").length;
+    return { queued, executing, failed, cancelled };
+  }, [deployments]);
 
   async function createB2bClient() {
     setError(null);
@@ -74,6 +121,24 @@ export default function AdminRevenuePage() {
     await loadRevenue();
   }
 
+  async function updateDeployment(id: string, action: "retry" | "cancel") {
+    setError(null);
+    setDeploymentBusyId(id);
+    const res = await fetch("/api/admin/assisted-deployments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action }),
+    });
+    const body = await res.json();
+    setDeploymentBusyId(null);
+    if (!res.ok) {
+      setError(body?.error ?? "Falha ao atualizar deploy assistido");
+      return;
+    }
+    await loadDeployments();
+    await loadRevenue();
+  }
+
   return (
     <div style={styles.page}>
       <header style={styles.header}>
@@ -85,7 +150,7 @@ export default function AdminRevenuePage() {
             serviços premium e B2B disponíveis para ativação e acompanhamento.
           </p>
         </div>
-        <button onClick={() => loadRevenue()} style={styles.refreshButton}>
+        <button onClick={() => { loadRevenue(); loadDeployments(); }} style={styles.refreshButton}>
           <RefreshCw size={16} />
           Atualizar
         </button>
@@ -106,6 +171,101 @@ export default function AdminRevenuePage() {
         <Metric icon={<Banknote size={20} />} label="Clientes B2B" value={String(operations.b2bClients)} />
         <Metric icon={<RefreshCw size={20} />} label="Alertas risco" value={String(operations.alerts)} />
         <Metric icon={<Banknote size={20} />} label="Eventos B2B" value={String(operations.b2bEvents)} />
+        <Metric icon={<Play size={20} />} label="Deploys fila" value={String(deploymentMetrics.queued)} />
+        <Metric icon={<RefreshCw size={20} />} label="Deploys executando" value={String(deploymentMetrics.executing)} />
+        <Metric icon={<AlertTriangle size={20} />} label="Deploys falhos" value={String(deploymentMetrics.failed)} />
+      </section>
+
+      <section className="card" style={styles.tableCard}>
+        <div style={styles.sectionHeader}>
+          <div>
+            <h2 style={styles.sectionTitle}>Controle de deploys assistidos</h2>
+            <p style={styles.model}>Fila Pix/cartao do relayer, com filtros por rede, status, wallet, retries, erro operacional e links on-chain.</p>
+          </div>
+          <span style={styles.badge}>{deployments.length} recentes</span>
+        </div>
+        <div style={styles.filterGrid}>
+          <select value={deploymentFilters.status} onChange={(event) => setDeploymentFilters((prev) => ({ ...prev, status: event.target.value }))}>
+            <option value="all">Todos status</option>
+            <option value="queued">Queued</option>
+            <option value="executing">Executing</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select value={deploymentFilters.chainId} onChange={(event) => setDeploymentFilters((prev) => ({ ...prev, chainId: event.target.value }))}>
+            <option value="all">Todas redes</option>
+            <option value="1">Ethereum</option>
+            <option value="10">Optimism</option>
+            <option value="56">BNB Chain</option>
+            <option value="137">Polygon</option>
+            <option value="42161">Arbitrum</option>
+            <option value="43114">Avalanche</option>
+            <option value="8453">Base</option>
+          </select>
+          <input placeholder="Wallet do cliente" value={deploymentFilters.wallet} onChange={(event) => setDeploymentFilters((prev) => ({ ...prev, wallet: event.target.value }))} />
+          <button onClick={() => loadDeployments()} style={styles.primaryButton}>Filtrar</button>
+        </div>
+        <div style={styles.tableWrap}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Token</th>
+                <th style={styles.th}>Cliente / rede</th>
+                <th style={styles.th}>Status</th>
+                <th style={styles.th}>Relayer</th>
+                <th style={styles.th}>Erro / proxima tentativa</th>
+                <th style={styles.th}>On-chain</th>
+                <th style={styles.th}>Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deployments.map((item) => (
+                <tr key={item.id}>
+                  <td style={styles.td}>
+                    <strong>{item.token_name}</strong>
+                    <small style={styles.code}>${item.token_symbol}</small>
+                  </td>
+                  <td style={styles.td}>
+                    <span>{shortAddress(item.wallet_address)}</span>
+                    <small style={styles.code}>chain {item.chain_id}</small>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={{ ...styles.status, ...deploymentStatusStyle(item.status) }}>{item.status}</span>
+                    <small style={styles.code}>{item.attempts} tentativa(s)</small>
+                  </td>
+                  <td style={styles.td}>
+                    {item.relayer_wallet ? shortAddress(item.relayer_wallet) : "Aguardando"}
+                    <small style={styles.code}>{shortAddress(item.factory_address)}</small>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={item.error_message ? styles.errorText : styles.mutedText}>{item.error_message ?? "Sem erro"}</span>
+                    <small style={styles.code}>{new Date(item.next_attempt_at).toLocaleString("pt-BR")}</small>
+                  </td>
+                  <td style={styles.td}>
+                    {item.tx_hash ? <a href={explorerTxUrl(item.chain_id, item.tx_hash)} target="_blank" rel="noreferrer" style={styles.link}>tx</a> : <span style={styles.mutedText}>sem tx</span>}
+                    {item.token_address && <a href={explorerAddressUrl(item.chain_id, item.token_address)} target="_blank" rel="noreferrer" style={styles.link}>token</a>}
+                  </td>
+                  <td style={styles.td}>
+                    <div style={styles.actionRow}>
+                      <button disabled={deploymentBusyId === item.id || item.status === "confirmed"} onClick={() => updateDeployment(item.id, "retry")} style={styles.smallButton}>
+                        <RotateCcw size={14} /> Retry
+                      </button>
+                      <button disabled={deploymentBusyId === item.id || item.status === "confirmed" || item.status === "cancelled"} onClick={() => updateDeployment(item.id, "cancel")} style={styles.dangerButton}>
+                        <XCircle size={14} /> Cancelar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {deployments.length === 0 && (
+                <tr>
+                  <td style={styles.td} colSpan={7}>Nenhum deploy assistido encontrado para os filtros atuais.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card" style={styles.tableCard}>
@@ -223,8 +383,40 @@ const styles = {
   statusReady: { background: "rgba(220,255,69,0.1)", color: "var(--accent-1)" },
   ready: { display: "block", color: "var(--green)", marginTop: 6, fontWeight: 700 },
   formGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 },
+  filterGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12 },
   primaryButton: { border: 0, background: "var(--accent-grad)", color: "#000", fontWeight: 900, padding: "12px 14px", cursor: "pointer" },
+  smallButton: { display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)", fontWeight: 800, padding: "8px 10px", cursor: "pointer" },
+  dangerButton: { display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid rgba(255,80,80,0.35)", background: "rgba(255,80,80,0.08)", color: "#ffb4b4", fontWeight: 800, padding: "8px 10px", cursor: "pointer" },
+  actionRow: { display: "flex", flexWrap: "wrap" as const, gap: 8 },
+  link: { color: "var(--accent-1)", fontWeight: 800, marginRight: 10, textDecoration: "none" },
+  errorText: { color: "#ffb4b4", lineHeight: 1.45 },
+  mutedText: { color: "var(--text-muted)" },
   secretBox: { display: "grid", gap: 10, border: "1px solid rgba(85,240,192,0.28)", background: "rgba(85,240,192,0.08)", padding: 14 },
   secretCode: { color: "var(--green)", wordBreak: "break-all" as const },
   embedCode: { color: "var(--text-muted)", whiteSpace: "pre-wrap" as const, wordBreak: "break-word" as const },
 };
+
+function shortAddress(value: string) {
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function deploymentStatusStyle(status: AssistedDeployment["status"]) {
+  if (status === "confirmed") return styles.statusActive;
+  if (status === "failed") return { background: "rgba(255,80,80,0.12)", color: "#ffb4b4" };
+  if (status === "cancelled") return { background: "rgba(148,163,184,0.12)", color: "var(--text-muted)" };
+  return styles.statusReady;
+}
+
+function explorerTxUrl(chainId: number, txHash: string) {
+  if (chainId === 10) return `https://optimistic.etherscan.io/tx/${txHash}`;
+  if (chainId === 137) return `https://polygonscan.com/tx/${txHash}`;
+  if (chainId === 42161) return `https://arbiscan.io/tx/${txHash}`;
+  if (chainId === 43114) return `https://snowtrace.io/tx/${txHash}`;
+  if (chainId === 8453) return `https://basescan.org/tx/${txHash}`;
+  if (chainId === 56) return `https://bscscan.com/tx/${txHash}`;
+  return `https://etherscan.io/tx/${txHash}`;
+}
+
+function explorerAddressUrl(chainId: number, address: string) {
+  return explorerTxUrl(chainId, address).replace("/tx/", "/address/");
+}

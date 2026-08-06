@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { BarChart3, CircleDollarSign, Coins, CreditCard, Settings, TrendingUp, Users } from "lucide-react";
+import { Activity, BarChart3, CircleDollarSign, Coins, CreditCard, Handshake, Settings, TrendingUp, Users } from "lucide-react";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 
@@ -82,6 +82,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <SidebarLink href={`${adminBase}/payments`} icon={<CreditCard size={18} />} label="Payments" active={pathname === `${adminBase}/payments`} />
           <SidebarLink href={`${adminBase}/lending`} icon={<CircleDollarSign size={18} />} label="Lending" active={pathname === `${adminBase}/lending`} />
           <SidebarLink href={`${adminBase}/revenue`} icon={<TrendingUp size={18} />} label="Planos" active={pathname === `${adminBase}/revenue`} />
+          <SidebarLink href={`${adminBase}/affiliates`} icon={<Handshake size={18} />} label="Afiliados" active={pathname === `${adminBase}/affiliates`} />
+          <SidebarLink href={`${adminBase}/operations`} icon={<Activity size={18} />} label="Operacao" active={pathname === `${adminBase}/operations`} />
           <SidebarLink href={`${adminBase}/settings`} icon={<Settings size={18} />} label="Settings" active={pathname === `${adminBase}/settings`} />
         </nav>
 

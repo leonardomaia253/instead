@@ -40,6 +40,10 @@ export async function POST(request: Request) {
     if (!(await hasApprovedCompliance(session.wallet_address))) {
       return NextResponse.json({ error: "KYC required", code: "kyc_required" }, { status: 403 });
     }
+    const referralCode = String((body as any).referralCode ?? body.metadata?.referral_code ?? "").trim().toLowerCase();
+    if (referralCode) {
+      body.metadata = { ...(body.metadata ?? {}), referral_code: referralCode };
+    }
     await validateCheckoutRequest(body);
 
     const checkout = body.provider === "stripe" ? await createStripeCheckout(body) : await createPagarmeCheckout(body);

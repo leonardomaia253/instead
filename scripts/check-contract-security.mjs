@@ -64,6 +64,12 @@ for (const file of walk(contractsDir)) {
     }
   }
 
+  if (path === "contracts/TokenFactory.sol") {
+    for (const expected of ["FACTORY_VERSION = 4", "authorizedRelayers", "onlyAuthorizedRelayer", "createTokenFor", "createFairLaunchTokenETHFor", "setRelayer"]) {
+      if (!code.includes(expected)) failures.push(`${path} must include ${expected}`);
+    }
+  }
+
   const externalPayableFunctions = [...code.matchAll(/function\s+([A-Za-z0-9_]+)\s*\([^)]*\)\s+external\s+payable([^{;]*)\{/g)];
   for (const match of externalPayableFunctions) {
     if (!/\bnonReentrant\b/.test(match[2])) failures.push(`${path}.${match[1]} is external payable without nonReentrant`);

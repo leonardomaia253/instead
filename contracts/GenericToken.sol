@@ -24,7 +24,7 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
     bool    public immutable hasBlacklist;
     bool    public immutable burnTax;
     uint256 public immutable taxBPS;        // Basis points (200 = 2%)
-    address public immutable taxRecipient;
+    address public taxRecipient;
     uint256 public immutable maxWalletBPS;  // 0 disabled, 100 = 1% of cap
     uint256 public immutable createdAt;
 
@@ -32,6 +32,7 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
 
     event TokenMinted(address indexed to, uint256 amount);
     event Blacklisted(address indexed account, bool status);
+    event TaxRecipientUpdated(address indexed oldRecipient, address indexed newRecipient);
 
     constructor(
         string memory name_,
@@ -78,6 +79,13 @@ contract GenericToken is ERC20Capped, ERC20Burnable, ERC20Votes, Ownable2Step {
         require(hasBlacklist, "No blacklist");
         blacklisted[account] = status;
         emit Blacklisted(account, status);
+    }
+
+    function setTaxRecipient(address newRecipient) external onlyOwner {
+        require(taxable && !burnTax, "No tax recipient");
+        require(newRecipient != address(0), "Invalid recipient");
+        emit TaxRecipientUpdated(taxRecipient, newRecipient);
+        taxRecipient = newRecipient;
     }
 
     // ─── Overrides ────────────────────────────────────────────────────────────

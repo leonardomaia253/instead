@@ -13,7 +13,7 @@ type NetworkCheck = {
   kind: "evm" | "solana";
 };
 
-const EVM_ADDRESS = Deno.env.get("BALANCE_MONITOR_EVM_ADDRESS") || Deno.env.get("PRODUCTION_MULTISIG_ADDRESS");
+const EVM_ADDRESS = Deno.env.get("BALANCE_MONITOR_EVM_ADDRESS") || Deno.env.get("ASSISTED_DEPLOYER_ADDRESS") || Deno.env.get("PRODUCTION_MULTISIG_ADDRESS");
 const SOLANA_ADDRESS = Deno.env.get("BALANCE_MONITOR_SOLANA_ADDRESS") || Deno.env.get("NEXT_PUBLIC_SOLANA_DEPLOYER_ADDRESS");
 
 const NETWORKS: NetworkCheck[] = [

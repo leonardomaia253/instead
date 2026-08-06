@@ -18,12 +18,18 @@ export async function GET(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const [entitlements, intents, alerts] = await Promise.all([
+  const [entitlements, assistedDeployments, intents, alerts] = await Promise.all([
     supabase
       .from("user_revenue_entitlements")
       .select("id,source_code,status,starts_at,expires_at,metadata,revenue_sources(label,category,billing_interval)")
       .eq("wallet_address", wallet)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("assisted_token_deployments")
+      .select("id,payment_intent_id,wallet_address,chain_id,factory_address,status,token_name,token_symbol,initial_supply,max_supply,mintable,taxable,tax_bps,has_blacklist,burn_tax,max_wallet_bps,relayer_wallet,tx_hash,token_address,error_message,attempts,next_attempt_at,metadata,created_at,updated_at")
+      .eq("wallet_address", wallet)
+      .order("created_at", { ascending: false })
+      .limit(20),
     supabase
       .from("lending_automation_intents")
       .select("id,source_code,chain_id,status,risk_threshold,recommendation,tx_hash,created_at,updated_at,payload,revenue_sources(label,category)")
@@ -39,11 +45,13 @@ export async function GET(request: Request) {
   ]);
 
   if (entitlements.error) throw entitlements.error;
+  if (assistedDeployments.error) throw assistedDeployments.error;
   if (intents.error) throw intents.error;
   if (alerts.error) throw alerts.error;
 
   return noStoreJson({
     entitlements: entitlements.data ?? [],
+    assistedDeployments: assistedDeployments.data ?? [],
     intents: intents.data ?? [],
     alerts: alerts.data ?? [],
   });

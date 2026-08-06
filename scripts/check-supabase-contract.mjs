@@ -31,6 +31,14 @@ const expectedTables = [
   "lending_alert_events",
   "lending_risk_preferences",
   "b2b_widget_events",
+  "assisted_token_deployments",
+  "operational_incidents",
+  "webhook_event_logs",
+  "affiliate_profiles",
+  "affiliate_clicks",
+  "affiliate_conversions",
+  "affiliate_commissions",
+  "affiliate_payout_requests",
 ];
 
 for (const table of expectedTables) {
@@ -86,6 +94,17 @@ if (!read("frontend/src/app/api/lending/automation-intents/route.ts").includes("
 if (!read("frontend/src/app/api/b2b/widget/route.ts").includes("b2b_widget_clients")) failures.push("B2B widget API is missing");
 if (!read("frontend/src/app/api/admin/b2b-clients/route.ts").includes("apiKey")) failures.push("Admin B2B client provisioning API is missing");
 if (!read("frontend/src/app/api/revenue/me/route.ts").includes("user_revenue_entitlements")) failures.push("User revenue status API is missing");
+if (!read("frontend/src/app/api/revenue/me/route.ts").includes("assisted_token_deployments")) failures.push("User revenue status API must include assisted token deployment status");
+if (!read("frontend/src/app/[locale]/dashboard/page.tsx").includes("Deploys assistidos")) failures.push("Dashboard must show assisted token deployments");
+if (!read("frontend/src/app/api/admin/assisted-deployments/route.ts").includes("assisted_token_deployments")) failures.push("Admin assisted deployments API is missing");
+if (!read("frontend/src/app/[locale]/admin/revenue/page.tsx").includes("Controle de deploys assistidos")) failures.push("Admin revenue page must expose assisted deployment controls");
+if (!read("frontend/src/app/api/admin/operations/route.ts").includes("operational_incidents")) failures.push("Admin operations API must expose operational incidents");
+if (!read("frontend/src/app/api/admin/operations/route.ts").includes("webhook_event_logs")) failures.push("Admin operations API must expose webhook event logs");
+if (!read("frontend/src/app/[locale]/admin/operations/page.tsx").includes("Centro de controle administrativo")) failures.push("Admin operations page is missing");
+if (!read("frontend/src/app/api/affiliates/me/route.ts").includes("affiliate_commissions")) failures.push("Affiliate self-service API is missing");
+if (!read("frontend/src/app/api/admin/affiliates/route.ts").includes("affiliate_profiles")) failures.push("Admin affiliates API is missing");
+if (!read("frontend/src/app/[locale]/affiliates/page.tsx").includes("Painel de comissões")) failures.push("Affiliate dashboard page is missing");
+if (!read("frontend/src/app/[locale]/admin/affiliates/page.tsx").includes("Gestão de afiliados")) failures.push("Admin affiliates page is missing");
 const loginPage = read("frontend/src/app/[locale]/login/page.tsx");
 for (const expected of ['getSupabaseFunctionUrl("siwe-auth")', "signMessageAsync", "setWalletAccessToken"]) {
   if (!loginPage.includes(expected)) failures.push(`Wallet login must establish signed SIWE wallet session: ${expected}`);
@@ -96,6 +115,7 @@ if (!read("frontend/src/lib/server/csrf.ts").includes("if (!origin) return NextR
 for (const route of [
   "frontend/src/app/api/admin/prices/route.ts",
   "frontend/src/app/api/admin/b2b-clients/route.ts",
+  "frontend/src/app/api/admin/operations/route.ts",
   "frontend/src/app/api/lending/automation-intents/route.ts",
 ]) {
   if (!read(route).includes("requireSameOrigin")) failures.push(`${route} must enforce same-origin requests`);

@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import Stripe from "stripe";
 import { FIAT_REVENUE_SOURCES } from "@/lib/revenueCatalog";
+import { createAffiliateCommissionForPayment, resolveAffiliateByCode } from "./affiliates";
 import { createSupabaseAdminClient } from "./supabaseAdmin";
 
 export type PaymentProvider = "stripe" | "pagarme";
@@ -216,6 +217,15 @@ export async function createPaymentIntentRecord(input: {
   currency: string;
   metadata: Record<string, unknown>;
 }) {
+  const affiliate = await resolveAffiliateByCode(input.metadata.referral_code);
+  const metadata = affiliate
+    ? {
+        ...input.metadata,
+        referral_code: affiliate.referral_code,
+        affiliate_id: affiliate.id,
+        affiliate_commission_bps: affiliate.default_commission_bps,
+      }
+    : input.metadata;
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("payment_intents")
@@ -228,7 +238,7 @@ export async function createPaymentIntentRecord(input: {
       amount_cents: input.amountCents,
       currency: input.currency,
       status: "created",
-      metadata: input.metadata,
+      metadata,
     })
     .select()
     .single();
@@ -257,7 +267,7 @@ export async function getPaymentIntentById(id: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("payment_intents")
-    .select("id,provider,provider_reference,amount_cents,currency,status,wallet_address,vertical,product_code")
+    .select("id,provider,provider_reference,amount_cents,currency,status,wallet_address,vertical,product_code,metadata")
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -271,7 +281,68 @@ export async function getPaymentIntentById(id: string) {
     wallet_address: string | null;
     vertical: PaymentVertical;
     product_code: string;
+    metadata: Record<string, unknown>;
   };
+}
+
+function assistedDeployPayload(payment: {
+  id: string;
+  wallet_address: string | null;
+  vertical: PaymentVertical;
+  product_code: string;
+  metadata: Record<string, unknown>;
+}) {
+  if (payment.vertical !== "token_factory" || !payment.wallet_address) return null;
+  const metadata = payment.metadata ?? {};
+  const chainId = Number(metadata.chain_id);
+  const factoryAddress = String(metadata.factory_address ?? "");
+  const initialSupply = String(metadata.initial_supply ?? "");
+  const maxSupply = String(metadata.max_supply ?? metadata.initial_supply ?? "");
+  const tokenName = String(metadata.name ?? "");
+  const tokenSymbol = String(metadata.symbol ?? "").toUpperCase();
+  if (!chainId || !/^0x[a-fA-F0-9]{40}$/.test(factoryAddress)) return null;
+  if (!tokenName || !/^[A-Z0-9]{2,8}$/.test(tokenSymbol)) return null;
+  if (!/^\d+$/.test(initialSupply) || !/^\d+$/.test(maxSupply)) return null;
+
+  return {
+    payment_intent_id: payment.id,
+    wallet_address: payment.wallet_address.toLowerCase(),
+    chain_id: chainId,
+    factory_address: factoryAddress,
+    status: "queued",
+    token_name: tokenName,
+    token_symbol: tokenSymbol,
+    initial_supply: initialSupply,
+    max_supply: maxSupply,
+    mintable: Boolean(metadata.mintable),
+    taxable: Boolean(metadata.taxable),
+    tax_bps: Number(metadata.tax_bps ?? 0),
+    has_blacklist: Boolean(metadata.has_blacklist),
+    burn_tax: Boolean(metadata.burn_tax),
+    max_wallet_bps: Number(metadata.max_wallet_bps ?? 0),
+    metadata: {
+      product_code: payment.product_code,
+      token_template: metadata.token_template ?? null,
+      liquidity_eth: metadata.liquidity_eth ?? null,
+    },
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function enqueueAssistedTokenDeployment(payment: {
+  id: string;
+  wallet_address: string | null;
+  vertical: PaymentVertical;
+  product_code: string;
+  metadata: Record<string, unknown>;
+}) {
+  const payload = assistedDeployPayload(payment);
+  if (!payload) return;
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("assisted_token_deployments")
+    .upsert(payload, { onConflict: "payment_intent_id" });
+  if (error) throw error;
 }
 
 export async function markPaymentPaid(input: {
@@ -324,6 +395,8 @@ export async function markPaymentPaid(input: {
         { onConflict: "wallet_address,source_code" },
       );
   }
+  await enqueueAssistedTokenDeployment(payment);
+  await createAffiliateCommissionForPayment(payment);
 }
 
 export function getStripe() {
