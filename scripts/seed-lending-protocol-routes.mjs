@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const routesPath = resolve(process.cwd(), "config/lending-protocols.json");
+const externalIntegrationsPath = resolve(process.cwd(), "config/external-lending-integrations.json");
 const deploymentsDir = resolve(process.cwd(), "deployments");
 
 const NETWORKS = {
@@ -32,6 +33,7 @@ if (!serviceRoleKey) {
 }
 
 const protocols = JSON.parse(readFileSync(routesPath, "utf8"));
+const externalIntegrations = JSON.parse(readFileSync(externalIntegrationsPath, "utf8"));
 const protocolNotes = {
   spark: "Adapter exists, but must be validated against current Spark Pool markets and non-custodial withdraw/borrow permissions before production.",
   radiant: "Research only. Aave-derived but requires protocol-specific market, oracle, risk, and security review before adapter enablement.",
@@ -55,7 +57,7 @@ const rows = protocols.map((protocol) => ({
   chain_id: null,
   adapter_address: null,
   market_address: null,
-  config: {},
+  config: externalIntegrations.protocols?.[protocol.id] ?? {},
   status: protocol.status,
   production_ready: protocol.productionReady,
   risk_tier: protocol.riskTier,

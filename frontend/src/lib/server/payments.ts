@@ -292,7 +292,8 @@ function assistedDeployPayload(payment: {
   product_code: string;
   metadata: Record<string, unknown>;
 }) {
-  if (payment.vertical !== "token_factory" || !payment.wallet_address) return null;
+  const shouldQueueFactoryDeployment = payment.vertical === "token_factory" && Boolean(payment.wallet_address);
+  if (!shouldQueueFactoryDeployment || !payment.wallet_address) return null;
   const metadata = payment.metadata ?? {};
   const chainId = Number(metadata.chain_id);
   const factoryAddress = String(metadata.factory_address ?? "");

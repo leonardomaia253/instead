@@ -3,6 +3,15 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+function canUseWebGL() {
+  try {
+    const canvas = document.createElement("canvas");
+    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl") ?? canvas.getContext("experimental-webgl"));
+  } catch {
+    return false;
+  }
+}
+
 export default function Scene3D() {
   const hostRef = useRef<HTMLDivElement>(null);
 
@@ -17,7 +26,16 @@ export default function Scene3D() {
     const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100);
     camera.position.set(0, 0.4, 7.4);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    if (!canUseWebGL()) return;
+
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch (error) {
+      console.warn("Scene3D disabled because WebGL is unavailable.", error);
+      return;
+    }
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
     currentHost.appendChild(renderer.domElement);
@@ -134,7 +152,9 @@ export default function Scene3D() {
       lineMaterial.dispose();
       routeGeometries.forEach((geometry) => geometry.dispose());
       particleGeometry.dispose();
-      currentHost.removeChild(renderer.domElement);
+      if (renderer.domElement.parentNode === currentHost) {
+        currentHost.removeChild(renderer.domElement);
+      }
     };
   }, []);
 

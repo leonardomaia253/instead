@@ -1,0 +1,108 @@
+{
+  "updatedAt": "2026-08-06",
+  "sources": {
+    "compoundDocs": "https://docs.compound.finance/",
+    "compoundCometRepository": "https://github.com/compound-finance/comet/tree/main/deployments",
+    "morphoAddresses": "https://docs.morpho.org/developers/contracts/addresses/",
+    "sparkDocs": "https://docs.spark.fi/"
+  },
+  "protocols": {
+    "spark": {
+      "status": "adapter-hardened",
+      "productionReady": false,
+      "deployable": false,
+      "missing": [
+        "Official Spark pool address book per target network",
+        "sToken/aToken and variable debt token mappings per asset",
+        "Fork tests for supply, withdraw, borrow, repay",
+        "Gas funding for target networks"
+      ]
+    },
+    "compound_v3": {
+      "status": "adapter-hardened",
+      "productionReady": false,
+      "deployable": false,
+      "missing": [
+        "Comet proxy address per market from Compound deployment artifacts",
+        "Per-market supported collateral/base mapping",
+        "Fork tests for Comet manager permissions and borrow/withdraw semantics",
+        "Gas funding for target networks"
+      ]
+    },
+    "morpho_blue": {
+      "status": "adapter-hardened",
+      "productionReady": false,
+      "deployable": false,
+      "knownContracts": {
+        "ethereumMorpho": "0xea4f2979D7A99B40404b447Cf71c008e3805760F",
+        "baseMorpho": "0xBAa5cc21fd487B8Fcc2F632f3F4E8D372e4A5b75"
+      },
+      "missing": [
+        "Curated market params per loan/collateral pair",
+        "Oracle and IRM verification per market",
+        "Fork tests for position authorization and callbacks",
+        "Gas funding for target networks"
+      ]
+    },
+    "venus": {
+      "status": "adapter-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["VToken adapter implementation", "BNB Chain market mapping", "Fork tests", "Gas funding"]
+    },
+    "benqi": {
+      "status": "adapter-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["QiToken adapter implementation", "Avalanche market mapping", "Fork tests", "Gas funding"]
+    },
+    "radiant": {
+      "status": "research-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["Protocol-specific Aave-derived adapter review", "Market mapping", "Fork tests", "Risk approval"]
+    },
+    "euler_v2": {
+      "status": "adapter-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["EVK vault adapter", "Vault mapping", "Fork tests", "Risk approval"]
+    },
+    "silo": {
+      "status": "adapter-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["Isolated-vault adapter", "Vault mapping", "Fork tests", "Risk approval"]
+    },
+    "exactly": {
+      "status": "adapter-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["Fixed-rate adapter", "Market mapping", "Fork tests", "Risk approval"]
+    },
+    "gearbox": {
+      "status": "adapter-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["Credit-account adapter", "Account lifecycle design", "Fork tests", "Critical-risk approval"]
+    },
+    "maker_sky": {
+      "status": "custom-integration-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["CDP/Sky integration design", "Vault accounting", "Liquidation/risk policy", "Fork tests"]
+    },
+    "kamino": {
+      "status": "solana-service-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["Solana SDK service", "Wallet/signature flow", "Program tests", "SOL funding"]
+    },
+    "marginfi": {
+      "status": "solana-service-required",
+      "productionReady": false,
+      "deployable": false,
+      "missing": ["Solana SDK service", "Wallet/signature flow", "Program tests", "SOL funding"]
+    }
+  }
+}
