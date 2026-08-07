@@ -47,6 +47,7 @@
     "balances:monitor": "node scripts/monitor-balances.mjs",
     "gas:rebalance:lifi": "hardhat run scripts/rebalance-gas-lifi.ts",
     "revenue:check": "node scripts/check-revenue-sources.mjs",
+    "community:check": "node scripts/check-community-growth.mjs",
     "prices:verify": "node scripts/verify-platform-prices.mjs",
     "addresses:check": "node scripts/check-production-addresses.mjs",
     "performance:check": "node scripts/check-performance-budget.mjs",

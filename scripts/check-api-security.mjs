@@ -38,11 +38,33 @@ for (const route of [
   "frontend/src/app/api/admin/assisted-deployments/route.ts",
   "frontend/src/app/api/admin/operations/route.ts",
   "frontend/src/app/api/admin/affiliates/route.ts",
+  "frontend/src/app/api/admin/community/route.ts",
   "frontend/src/app/api/lending/automation-intents/route.ts",
 ]) {
   for (const expected of ["requireSameOrigin", "rateLimit", "readLimitedJson"]) {
     requireIncludes(route, expected, `${route} must include ${expected}`);
   }
+}
+
+for (const route of [
+  "frontend/src/app/api/community/me/route.ts",
+  "frontend/src/app/api/community/event/route.ts",
+  "frontend/src/app/api/community/vote/route.ts",
+]) {
+  for (const expected of ["requireSameOrigin", "rateLimit", "readLimitedJson"]) {
+    requireIncludes(route, expected, `${route} must include ${expected}`);
+  }
+}
+
+for (const [route, secret, header] of [
+  ["frontend/src/app/api/community/queue/route.ts", "COMMUNITY_QUEUE_SECRET", "x-instead-community-secret"],
+  ["frontend/src/app/api/discord/webhook/route.ts", "DISCORD_WEBHOOK_SECRET", "x-instead-discord-secret"],
+]) {
+  requireIncludes(route, "rateLimit", `${route} must rate-limit external worker/webhook traffic`);
+  requireIncludes(route, "readLimitedJson", `${route} must cap JSON request payload size`);
+  requireIncludes(route, secret, `${route} must require ${secret}`);
+  requireIncludes(route, header, `${route} must verify ${header}`);
+  requireIncludes(route, "Service unavailable", `${route} must fail closed when secret is not configured`);
 }
 
 for (const [route, signatureCheck] of [

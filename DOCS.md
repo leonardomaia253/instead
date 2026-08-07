@@ -49,8 +49,30 @@ Supabase e usado para:
 - nonces SIWE;
 - eventos de observabilidade;
 - fila de reconciliacao operacional.
+- camada de comunidade, missoes, XP, governanca, CRM e fila de mensagens.
 
 Supabase nao deve ser fonte final de autorizacao para fundos. Operacoes sensiveis precisam ser validadas contra eventos e receipts on-chain.
+
+### Comunidade como produto
+
+A camada de comunidade implementada no app cobre:
+
+- canais oficiais: Discord, Telegram, X/Twitter, Farcaster, Reddit, YouTube, TikTok e newsletter;
+- perfis por wallet com handles sociais, referral code, XP, nivel e cargo;
+- missoes com aprovacao automatica ou revisao manual;
+- recompensas por XP, incluindo badges, acesso, desconto, early access e elegibilidade para airdrop;
+- enquetes de governanca com voto por wallet;
+- cockpit admin para revisar missoes, ver rankings, canais, recompensas, votos e automacoes;
+- fila `community_message_queue` para workers de Discord/Telegram/newsletter processarem mensagens segmentadas.
+
+Endpoints principais:
+
+- `/api/community/me`: overview publico e criacao/atualizacao de perfil.
+- `/api/community/event`: registro de missao/evento de comunidade.
+- `/api/community/vote`: voto em governanca.
+- `/api/community/queue`: worker seguro para claim/mark da fila de mensagens.
+- `/api/discord/webhook`: verificacao/automacao de Discord.
+- `/api/admin/community`: cockpit admin, revisao de missoes e enfileiramento de automacoes.
 
 ## 3. Protocolos externos
 

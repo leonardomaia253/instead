@@ -31,6 +31,7 @@ export function Navbar() {
     { href: "/lending", label: locale === "en" ? "Lending" : "Lending" },
     { href: "/os", label: locale === "en" ? "OS" : "OS" },
     { href: "/solutions", label: locale === "en" ? "Plans" : "Planos" },
+    { href: "/community", label: locale === "en" ? "Community" : "Comunidade" },
     { href: "/factory", label: locale === "en" ? "Factory" : "Fábrica" },
     { href: "/tokens", label: locale === "en" ? "Explore" : "Explorar" },
     { href: "/staking", label: locale === "en" ? "Staking" : "Staking" },

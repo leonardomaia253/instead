@@ -100,6 +100,7 @@ run("secret scan", "pnpm", ["secrets:check"], { timeout: 60_000 });
 run("API security check", "pnpm", ["api:security"], { timeout: 60_000 });
 run("Edge Function contract check", "pnpm", ["edge:functions:check"], { timeout: 60_000 });
 run("revenue source check", "pnpm", ["revenue:check"], { timeout: 60_000 });
+run("community growth check", "pnpm", ["community:check"], { timeout: 60_000 });
 run("live platform price verification", "pnpm", ["prices:verify"], { timeout: 60_000 });
 run("production readiness", "pnpm", ["readiness"], { timeout: 120_000 });
 failNow();
