@@ -30,6 +30,7 @@ const LENDING_ASSETS = {
 } as const;
 const USDC_ADDRESS = LENDING_ASSETS.USDC.address;
 const WETH_ADDRESS = LENDING_ASSETS.WETH.address;
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
 
 type Tab = "deposit" | "borrow" | "repay";
 
@@ -340,25 +341,26 @@ export default function LendingPage() {
             justifyItems: "center",
           }}>
             <div style={{ fontSize: 40 }}>🔒</div>
-            <strong style={{ fontSize: 20, color: "var(--text-primary)" }}>Empréstimos Inteligentes — Em Breve</strong>
+            <strong style={{ fontSize: 20, color: "var(--text-primary)" }}>Lending on-chain desativado neste ambiente</strong>
             <p style={{ color: "var(--text-muted)", fontSize: 15, lineHeight: 1.65, maxWidth: 500 }}>
-              Nosso módulo de crédito descentralizado está em fase final de validação de segurança.
-              Seja notificado assim que abrir para o público.
+              Configure contratos, rotas e gates de producao antes de liberar operacoes com capital real.
             </p>
-            <a
-              href="mailto:contato@instead.volupai.com?subject=Interesse%20em%20Empr%C3%A9stimos"
-              style={{
-                marginTop: 8,
-                padding: "13px 32px",
-                background: "var(--accent-grad)",
-                color: "#000",
-                fontWeight: 700,
-                fontSize: 14,
-                textDecoration: "none",
-              }}
-            >
-              Quero Acesso Antecipado
-            </a>
+            {SUPPORT_EMAIL ? (
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=Interesse%20em%20Emprestimos`}
+                style={{
+                  marginTop: 8,
+                  padding: "13px 32px",
+                  background: "var(--accent-grad)",
+                  color: "#000",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  textDecoration: "none",
+                }}
+              >
+                Falar com especialista
+              </a>
+            ) : null}
           </div>
         )}
 
@@ -480,7 +482,7 @@ export default function LendingPage() {
                   disabled={isPending || !amount || !isLendingEnabled}
                 >
                   {!isLendingEnabled
-                    ? "Disponível em Breve"
+                    ? "Indisponivel neste ambiente"
                     : isPending
                     ? "Aguardando confirmação…"
                     : tab === "deposit"

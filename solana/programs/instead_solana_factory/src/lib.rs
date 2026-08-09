@@ -7,7 +7,7 @@ use anchor_spl::metadata::{
 use anchor_spl::token_2022::{mint_to, MintTo, Token2022};
 use anchor_spl::token_interface::{Mint, TokenAccount};
 
-declare_id!("11111111111111111111111111111111");
+declare_id!("BXg5tAMHYNbYhfxd6eYR7j3njk2nozb5Bk6JZuqhdtzy");
 
 pub const MAX_NAME_LEN: usize = 64;
 pub const MAX_SYMBOL_LEN: usize = 16;
@@ -440,6 +440,78 @@ fn validate_token_args(args: &CreateTokenArgs) -> Result<()> {
     require!(args.initial_supply > 0, InsteadError::InvalidSupply);
     require!(args.transfer_fee_bps <= MAX_BPS, InsteadError::InvalidBps);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn valid_args() -> CreateTokenArgs {
+        CreateTokenArgs {
+            name: "Instead Solana Token".to_string(),
+            symbol: "IST".to_string(),
+            uri: "https://instead.finance/metadata/ist.json".to_string(),
+            preset_code: "standard".to_string(),
+            decimals: 9,
+            initial_supply: 1_000_000_000,
+            transfer_fee_bps: 250,
+            mintable: true,
+            freezable: false,
+            mutable_metadata: true,
+            fair_launch: false,
+        }
+    }
+
+    #[test]
+    fn accepts_valid_token_args() {
+        assert!(validate_token_args(&valid_args()).is_ok());
+    }
+
+    #[test]
+    fn rejects_blank_or_oversized_name() {
+        let mut args = valid_args();
+        args.name = "   ".to_string();
+        assert!(validate_token_args(&args).is_err());
+
+        args.name = "x".repeat(MAX_NAME_LEN + 1);
+        assert!(validate_token_args(&args).is_err());
+    }
+
+    #[test]
+    fn rejects_blank_or_oversized_symbol() {
+        let mut args = valid_args();
+        args.symbol = "".to_string();
+        assert!(validate_token_args(&args).is_err());
+
+        args.symbol = "X".repeat(MAX_SYMBOL_LEN + 1);
+        assert!(validate_token_args(&args).is_err());
+    }
+
+    #[test]
+    fn rejects_oversized_uri_and_preset() {
+        let mut args = valid_args();
+        args.uri = "u".repeat(MAX_URI_LEN + 1);
+        assert!(validate_token_args(&args).is_err());
+
+        args = valid_args();
+        args.preset_code = "p".repeat(MAX_PRESET_CODE_LEN + 1);
+        assert!(validate_token_args(&args).is_err());
+    }
+
+    #[test]
+    fn rejects_invalid_decimals_supply_and_bps() {
+        let mut args = valid_args();
+        args.decimals = 10;
+        assert!(validate_token_args(&args).is_err());
+
+        args = valid_args();
+        args.initial_supply = 0;
+        assert!(validate_token_args(&args).is_err());
+
+        args = valid_args();
+        args.transfer_fee_bps = MAX_BPS + 1;
+        assert!(validate_token_args(&args).is_err());
+    }
 }
 
 #[event]

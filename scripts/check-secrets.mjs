@@ -52,20 +52,24 @@ const textExtensions = new Set([
 
 const rules = [
   {
+    name: "supabase-project-ref-hardcoded",
+    pattern: /\b[a-z]{20}\.supabase\.co\b|api\.supabase\.com\/v1\/projects\/[a-z0-9]{20}\b/g,
+  },
+  {
     name: "telegram-bot-token",
     pattern: /\b\d{8,12}:AA[A-Za-z0-9_-]{30,}\b/g,
   },
   {
     name: "evm-private-key-env",
-    pattern: /\b(?:PRIVATE_KEY|DEPLOYER_PRIVATE_KEY|OWNER_PRIVATE_KEY|MNEMONIC)\s*=\s*["']?(?:0x)?[a-fA-F0-9]{64}\b/g,
+    pattern: /\b(?:PRIVATE_KEY|DEPLOYER_PRIVATE_KEY|OWNER_PRIVATE_KEY|MNEMONIC)[ \t]*=[ \t]*["']?(?:0x)?[a-fA-F0-9]{64}\b/g,
   },
   {
     name: "supabase-service-role-env",
-    pattern: /\bSUPABASE_SERVICE_ROLE_KEY\s*=\s*["']?eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g,
+    pattern: /\bSUPABASE_SERVICE_ROLE_KEY[ \t]*=[ \t]*["']?eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g,
   },
   {
     name: "jwt-secret-env",
-    pattern: /\b(?:JWT_SECRET|SUPABASE_JWT_SECRET)\s*=\s*["']?[A-Za-z0-9_./+=-]{32,}/g,
+    pattern: /\b(?:JWT_SECRET|SUPABASE_JWT_SECRET)[ \t]*=[ \t]*["']?[A-Za-z0-9_./+=-]{32,}/g,
   },
   {
     name: "google-api-key",
@@ -74,6 +78,7 @@ const rules = [
 ];
 
 const findings = [];
+const configFailures = [];
 
 function isIgnoredPath(path) {
   const parts = relative(root, path).split(sep);
@@ -104,6 +109,10 @@ function scanFile(path) {
       const line = before.split(/\r?\n/).length;
       const lineText = lines[line - 1] ?? "";
       if (lineText.includes("your_") || lineText.includes("changeme") || lineText.includes("<")) continue;
+      if (rule.name === "supabase-project-ref-hardcoded") {
+        const projectPath = relative(root, path).replaceAll("\\", "/");
+        if (projectPath === "config/vercel-waf-rate-limit-policy.json") continue;
+      }
       findings.push({
         file: relative(root, path).replaceAll("\\", "/"),
         line,
@@ -129,8 +138,23 @@ function walk(dir) {
 
 walk(root);
 
-if (findings.length > 0) {
+const productionExamplePath = resolve(root, ".env.production.example");
+if (existsSync(productionExamplePath)) {
+  const productionExample = readFileSync(productionExamplePath, "utf8");
+  for (const forbidden of [
+    "instead.volupai.com",
+    "contato@instead.volupai.com",
+    "0x0000000000000000000000000000000000000000",
+  ]) {
+    if (productionExample.includes(forbidden)) {
+      configFailures.push(`.env.production.example must not include production/demo placeholder value: ${forbidden}`);
+    }
+  }
+}
+
+if (findings.length > 0 || configFailures.length > 0) {
   console.error("Secret scan failed:");
+  for (const failure of configFailures) console.error(`- ${failure}`);
   for (const finding of findings) {
     console.error(`- ${finding.file}:${finding.line} ${finding.rule} ${finding.value}`);
   }

@@ -52,11 +52,18 @@ async function rpc(url: string, method: string, params: unknown[]) {
   return payload.result;
 }
 
+function resolveRpcUrl(network: NetworkCheck) {
+  const configured = Deno.env.get(network.rpcEnv);
+  if (configured) return configured;
+  if (Deno.env.get("ALLOW_PUBLIC_RPC_FALLBACK") === "true") return network.fallbackRpc;
+  throw new Error(`${network.rpcEnv} is required`);
+}
+
 async function checkNetwork(network: NetworkCheck) {
   const address = network.kind === "solana" ? SOLANA_ADDRESS : EVM_ADDRESS;
   if (!address) return { ...network, status: "skipped", reason: `${network.kind === "solana" ? "BALANCE_MONITOR_SOLANA_ADDRESS" : "BALANCE_MONITOR_EVM_ADDRESS"} missing` };
 
-  const rpcUrl = Deno.env.get(network.rpcEnv) || network.fallbackRpc;
+  const rpcUrl = resolveRpcUrl(network);
   const threshold = parseUnits(Deno.env.get(network.thresholdEnv) || network.defaultThreshold, network.decimals);
   const rawBalance = network.kind === "solana"
     ? BigInt((await rpc(rpcUrl, "getBalance", [address])).value)

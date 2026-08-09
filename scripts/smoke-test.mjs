@@ -4,7 +4,7 @@ import { mergeEnv, parseEnvFile, projectRefFromSupabaseUrl, supabaseEnvDiagnosti
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
 const env = mergeEnv(process.env, fileEnv);
 
-const appOrigin = env.APP_ORIGIN || env.NEXT_PUBLIC_APP_URL;
+const appOrigin = env.APP_ORIGIN || env.NEXT_PUBLIC_APP_ORIGIN;
 const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
 const telegramSecret = env.TELEGRAM_WEBHOOK_SECRET;
 

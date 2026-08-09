@@ -108,6 +108,12 @@ async function runReconciliation() {
     anomaliesCount++;
     
     // Insert/enqueue into the reconciliation queue to alert admins
+    const intentChainId = Number(intent.metadata?.chain_id ?? intent.metadata?.chainId);
+    if (!Number.isInteger(intentChainId) || intentChainId <= 0) {
+      console.error(`- Cannot enqueue anomaly for ${intentId}: payment metadata is missing a valid chain_id`);
+      continue;
+    }
+
     const operationId = `${wallet}:assisted_deploy_pending:${intentId}`;
     const { error: enqueueError } = await supabase
       .from("operation_reconciliation_queue")
@@ -116,8 +122,8 @@ async function runReconciliation() {
         user_wallet: wallet,
         vertical: "token_factory",
         action: "assisted_deploy",
-        tx_hash: "0x0000000000000000000000000000000000000000000000000000000000000000", // placeholder for manual deploy
-        chain_id: 42161, // Arbitrum default
+        tx_hash: null,
+        chain_id: intentChainId,
         expected_state: {
           payment_intent_id: intentId,
           product_code,

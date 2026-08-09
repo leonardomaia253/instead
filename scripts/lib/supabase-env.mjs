@@ -15,12 +15,13 @@ export function parseEnvFile(path) {
 }
 
 export function mergeEnv(processEnv = process.env, fileEnv = {}) {
-  return Object.fromEntries(
-    Object.entries({ ...processEnv, ...fileEnv }).map(([key, value]) => [
-      key,
-      fileEnv[key] === "" && processEnv[key] ? processEnv[key] : value,
-    ]),
-  );
+  const merged = {};
+  for (const key of new Set([...Object.keys(fileEnv), ...Object.keys(processEnv)])) {
+    const processValue = processEnv[key];
+    const fileValue = fileEnv[key];
+    merged[key] = processValue !== undefined && processValue !== "" ? processValue : fileValue;
+  }
+  return merged;
 }
 
 export function projectRefFromSupabaseUrl(value) {

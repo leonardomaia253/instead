@@ -37,6 +37,20 @@ if (normalized.includes("auth.role()")) {
   failures.push("migrations must not use deprecated auth.role(); use policy TO clauses instead");
 }
 
+for (const forbidden of [
+  "replace_with_",
+  "your_",
+  "changeme",
+  "dummy_secret",
+  "your_secret",
+]) {
+  if (normalized.includes(forbidden)) failures.push(`migrations must not include secret placeholder: ${forbidden}`);
+}
+
+if (normalized.includes("x-monitor-secret") && !normalized.includes("vault.decrypted_secrets")) {
+  failures.push("balance-monitor schedules must read x-monitor-secret from Supabase Vault instead of SQL literals");
+}
+
 const sensitiveTables = [
   "users",
   "generated_tokens",
@@ -51,12 +65,67 @@ const sensitiveTables = [
   "payment_intents",
 ];
 
+const grantStatements = [...corpus.matchAll(/grant\s+(.+?)\s+on\s+table\s+(.+?)\s+to\s+([^;]+);/gis)].map((match) => ({
+  privileges: match[1].toLowerCase(),
+  tables: match[2].toLowerCase(),
+  roles: match[3].toLowerCase(),
+}));
+
+function hasGrant(table, role, privilege) {
+  const needle = `public.${table}`.toLowerCase();
+  return grantStatements.some((statement) => {
+    const grantsTable = statement.tables.includes(needle);
+    const grantsRole = statement.roles.split(",").map((item) => item.trim()).includes(role);
+    const grantsPrivilege = statement.privileges.includes("all") || statement.privileges.split(",").map((item) => item.trim()).includes(privilege);
+    return grantsTable && grantsRole && grantsPrivilege;
+  });
+}
+
 for (const table of sensitiveTables) {
   if (!normalized.includes(`create table if not exists public.${table}`) && !normalized.includes(`create table public.${table}`)) {
     failures.push(`public.${table} table is not created`);
   }
   if (!normalized.includes(`alter table public.${table} enable row level security`)) {
     failures.push(`public.${table} does not enable RLS`);
+  }
+}
+
+const dataApiTables = [...new Set([...corpus.matchAll(/create\s+table(?:\s+if\s+not\s+exists)?\s+public\.([a-z0-9_]+)/gi)].map((match) => match[1]))];
+for (const table of dataApiTables) {
+  if (!hasGrant(table, "service_role", "select")) {
+    failures.push(`public.${table} must explicitly grant Data API access to service_role`);
+  }
+}
+
+const requiredRoleGrants = [
+  ["generated_tokens", "anon", "select"],
+  ["staking_pools", "anon", "select"],
+  ["platform_stats", "anon", "select"],
+  ["platform_prices", "anon", "select"],
+  ["revenue_sources", "anon", "select"],
+  ["community_channels", "anon", "select"],
+  ["community_missions", "anon", "select"],
+  ["community_rewards", "anon", "select"],
+  ["community_governance_polls", "anon", "select"],
+  ["telegram_bot_intents", "anon", "select"],
+  ["users", "authenticated", "select"],
+  ["users", "authenticated", "insert"],
+  ["users", "authenticated", "update"],
+  ["generated_tokens", "authenticated", "insert"],
+  ["generated_tokens", "authenticated", "update"],
+  ["audits", "authenticated", "insert"],
+  ["lending_positions", "authenticated", "insert"],
+  ["lending_positions", "authenticated", "update"],
+  ["operation_reconciliation_queue", "authenticated", "insert"],
+  ["operation_reconciliation_queue", "authenticated", "update"],
+  ["observability_events", "anon", "insert"],
+  ["observability_events", "authenticated", "insert"],
+  ["telegram_bot_intents", "authenticated", "update"],
+];
+
+for (const [table, role, privilege] of requiredRoleGrants) {
+  if (!hasGrant(table, role, privilege)) {
+    failures.push(`public.${table} must grant ${privilege.toUpperCase()} to ${role}`);
   }
 }
 

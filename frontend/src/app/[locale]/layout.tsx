@@ -3,8 +3,9 @@ import { Metadata } from 'next';
 import { Providers } from '../providers';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { getPublicAppOrigin } from '@/lib/site';
 
-const SITE_URL = 'https://instead.volupai.com';
+const SITE_URL = getPublicAppOrigin();
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

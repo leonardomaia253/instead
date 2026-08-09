@@ -1,10 +1,17 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
 import type { Chain } from "viem";
+import { getPublicAppOrigin } from "@/lib/site";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 if (!projectId && typeof window !== "undefined") {
   console.error("[Instead] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. WalletConnect will not work.");
+}
+
+function optionalEvmAddress(value: string | undefined) {
+  return value && /^0x[a-fA-F0-9]{40}$/.test(value) && value.toLowerCase() !== "0x0000000000000000000000000000000000000000"
+    ? value
+    : null;
 }
 
 const mainnet = {
@@ -76,7 +83,7 @@ export const SUPPORTED_CHAINS = [
 export const wagmiConfig = getDefaultConfig({
   appName: "Instead",
   appDescription: "Instead DeFi liquidity, lending and tokenization interface.",
-  appUrl: "https://instead.volupai.com",
+  appUrl: getPublicAppOrigin(),
   projectId,
   chains: SUPPORTED_CHAINS,
   ssr: true,
@@ -97,7 +104,7 @@ export const CHAIN_META: Record<number, {
   icon: string;
   color: string;
   gasLabel: string;
-  factoryAddress: string;
+  factoryAddress: string | null;
   ethUsdFeed: string;
   explorer: string;
 }> = {
@@ -106,7 +113,7 @@ export const CHAIN_META: Record<number, {
     icon: "🔵",
     color: "#2563eb",
     gasLabel: "Gas Ultra Baixo (~$0.01)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_ARBITRUM ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_ARBITRUM),
     ethUsdFeed: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
     explorer: "https://arbiscan.io",
   },
@@ -115,7 +122,7 @@ export const CHAIN_META: Record<number, {
     icon: "🟣",
     color: "#7c3aed",
     gasLabel: "Gas Baixo (~$0.02)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_POLYGON ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_POLYGON),
     ethUsdFeed: "0xF9680D99D6C9589e2a93a78A04A279e509205945",
     explorer: "https://polygonscan.com",
   },
@@ -124,7 +131,7 @@ export const CHAIN_META: Record<number, {
     icon: "🟡",
     color: "#f59e0b",
     gasLabel: "Gas Baixo (~$0.05)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_BSC ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_BSC),
     ethUsdFeed: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
     explorer: "https://bscscan.com",
   },
@@ -133,7 +140,7 @@ export const CHAIN_META: Record<number, {
     icon: "🔷",
     color: "#3b82f6",
     gasLabel: "Gas Ultra Baixo (~$0.005)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_BASE ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_BASE),
     ethUsdFeed: "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
     explorer: "https://basescan.org",
   },
@@ -142,7 +149,7 @@ export const CHAIN_META: Record<number, {
     icon: "🔴",
     color: "#ef4444",
     gasLabel: "Gas Muito Baixo (~$0.01)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_OPTIMISM ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_OPTIMISM),
     ethUsdFeed: "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
     explorer: "https://optimistic.etherscan.io",
   },
@@ -151,7 +158,7 @@ export const CHAIN_META: Record<number, {
     icon: "⟠",
     color: "#64748b",
     gasLabel: "Gas Alto (~$5-20)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_MAINNET ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_MAINNET),
     ethUsdFeed: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
     explorer: "https://etherscan.io",
   },
@@ -160,7 +167,7 @@ export const CHAIN_META: Record<number, {
     icon: "🔺",
     color: "#dc2626",
     gasLabel: "Gas Baixo (~$0.05)",
-    factoryAddress: process.env.NEXT_PUBLIC_FACTORY_AVALANCHE ?? "0x0",
+    factoryAddress: optionalEvmAddress(process.env.NEXT_PUBLIC_FACTORY_AVALANCHE),
     ethUsdFeed: "0x976B3D034E162d8bD72D6b9C989d545b839003b0",
     explorer: "https://snowtrace.io",
   },

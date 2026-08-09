@@ -147,9 +147,13 @@ for (const requiredFile of [
 requireEnv("NEXT_PUBLIC_SUPABASE_URL");
 requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 requireEnv("NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID");
+const publicAppOrigin = requireHttpsUrl("NEXT_PUBLIC_APP_ORIGIN");
+const serverAppOrigin = requireHttpsUrl("APP_ORIGIN");
+if (publicAppOrigin && serverAppOrigin && publicAppOrigin.replace(/\/$/, "") !== serverAppOrigin.replace(/\/$/, "")) {
+  failures.push("APP_ORIGIN must match NEXT_PUBLIC_APP_ORIGIN");
+}
 
 warnIfMissing("SUPABASE_SERVICE_ROLE_KEY");
-warnIfMissing("APP_ORIGIN");
 warnIfMissing("UPTIME_STATUS_URL");
 warnIfMissing("TELEGRAM_ALERT_CHAT_ID");
 warnIfMissing("SOLANA_RPC_URL");

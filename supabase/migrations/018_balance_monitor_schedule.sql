@@ -3,8 +3,7 @@
 -- Requirements in Supabase Dashboard:
 -- 1. Enable the `pg_cron` extension.
 -- 2. Enable the `pg_net` extension.
--- 3. Store BALANCE_MONITOR_SECRET as a Supabase secret and replace the placeholder below
---    if you choose to enforce x-monitor-secret on the Edge Function.
+-- 3. Store `project_url` and `balance_monitor_secret` in Supabase Vault.
 --
 -- This migration is intentionally commented out because projects differ in extension
 -- permissions and secret-storage policy. Apply manually after confirming pg_cron/pg_net
@@ -15,10 +14,10 @@
 --   '*/15 * * * *',
 --   $$
 --   SELECT net.http_post(
---     url := 'https://wjvrcwvnznkisoerngal.supabase.co/functions/v1/balance-monitor',
+--     url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/balance-monitor',
 --     headers := jsonb_build_object(
 --       'Content-Type', 'application/json',
---       'x-monitor-secret', 'REPLACE_WITH_BALANCE_MONITOR_SECRET'
+--       'x-monitor-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'balance_monitor_secret')
 --     ),
 --     body := '{}'::jsonb
 --   );

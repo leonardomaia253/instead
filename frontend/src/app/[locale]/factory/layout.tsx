@@ -1,4 +1,7 @@
 import { Metadata } from 'next';
+import { getPublicAppOrigin } from '@/lib/site';
+
+const siteUrl = getPublicAppOrigin();
 
 export const metadata: Metadata = {
   title: 'Token Factory - Criar Token Sem Código | Instead DeFi',
@@ -7,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Crie seu Token em Minutos | Instead DeFi Factory',
     description: 'A maneira mais fácil e rápida de lançar seu projeto blockchain.',
-    url: 'https://instead.volupai.com/factory',
+    url: `${siteUrl}/factory`,
   },
 };
 

@@ -13,6 +13,7 @@ const catalog = read("frontend/src/lib/revenueCatalog.ts");
 const migration = read("supabase/migrations/019_revenue_sources.sql");
 const payments = read("frontend/src/lib/server/payments.ts");
 const checkoutRoute = read("frontend/src/app/api/payments/checkout/route.ts");
+const adminRevenueRoute = read("frontend/src/app/api/admin/revenue/route.ts");
 const lendingAutomationRoute = read("frontend/src/app/api/lending/automation-intents/route.ts");
 const adminPage = read("frontend/src/app/[locale]/admin/revenue/page.tsx");
 const monetizationMigration = read("supabase/migrations/20260728203609_monetization_product_flows.sql");
@@ -26,7 +27,15 @@ if (!catalog.includes("lending_borrow_fee") || !catalog.includes("takeRateBps: 1
 if (!catalog.includes("multi_protocol_routing_fee")) failures.push("Multi-protocol routing fee must be represented");
 if (!migration.includes("CREATE TABLE IF NOT EXISTS public.revenue_sources")) failures.push("revenue_sources migration is missing");
 if (!migration.includes("INSERT INTO public.platform_prices")) failures.push("Fiat revenue products must be seeded into platform_prices");
-if (!payments.includes("FIAT_REVENUE_SOURCES")) failures.push("Checkout fallback must come from revenue catalog");
+if (!payments.includes("FIAT_REVENUE_SOURCES")) failures.push("Local development price fallback must come from revenue catalog");
+if (!payments.includes("ALLOW_LOCAL_PRICE_FALLBACK") || !payments.includes('process.env.NODE_ENV !== "production"')) {
+  failures.push("Checkout must not use local price fallback in production");
+}
+if (!payments.includes("Payment prices are unavailable")) failures.push("Checkout must fail closed when production prices are unavailable");
+if (adminRevenueRoute.includes('source: "fallback"') || adminRevenueRoute.includes("REVENUE_SOURCES.map")) {
+  failures.push("Admin revenue API must not fall back to local catalog when Supabase is unavailable");
+}
+if (!adminRevenueRoute.includes("Revenue data unavailable")) failures.push("Admin revenue API must fail closed when Supabase revenue data is unavailable");
 if (payments.includes('vertical !== "token_factory"')) failures.push("Checkout must not be restricted to token factory only");
 if (!checkoutRoute.includes("requireSameOrigin")) failures.push("Checkout must enforce same-origin requests");
 if (!checkoutRoute.includes("verifyWalletSession")) failures.push("Checkout must bind walletAddress to the signed wallet session");
@@ -38,7 +47,12 @@ if (!read("frontend/src/app/api/payments/webhooks/stripe/route.ts").includes("re
 if (!read("frontend/src/app/api/payments/webhooks/pagarme/route.ts").includes("readLimitedText")) failures.push("Pagar.me webhook must cap raw request body size");
 if (lendingAutomationRoute.includes("requiresPayment === false")) failures.push("Lending automation must not trust client-provided payment bypass flags");
 if (!lendingAutomationRoute.includes("user_revenue_entitlements")) failures.push("Lending automation must verify active paid entitlement before queueing premium work");
-if (!adminPage.includes("REVENUE_SOURCE_COUNT")) failures.push("Admin page must display canonical revenue count");
+if (adminPage.includes("REVENUE_SOURCE_COUNT") || adminPage.includes('"fallback"')) {
+  failures.push("Admin revenue page must not display local fallback revenue counts");
+}
+if (!adminPage.includes("Carregando dados operacionais de receita")) {
+  failures.push("Admin revenue page must show an explicit loading state for live revenue data");
+}
 for (const table of ["user_revenue_entitlements", "lending_automation_intents", "b2b_widget_clients"]) {
   if (!monetizationMigration.includes(`public.${table}`)) failures.push(`Monetization migration must create ${table}`);
 }

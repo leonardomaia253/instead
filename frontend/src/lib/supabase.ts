@@ -172,7 +172,7 @@ export type ReconciliationOperation = {
   user_wallet: string;
   vertical: "lending" | "token_factory" | "staking";
   action: string;
-  tx_hash: string;
+  tx_hash: string | null;
   chain_id: number;
   expected_state?: Record<string, unknown>;
   status?: "pending" | "confirmed" | "mismatch" | "failed" | "ignored";
@@ -417,7 +417,7 @@ export async function enqueueReconciliation(operation: ReconciliationOperation) 
       {
         ...operation,
         user_wallet: operation.user_wallet.toLowerCase(),
-        tx_hash: operation.tx_hash.toLowerCase(),
+        tx_hash: normalizeTxHash(operation.tx_hash),
         expected_state: operation.expected_state ?? {},
         status: operation.status ?? "pending",
         updated_at: new Date().toISOString(),

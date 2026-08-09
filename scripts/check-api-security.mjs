@@ -108,6 +108,36 @@ for (const route of [
   requireIncludes(route, "readLimitedJson", `${route} must cap JSON request payload size`);
 }
 
+for (const route of [
+  "frontend/src/app/api/auth/session/route.ts",
+  "frontend/src/app/api/admin/b2b-clients/route.ts",
+  "frontend/src/app/api/b2b/widget/route.ts",
+]) {
+  if (/readLimitedJson[\s\S]*?\.catch\(\(\).*?\(\{\}\)/.test(read(route))) {
+    failures.push(`${route} must return 400 for invalid JSON instead of treating it as an empty object`);
+  }
+  requireIncludes(route, "Invalid JSON body", `${route} must return a clear invalid JSON error`);
+}
+
+const telegramWebhookRoute = read("frontend/src/app/api/telegram/webhook/route.ts");
+if (telegramWebhookRoute.includes("https://instead.volupai.com")) {
+  failures.push("Telegram webhook route must not hardcode a production app URL fallback");
+}
+if (/`\$\{input\.flow\}_\$\{Date\.now\(\)\}`|Date\.now\(\)/.test(telegramWebhookRoute)) {
+  failures.push("Telegram webhook route must not create synthetic intent IDs when persistence fails");
+}
+for (const expected of ["Telegram persistence unavailable", "Telegram intent persistence failed", "!APP_URL || !supabase"]) {
+  if (!telegramWebhookRoute.includes(expected)) failures.push(`Telegram webhook route must fail closed with ${expected}`);
+}
+
+const b2bWidgetRoute = read("frontend/src/app/api/b2b/widget/route.ts");
+if (b2bWidgetRoute.includes("https://instead.volupai.com")) {
+  failures.push("B2B widget route must not hardcode a production app URL fallback");
+}
+if (!b2bWidgetRoute.includes("getPublicAppOrigin")) {
+  failures.push("B2B widget route must use configured public app origin");
+}
+
 const checkoutRoute = "frontend/src/app/api/payments/checkout/route.ts";
 for (const expected of ["requireSameOrigin", "rateLimit", "readLimitedJson", "verifyWalletSession", "hasApprovedCompliance", "kyc_required"]) {
   requireIncludes(checkoutRoute, expected, `${checkoutRoute} must include ${expected}`);
@@ -126,6 +156,9 @@ for (const expected of [
   "shipping",
 ]) {
   requireIncludes(paymentsLib, expected, `${paymentsLib} must include gateway checkout field ${expected}`);
+}
+for (const expected of ["ALLOW_LOCAL_PRICE_FALLBACK", 'process.env.NODE_ENV !== "production"', "Payment prices are unavailable"]) {
+  requireIncludes(paymentsLib, expected, `${paymentsLib} must fail closed on production price lookup failures`);
 }
 for (const expected of ["assisted_token_deployments", "payment_intent_id", "factory_address", "initial_supply"]) {
   requireIncludes(paymentsLib, expected, `${paymentsLib} must enqueue assisted token deployments with ${expected}`);
@@ -165,6 +198,11 @@ for (const route of [
   "frontend/src/app/api/admin/revenue/route.ts",
 ]) {
   requireIncludes(route, "noStoreJson", `${route} must disable caching of sensitive data`);
+}
+
+const operationsRoute = read("frontend/src/app/api/admin/operations/route.ts");
+if (!operationsRoute.includes("ALLOW_PUBLIC_RPC_FALLBACK") || operationsRoute.includes("process.env[network.rpcEnv] || network.fallbackRpc")) {
+  failures.push("Admin operations route must not use public RPC fallback unless ALLOW_PUBLIC_RPC_FALLBACK=true");
 }
 
 const wafPolicy = read("config/vercel-waf-rate-limit-policy.json");

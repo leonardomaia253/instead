@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { AlertTriangle, Banknote, CheckCircle2, CircleDollarSign, Play, RefreshCw, RotateCcw, TrendingUp, XCircle } from "lucide-react";
-import { REVENUE_SOURCE_COUNT } from "@/lib/revenueCatalog";
 
 type RevenueRow = {
   source_code: string;
@@ -44,7 +43,7 @@ const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL",
 export default function AdminRevenuePage() {
   const [sources, setSources] = useState<RevenueRow[]>([]);
   const [operations, setOperations] = useState({ entitlements: 0, automationIntents: 0, b2bClients: 0, alerts: 0, b2bEvents: 0 });
-  const [source, setSource] = useState<"supabase" | "fallback" | "loading">("loading");
+  const [source, setSource] = useState<"supabase" | "loading">("loading");
   const [error, setError] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<AssistedDeployment[]>([]);
   const [deploymentFilters, setDeploymentFilters] = useState({ status: "all", chainId: "all", wallet: "" });
@@ -57,12 +56,15 @@ export default function AdminRevenuePage() {
     const res = await fetch("/api/admin/revenue", { cache: "no-store" });
     const body = await res.json();
     if (!res.ok) {
+      setSources([]);
+      setOperations({ entitlements: 0, automationIntents: 0, b2bClients: 0, alerts: 0, b2bEvents: 0 });
+      setSource("loading");
       setError(body?.error ?? "Falha ao carregar fontes de receita");
       return;
     }
     setSources(body.sources ?? []);
     setOperations(body.operations ?? { entitlements: 0, automationIntents: 0, b2bClients: 0, alerts: 0, b2bEvents: 0 });
-    setSource(body.source ?? "supabase");
+    setSource("supabase");
   }
 
   async function loadDeployments() {
@@ -157,12 +159,10 @@ export default function AdminRevenuePage() {
       </header>
 
       {error && <div style={styles.error}>{error}</div>}
-      {source === "fallback" && (
-        <div style={styles.warning}>Supabase indisponível para revenue_sources; exibindo catálogo local de fallback.</div>
-      )}
+      {source === "loading" && !error && <div style={styles.warning}>Carregando dados operacionais de receita.</div>}
 
       <section style={styles.metricGrid}>
-        <Metric icon={<TrendingUp size={20} />} label="Planos ativos" value={String(sources.length || REVENUE_SOURCE_COUNT)} />
+        <Metric icon={<TrendingUp size={20} />} label="Planos ativos" value={String(sources.length)} />
         <Metric icon={<CheckCircle2 size={20} />} label="Production ready" value={String(metrics.ready)} />
         <Metric icon={<Banknote size={20} />} label="Checkout fiat" value={String(metrics.checkoutProducts)} />
         <Metric icon={<CircleDollarSign size={20} />} label="Taxas on-chain" value={String(metrics.feeBased)} />

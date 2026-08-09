@@ -7,7 +7,7 @@
     "typecheck": "pnpm --filter instead-frontend exec tsc --noEmit",
     "contracts:compile": "hardhat compile",
     "contracts:test": "hardhat test",
-    "contracts:security": "node scripts/check-contract-security.mjs",
+    "contracts:security": "node scripts/check-contract-security.mjs && node scripts/check-deployment-scripts.mjs",
     "contracts:test:fork": "hardhat test test/InsteadLendingPoolFork.ts",
     "deploy:factory": "hardhat run scripts/deploy-token-factory.ts",
     "deploy:staging": "hardhat run scripts/deploy-staging-all.ts",
@@ -45,12 +45,14 @@
     "api:security": "node scripts/check-api-security.mjs",
     "telegram:set-webhook": "node scripts/set-telegram-webhook.mjs",
     "balances:monitor": "node scripts/monitor-balances.mjs",
+    "operations:check": "node scripts/check-operations-monitoring.mjs",
     "gas:rebalance:lifi": "hardhat run scripts/rebalance-gas-lifi.ts",
     "revenue:check": "node scripts/check-revenue-sources.mjs",
     "community:check": "node scripts/check-community-growth.mjs",
     "prices:verify": "node scripts/verify-platform-prices.mjs",
     "addresses:check": "node scripts/check-production-addresses.mjs",
     "performance:check": "node scripts/check-performance-budget.mjs",
+    "mobile:check": "node scripts/check-mobile-config.mjs",
     "ux:check": "node scripts/check-ux-production.mjs",
     "audit:local-production": "node scripts/local-production-audit.mjs",
     "production:gate": "node scripts/production-gate.mjs",
@@ -83,5 +85,6 @@
     "@openzeppelin/contracts-upgradeable": "^5.6.1",
     "dotenv": "^17.4.2",
     "hardhat": "^2.29.0"
-  }
+  },
+  "workspaces": ["frontend"]
 }

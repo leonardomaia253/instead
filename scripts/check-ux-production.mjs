@@ -163,6 +163,81 @@ if (/demo/i.test(read("frontend/src/app/[locale]/simulator/page.tsx"))) {
   failures.push("Simulator page must not expose demo wording in production UX");
 }
 
+const homeText = read("frontend/src/app/[locale]/page.tsx");
+if (/fallbackStats|4\.2M|1,240|850K/.test(homeText)) {
+  failures.push("Home page must not publish invented fallback traction metrics");
+}
+if (!homeText.includes("Aguardando dados")) {
+  failures.push("Home page must show an explicit empty state when live platform stats are unavailable");
+}
+
+const footerText = read("frontend/src/components/Footer.tsx");
+if (/https:\/\/twitter\.com["']|https:\/\/github\.com["']/.test(footerText)) {
+  failures.push("Footer must not link to generic social homepages");
+}
+if (/Protocolo Auditado|audited protocol/i.test(footerText)) {
+  failures.push("Footer must not claim audited protocol status without external audit evidence");
+}
+if (!footerText.includes("NEXT_PUBLIC_COMMUNITY_X_URL") || !footerText.includes("NEXT_PUBLIC_GITHUB_URL")) {
+  failures.push("Footer social links must be configurable with public production URLs");
+}
+
+const runtimeUrlFiles = [
+  "frontend/src/app/[locale]/layout.tsx",
+  "frontend/src/app/[locale]/factory/layout.tsx",
+  "frontend/src/app/[locale]/lending/layout.tsx",
+  "frontend/src/app/[locale]/staking/layout.tsx",
+  "frontend/src/app/sitemap.ts",
+  "frontend/src/app/robots.ts",
+  "frontend/src/lib/wagmi.ts",
+  "frontend/src/app/api/b2b/widget/route.ts",
+];
+for (const file of runtimeUrlFiles) {
+  if (read(file).includes("https://instead.volupai.com")) {
+    failures.push(`${file} must use configured app origin instead of hardcoded production URL`);
+  }
+}
+if (!read("frontend/src/lib/site.ts").includes("NEXT_PUBLIC_APP_ORIGIN")) {
+  failures.push("Frontend runtime URLs must be centralized in frontend/src/lib/site.ts");
+}
+const readinessText = read("scripts/production-readiness.mjs");
+if (!readinessText.includes('requireHttpsUrl("APP_ORIGIN")') || !readinessText.includes("APP_ORIGIN must match NEXT_PUBLIC_APP_ORIGIN")) {
+  failures.push("Production readiness must require APP_ORIGIN and match it to NEXT_PUBLIC_APP_ORIGIN");
+}
+if (read("scripts/production-gate.mjs").includes("skipped production smoke")) {
+  failures.push("Production gate must not skip smoke tests because APP_ORIGIN is missing");
+}
+if (!read("scripts/smoke-test.mjs").includes("NEXT_PUBLIC_APP_ORIGIN")) {
+  failures.push("Smoke tests must use NEXT_PUBLIC_APP_ORIGIN as the public origin fallback");
+}
+const certifyText = read("scripts/production-certify.mjs");
+if (!certifyText.includes("...mergeEnv(process.env, fileEnv)") || !certifyText.includes('REQUIRE_STRICT_PRODUCTION_GATE: "true"')) {
+  failures.push("Production certification must force strict gate after merging local/process env");
+}
+
+const adminHomeText = read("frontend/src/app/[locale]/admin/page.tsx");
+if (/simulado/i.test(adminHomeText)) {
+  failures.push("Admin revenue dashboard must label projections as planning, not simulated production metrics");
+}
+
+const lendingHookText = read("frontend/src/hooks/useInsteadLending.ts");
+if (/em breve|coming soon/i.test(lendingHookText)) {
+  failures.push("Lending disabled state must explain operational configuration instead of coming-soon product copy");
+}
+if (!lendingHookText.includes("NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING")) {
+  failures.push("Lending hook must keep production lending explicitly gated by NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING");
+}
+const lendingPageText = read("frontend/src/app/[locale]/lending/page.tsx");
+if (/em breve|coming soon|acesso antecipado/i.test(lendingPageText)) {
+  failures.push("Lending page disabled state must not expose coming-soon or early-access production copy");
+}
+if (lendingPageText.includes("contato@instead.volupai.com")) {
+  failures.push("Lending page must use NEXT_PUBLIC_SUPPORT_EMAIL instead of hardcoded contact email");
+}
+if (!lendingPageText.includes("NEXT_PUBLIC_SUPPORT_EMAIL")) {
+  failures.push("Lending page must expose specialist contact through NEXT_PUBLIC_SUPPORT_EMAIL");
+}
+
 const publicSolutionsCopy = [
   read("frontend/src/app/[locale]/solutions/page.tsx"),
   read("frontend/src/app/[locale]/solutions/[slug]/page.tsx"),

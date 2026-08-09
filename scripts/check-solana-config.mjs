@@ -53,6 +53,22 @@ for (const requiredFile of [
   if (!existsSync(resolve(root, requiredFile))) failures.push(`${requiredFile} is missing`);
 }
 
+const anchorToml = readFileSync(resolve(root, "solana/Anchor.toml"), "utf8");
+const programSource = readFileSync(resolve(root, "solana/programs/instead_solana_factory/src/lib.rs"), "utf8");
+const configuredProgramIds = [...anchorToml.matchAll(/instead_solana_factory\s*=\s*"([^"]+)"/g)].map((match) => match[1]);
+const declaredProgramId = programSource.match(/declare_id!\("([^"]+)"\)/)?.[1] ?? "";
+if (configuredProgramIds.length !== 3) failures.push("Anchor.toml must configure localnet, devnet and mainnet program ids");
+if (!declaredProgramId) failures.push("Solana program must declare an id");
+if ([declaredProgramId, ...configuredProgramIds].includes("11111111111111111111111111111111")) {
+  failures.push("Solana program id must not use the System Program placeholder");
+}
+if (declaredProgramId && configuredProgramIds.some((id) => id !== declaredProgramId)) {
+  failures.push("Anchor.toml program ids must match declare_id! in lib.rs");
+}
+if (declaredProgramId && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(declaredProgramId)) {
+  failures.push("declare_id! must be a Solana base58 public key");
+}
+
 if (failures.length > 0) {
   console.error("Solana config check failed:");
   for (const failure of failures) console.error(`- ${failure}`);

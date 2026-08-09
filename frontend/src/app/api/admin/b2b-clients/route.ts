@@ -30,7 +30,12 @@ export async function POST(request: NextRequest) {
   if (!adminSession) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const adminWallet = adminSession.wallet_address;
 
-  const body = await readLimitedJson<Record<string, unknown>>(request, 4096).catch((): Record<string, unknown> => ({}));
+  let body: Record<string, unknown>;
+  try {
+    body = await readLimitedJson<Record<string, unknown>>(request, 4096);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const name = String(body.name ?? "").trim();
   const domain = normalizeDomain(body.domain);
   const contactEmail = String(body.contactEmail ?? "").trim() || null;

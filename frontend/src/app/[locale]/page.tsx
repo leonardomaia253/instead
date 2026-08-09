@@ -14,13 +14,6 @@ import { useSettings } from "@/hooks/useSettings";
 const HealthGauge = dynamic(() => import("@/components/HealthGauge").then((mod) => mod.HealthGauge), { ssr: false });
 const Scene3D = dynamic(() => import("@/components/Scene3D"), { ssr: false });
 
-const fallbackStats = {
-  total_value_locked: "$4.2M+",
-  tokens_created: "1,240+",
-  fees_saved: "$850K",
-  active_networks: "7+",
-};
-
 export default function Home() {
   const statsRef = useRef<HTMLDivElement>(null);
   const [platformStats, setPlatformStats] = React.useState<PlatformStat[]>([]);
@@ -40,15 +33,15 @@ export default function Home() {
 
   const stats = useMemo(
     () => [
-      { label: "Valor total bloqueado", key: "total_value_locked", value: fallbackStats.total_value_locked },
-      { label: "Ativos lançados", key: "tokens_created", value: fallbackStats.tokens_created },
-      { label: "Gas roteado", key: "fees_saved", value: fallbackStats.fees_saved },
-      { label: "Redes ativas", key: "active_networks", value: fallbackStats.active_networks },
+      { label: "Valor total bloqueado", key: "total_value_locked" },
+      { label: "Ativos lancados", key: "tokens_created" },
+      { label: "Gas roteado", key: "fees_saved" },
+      { label: "Redes ativas", key: "active_networks" },
     ],
     [],
   );
 
-  const getStat = (key: string, defaultValue: string) => platformStats.find((item) => item.key === key)?.value || defaultValue;
+  const getStat = (key: string) => platformStats.find((item) => item.key === key)?.value || "Aguardando dados";
 
   return (
     <div className="site-shell">
@@ -116,7 +109,7 @@ export default function Home() {
             {stats.concat(stats).map((item, index) => (
               <div className="market-tile" key={`${item.key}-${index}`}>
                 <span>{item.label}</span>
-                <strong>{getStat(item.key, item.value)}</strong>
+                <strong>{getStat(item.key)}</strong>
               </div>
             ))}
           </div>

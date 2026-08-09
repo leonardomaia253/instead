@@ -12,8 +12,9 @@ type RateLimitBucket = {
 const buckets = new Map<string, RateLimitBucket>();
 
 export function corsHeaders() {
+  const appOrigin = Deno.env.get("APP_ORIGIN");
   return {
-    "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") ?? "https://instead.volupai.com",
+    "Access-Control-Allow-Origin": appOrigin ?? "null",
     "Access-Control-Allow-Headers": DEFAULT_ALLOWED_HEADERS,
     "Access-Control-Allow-Methods": DEFAULT_ALLOWED_METHODS,
     "Vary": "Origin",

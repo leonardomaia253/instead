@@ -8,7 +8,7 @@ const ANDROID_PUBLISHER_UPLOAD = 'https://androidpublisher.googleapis.com/upload
 const SCOPE = 'https://www.googleapis.com/auth/androidpublisher';
 
 const env = process.env;
-const packageName = env.GOOGLE_PLAY_PACKAGE_NAME || 'com.instead.app';
+const packageName = env.GOOGLE_PLAY_PACKAGE_NAME;
 const credentialsPath = env.GOOGLE_APPLICATION_CREDENTIALS;
 const bundlePath = env.ANDROID_AAB_PATH || env.GOOGLE_PLAY_AAB_PATH;
 const track = env.GOOGLE_PLAY_TRACK || 'internal';
@@ -87,6 +87,7 @@ async function getAccessToken(credentials) {
 
 async function main() {
   const resolvedCredentialsPath = resolveCredentialsPath(credentialsPath);
+  if (!packageName) fail('Set GOOGLE_PLAY_PACKAGE_NAME to the exact Play Console package name.');
   if (!resolvedCredentialsPath) fail('Set GOOGLE_APPLICATION_CREDENTIALS to the Play Console service-account JSON path.');
   if (!existsSync(resolvedCredentialsPath)) fail(`GOOGLE_APPLICATION_CREDENTIALS file not found: ${credentialsPath}`);
   if (!bundlePath) fail('Set ANDROID_AAB_PATH to the signed .aab you want to publish.');

@@ -1,9 +1,7 @@
 "use client";
-import { usePublicClient, useWriteContract, useReadContract } from "wagmi";
+import { useChainId, usePublicClient, useWriteContract, useReadContract } from "wagmi";
 import { CONTRACTS, TOKEN_FACTORY_ABI } from "@/lib/wagmi";
 import { enqueueReconciliation, insertAudit, insertGeneratedToken } from "@/lib/supabase";
-
-const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "42161");
 
 /**
  * Hook da Token Factory.
@@ -12,6 +10,7 @@ const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "42161");
 export function useTokenFactory() {
   const { writeContractAsync, isPending, error } = useWriteContract();
   const publicClient = usePublicClient();
+  const chainId = useChainId();
 
   // Leitura ao vivo da taxa de criação em ETH (baseada no preço Chainlink do ETH/USD)
   const { data: feeInEth, refetch: refetchFee } = useReadContract({
@@ -32,6 +31,7 @@ export function useTokenFactory() {
     creatorWallet: string;
   }) {
     if (!feeInEth) throw new Error("Could not fetch creation fee");
+    if (!chainId) throw new Error("Wallet network is required before creating a token");
 
     // Adiciona 5% de slippage ao fee para tolerar movimentos de preço do ETH
     const feeWithSlippage = (feeInEth * 105n) / 100n;
@@ -54,7 +54,7 @@ export function useTokenFactory() {
     });
 
     // Aguarda o recibo para extrair o endereço real do token
-    let tokenAddress = "pending";
+    let tokenAddress: string | null = null;
     try {
       const { Interface } = await import("ethers");
       const iface = new Interface(TOKEN_FACTORY_ABI as any);
@@ -72,6 +72,7 @@ export function useTokenFactory() {
     } catch (err) {
       console.error("Error parsing token address:", err);
     }
+    if (!tokenAddress) throw new Error("TokenCreated event not found; token address was not persisted");
 
     // Persiste no Supabase com o endereço real (se encontrado)
     await insertGeneratedToken({
@@ -83,7 +84,7 @@ export function useTokenFactory() {
       max_supply: Number(params.maxSupply),
       mintable: params.isMintable,
       tx_hash: txHash,
-      chain_id: CHAIN_ID,
+      chain_id: chainId,
     });
 
     const operationId = `${params.creatorWallet.toLowerCase()}:CREATE_TOKEN:${txHash.toLowerCase()}`;
@@ -92,14 +93,14 @@ export function useTokenFactory() {
       action: "CREATE_TOKEN",
       operation_id: operationId,
       tx_hash: txHash,
-      chain_id: CHAIN_ID,
+      chain_id: chainId,
       status: "confirmed",
       metadata: {
         token_address: tokenAddress,
         name: params.name,
         symbol: params.symbol,
         tx_hash: txHash,
-        chain_id: CHAIN_ID,
+        chain_id: chainId,
         mintable: params.isMintable,
         taxable: params.isTaxable ?? false,
         tax_bps: Number(params.taxBPS ?? 0n),
@@ -112,7 +113,7 @@ export function useTokenFactory() {
       vertical: "token_factory",
       action: "CREATE_TOKEN",
       tx_hash: txHash,
-      chain_id: CHAIN_ID,
+      chain_id: chainId,
       expected_state: {
         token_address: tokenAddress,
         name: params.name,

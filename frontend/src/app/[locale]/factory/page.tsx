@@ -862,13 +862,13 @@ export default function FactoryPage() {
   const [fiatCheckoutStatus, setFiatCheckoutStatus] = useState<"idle" | "loading" | "auth_required" | "kyc_required" | "error">("idle");
   const [telegramIntentId, setTelegramIntentId] = useState<string | null>(null);
 
-  const factoryAddress = (CHAIN_META[form.chainId]?.factoryAddress || "0x0") as `0x${string}`;
+  const factoryAddress = CHAIN_META[form.chainId]?.factoryAddress as `0x${string}` | null | undefined;
 
   const { data: feeInEth } = useReadContract({
-    address: factoryAddress,
+    address: factoryAddress ?? undefined,
     abi: TOKEN_FACTORY_ABI,
     functionName: "getCreationFeeInEth",
-    query: { enabled: factoryAddress !== "0x0" },
+    query: { enabled: Boolean(factoryAddress) },
   });
 
   const { writeContractAsync, data: txHash, isPending, error: writeError } = useWriteContract();
@@ -929,7 +929,7 @@ export default function FactoryPage() {
   }
 
   async function handleDeploy() {
-    if (!address || !feeInEth) return;
+    if (!address || !feeInEth || !factoryAddress) return;
     const feeWithSlippage = (feeInEth * 105n) / 100n;
     try {
       const initialSupply = toWholeTokenUnits(form.initialSupply);
@@ -969,7 +969,7 @@ export default function FactoryPage() {
         value: isFairLaunch ? feeWithSlippage + fairLaunchLiquidity : feeWithSlippage,
       });
 
-      let tokenAddress = "pending";
+      let tokenAddress: string | null = null;
       try {
         const { Interface } = await import("ethers");
         const iface = new Interface(TOKEN_FACTORY_ABI as any);
@@ -988,6 +988,8 @@ export default function FactoryPage() {
       } catch (eventError) {
         console.error("Erro ao extrair endereço do token:", eventError);
       }
+
+      if (!tokenAddress) throw new Error("TokenCreated event not found; token address was not persisted");
 
       // Salva metadados no Supabase
       await insertGeneratedToken({

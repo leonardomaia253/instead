@@ -3,13 +3,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-instead_solana_factory = "11111111111111111111111111111111"
+instead_solana_factory = "BXg5tAMHYNbYhfxd6eYR7j3njk2nozb5Bk6JZuqhdtzy"
 
 [programs.devnet]
-instead_solana_factory = "11111111111111111111111111111111"
+instead_solana_factory = "BXg5tAMHYNbYhfxd6eYR7j3njk2nozb5Bk6JZuqhdtzy"
 
 [programs.mainnet]
-instead_solana_factory = "11111111111111111111111111111111"
+instead_solana_factory = "BXg5tAMHYNbYhfxd6eYR7j3njk2nozb5Bk6JZuqhdtzy"
 
 [registry]
 url = "https://api.apr.dev"

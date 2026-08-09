@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
@@ -148,13 +148,13 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-// Margens lÃ­quidas por produto (gas + Stripe 2.9% + suporte humano + infra)
+// Margens líquidas por produto (gas + Stripe 2.9% + suporte humano + infra)
 const PRODUCT_MARGINS = {
-  onchain: 0.95,    // $5.00 on-chain â€” custo sÃ³ gas ~$0.25
-  dashboard: 0.85,  // $29/mÃªs â€” custo infra + CS ~$7
-  assisted: 0.70,   // $49 â€” ~2h suporte humano incluÃ­das
-  premium: 0.65,    // $159 â€” multi-chain + auditoria automÃ¡tica
-  agency: 0.60,     // $199 â€” white-glove onboarding ~3h
+  onchain: 0.95,    // $5.00 on-chain — custo só gas ~$0.25
+  dashboard: 0.85,  // $29/mês — custo infra + CS ~$7
+  assisted: 0.70,   // $49 — ~2h suporte humano incluídas
+  premium: 0.65,    // $159 — multi-chain + auditoria automática
+  agency: 0.60,     // $199 — white-glove onboarding ~3h
 } as const;
 
 export default function AdminDashboard() {
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
   const [salesConversion, setSalesConversion] = useState(0.22);
   const [averageTicket, setAverageTicket] = useState(420);
 
-  // Simulador $1.000/dia â€” mix mensal de produtos
+  // Planejador $1.000/dia — mix mensal de produtos
   const [qOnchain, setQOnchain] = useState(400);
   const [qDashboard, setQDashboard] = useState(200);
   const [qAssisted, setQAssisted] = useState(45);
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
               fontWeight: 700,
             }}
           >
-            ðŸ’² Gerenciar PreÃ§os
+            💲 Gerenciar Preços
           </a>
         </div>
       </header>
@@ -238,22 +238,22 @@ export default function AdminDashboard() {
         <MetricCard title="Clientes estimados" value={projectedCustomers.toLocaleString("en-US")} note={`${Math.round(salesConversion * 100)}% dos leads`} icon={<CheckCircle2 size={20} />} />
         <MetricCard title="Gap mensal" value={currencyFormatter.format(gap)} note="Ajuste trafego, conversao ou ticket" icon={<Activity size={20} />} />
         <MetricCard
-          title="Lucro/dia simulado"
+          title="Lucro/dia planejado"
           value={`$${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}`}
-          note={dailyProfitBreakdown.daily >= dailyGoal ? "âœ… Meta $1.000/dia atingida" : `${dailyProgress}% da meta de $1.000/dia`}
+          note={dailyProfitBreakdown.daily >= dailyGoal ? "✅ Meta $1.000/dia atingida" : `${dailyProgress}% da meta de $1.000/dia`}
           icon={<DollarSign size={20} />}
           highlight={dailyProfitBreakdown.daily >= dailyGoal}
         />
       </section>
 
-      {/* ===== SIMULADOR $1.000/DIA ===== */}
+      {/* ===== PLANEJADOR $1.000/DIA ===== */}
       <section className="card" style={styles.fullSection}>
         <div style={styles.sectionHeader}>
           <div>
-            <h2 style={styles.sectionTitle}>Simulador â€” $1.000 de lucro por dia</h2>
+            <h2 style={styles.sectionTitle}>Planejador — $1.000 de lucro por dia</h2>
             <p style={styles.sectionNote}>
-              Ajuste o volume mensal de cada produto e veja em tempo real quantas conversÃµes sÃ£o necessÃ¡rias para
-              atingir <strong style={{ color: "var(--accent-1)" }}>$1.000/dia lÃ­quido</strong>.
+              Ajuste o volume mensal de cada produto e veja em tempo real quantas conversões são necessárias para
+              atingir <strong style={{ color: "var(--accent-1)" }}>$1.000/dia líquido</strong>.
             </p>
           </div>
           <Zap size={22} color="var(--accent-1)" />
@@ -262,17 +262,17 @@ export default function AdminDashboard() {
         <div style={styles.dailySimGrid}>
           {/* Sliders da esquerda */}
           <div style={{ display: "grid", gap: 20 }}>
-            <Slider label="Token Deploy On-chain ($5 Ã— 95%)" value={qOnchain} min={0} max={2000} step={10} suffix=" deploys/mÃªs" onChange={setQOnchain} />
-            <Slider label="Creator Dashboard ($29/mÃªs Ã— 85%)" value={qDashboard} min={0} max={1000} step={5} suffix=" assinaturas ativas" onChange={setQDashboard} />
-            <Slider label="Deploy Assistido ($49 Ã— 70%)" value={qAssisted} min={0} max={200} step={1} suffix=" vendas/mÃªs" onChange={setQAssisted} />
-            <Slider label="Premium Launch ($159 Ã— 65%)" value={qPremium} min={0} max={100} step={1} suffix=" vendas/mÃªs" onChange={setQPremium} />
-            <Slider label="Setup AgÃªncia ($199 Ã— 60%)" value={qAgency} min={0} max={50} step={1} suffix=" agÃªncias/mÃªs" onChange={setQAgency} />
+            <Slider label="Token Deploy On-chain ($5 × 95%)" value={qOnchain} min={0} max={2000} step={10} suffix=" deploys/mês" onChange={setQOnchain} />
+            <Slider label="Creator Dashboard ($29/mês × 85%)" value={qDashboard} min={0} max={1000} step={5} suffix=" assinaturas ativas" onChange={setQDashboard} />
+            <Slider label="Deploy Assistido ($49 × 70%)" value={qAssisted} min={0} max={200} step={1} suffix=" vendas/mês" onChange={setQAssisted} />
+            <Slider label="Premium Launch ($159 × 65%)" value={qPremium} min={0} max={100} step={1} suffix=" vendas/mês" onChange={setQPremium} />
+            <Slider label="Setup Agência ($199 × 60%)" value={qAgency} min={0} max={50} step={1} suffix=" agências/mês" onChange={setQAgency} />
           </div>
 
           {/* Painel de resultados da direita */}
           <div style={styles.dailyResultPanel}>
             <div style={styles.dailyBigNumber}>
-              <span style={styles.dailyLabel}>Lucro LÃ­quido / Dia</span>
+              <span style={styles.dailyLabel}>Lucro Líquido / Dia</span>
               <strong style={{
                 ...styles.dailyValue,
                 color: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-1)"
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                 ${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}
               </strong>
               <span style={styles.dailyMonthly}>
-                {currencyFormatter.format(Math.round(dailyProfitBreakdown.totalMonthly))}/mÃªs
+                {currencyFormatter.format(Math.round(dailyProfitBreakdown.totalMonthly))}/mês
               </span>
             </div>
 
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
                 { label: "Dashboard",  profit: dailyProfitBreakdown.dashboard.profit, qty: dailyProfitBreakdown.dashboard.qty, unit: "assin." },
                 { label: "Assistido",  profit: dailyProfitBreakdown.assisted.profit,  qty: dailyProfitBreakdown.assisted.qty,  unit: "vendas" },
                 { label: "Premium",    profit: dailyProfitBreakdown.premium.profit,   qty: dailyProfitBreakdown.premium.qty,   unit: "vendas" },
-                { label: "AgÃªncia",    profit: dailyProfitBreakdown.agency.profit,    qty: dailyProfitBreakdown.agency.qty,    unit: "setup" },
+                { label: "Agência",    profit: dailyProfitBreakdown.agency.profit,    qty: dailyProfitBreakdown.agency.qty,    unit: "setup" },
               ] as const).map(({ label, profit, qty, unit }) => (
                 <div key={label} style={styles.breakdownRow}>
                   <span>{label}</span>
@@ -310,7 +310,7 @@ export default function AdminDashboard() {
             </div>
 
             {dailyProfitBreakdown.daily >= dailyGoal && (
-              <div style={styles.goalBadge}>ðŸŽ¯ $1.000/dia atingido com este mix!</div>
+              <div style={styles.goalBadge}>🎯 $1.000/dia atingido com este mix!</div>
             )}
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
         <div className="card" style={styles.calculator}>
           <div style={styles.sectionHeader}>
             <div>
-              <h2 style={styles.sectionTitle}>Simulador de metas</h2>
+              <h2 style={styles.sectionTitle}>Planejador de metas</h2>
               <p style={styles.sectionNote}>Use nas reunioes semanais para decidir se falta volume, oferta ou fechamento.</p>
             </div>
             <Banknote size={22} color="var(--accent-1)" />

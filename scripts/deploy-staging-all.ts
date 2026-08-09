@@ -1,12 +1,20 @@
 import { ethers, network, run } from "hardhat";
 import { writeDeploymentManifest } from "./deployment-manifest";
 
-function getEnv(name: string, fallback: string = ""): string {
-  return process.env[name] || fallback;
+const isLocalNetwork = network.name === "hardhat" || network.name === "localhost";
+
+function requireAddressEnv(name: string, localFallback?: string): string {
+  const value = process.env[name] || (isLocalNetwork ? localFallback : undefined);
+  if (!value) throw new Error(`${name} is required for ${network.name} deployment`);
+  if (!/^0x[a-fA-F0-9]{40}$/.test(value)) throw new Error(`${name} must be an EVM address`);
+  if (value.toLowerCase() === "0x0000000000000000000000000000000000000000") {
+    throw new Error(`${name} cannot be the zero address`);
+  }
+  return value;
 }
 
 async function verifyContract(address: string, constructorArguments: unknown[] = []) {
-  if (network.name === "hardhat" || network.name === "localhost") {
+  if (isLocalNetwork) {
     console.log(`[Verify] Skipping verification for local network ${network.name}`);
     return;
   }
@@ -29,9 +37,9 @@ async function main() {
   console.log(`Deployer Account: ${deployer ? deployer.address : "None (dry-run)"}`);
   console.log(`====================================================`);
 
-  const ethUsdFeed = getEnv("CHAINLINK_ETH_USD_FEED", "0x694AA1769357215DE4FAC081bf1f309aDC325306");
-  const treasury = getEnv("PRODUCTION_MULTISIG_ADDRESS", deployer ? deployer.address : "0x0000000000000000000000000000000000000001");
-  const dexRouter = getEnv("DEX_ROUTER_ADDRESS", "0xe592427a0aece92de3edee1f18e0157c05861564");
+  const ethUsdFeed = requireAddressEnv("CHAINLINK_ETH_USD_FEED", "0x694AA1769357215DE4FAC081bf1f309aDC325306");
+  const treasury = requireAddressEnv("PRODUCTION_MULTISIG_ADDRESS", deployer?.address);
+  const dexRouter = requireAddressEnv("DEX_ROUTER_ADDRESS", "0xe592427a0aece92de3edee1f18e0157c05861564");
 
   // 1. Deploy TokenFactory
   console.log("\n[1/4] Deploying TokenFactory...");
@@ -74,7 +82,7 @@ async function main() {
   // 4. Deploy Staking
   console.log("\n[4/4] Deploying Staking...");
   const Staking = await ethers.getContractFactory("InsteadStaking");
-  const rewardToken = getEnv("STAKING_REWARD_TOKEN", factoryAddress);
+  const rewardToken = requireAddressEnv("STAKING_REWARD_TOKEN", factoryAddress);
   const staking = await Staking.deploy(rewardToken, treasury);
   await staking.waitForDeployment();
   const stakingAddress = await staking.getAddress();
@@ -83,11 +91,11 @@ async function main() {
 
   // Write deployment manifest
   const manifest = writeDeploymentManifest(network.name, {
-    tokenFactory: { address: factoryAddress, version: 4, deployedAt: new Date().toISOString() },
-    lendingRouter: { address: lendingRouterAddress, deployedAt: new Date().toISOString() },
+    tokenFactory: { address: factoryAddress, version: 4, ethUsdFeed, treasury, dexRouter, deployedAt: new Date().toISOString() },
+    lendingRouter: { address: lendingRouterAddress, treasury, deployedAt: new Date().toISOString() },
     lendingPoolImpl: { address: implAddress, deployedAt: new Date().toISOString() },
-    lendingPoolProxy: { address: proxyAddress, deployedAt: new Date().toISOString() },
-    staking: { address: stakingAddress, deployedAt: new Date().toISOString() },
+    lendingPoolProxy: { address: proxyAddress, implementation: implAddress, treasury, router: lendingRouterAddress, deployedAt: new Date().toISOString() },
+    staking: { address: stakingAddress, rewardToken, treasury, deployedAt: new Date().toISOString() },
   });
 
   console.log("\n====================================================");

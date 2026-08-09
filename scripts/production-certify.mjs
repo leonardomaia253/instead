@@ -3,11 +3,11 @@ import { resolve } from "node:path";
 import { mergeEnv, parseEnvFile } from "./lib/supabase-env.mjs";
 
 const fileEnv = parseEnvFile(resolve(process.cwd(), "frontend/.env.local"));
-const env = mergeEnv(process.env, {
-  ...fileEnv,
+const env = {
+  ...mergeEnv(process.env, fileEnv),
   REQUIRE_STRICT_PRODUCTION_GATE: "true",
   SYNC_SUPABASE_SECRETS: "true",
-});
+};
 
 const steps = [
   { label: "Supabase environment diagnostics", args: ["supabase:diagnose"], timeout: 60_000, allowWarnings: false },

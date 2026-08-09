@@ -6,17 +6,30 @@ def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH") ?: "${rootDir}/../../c
 def androidKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
 def androidKeyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "instead"
 def androidKeyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: androidKeystorePassword
+def twaUrl = System.getenv("ANDROID_TWA_URL")
+if (!twaUrl) {
+    throw new GradleException("ANDROID_TWA_URL is required")
+}
+def twaHost = System.getenv("ANDROID_TWA_HOST") ?: new URI(twaUrl).host
+def playPackageName = System.getenv("GOOGLE_PLAY_PACKAGE_NAME")
+if (!playPackageName) {
+    throw new GradleException("GOOGLE_PLAY_PACKAGE_NAME is required")
+}
 
 android {
     namespace "com.instead.app"
     compileSdk 35
 
     defaultConfig {
-        applicationId System.getenv("GOOGLE_PLAY_PACKAGE_NAME") ?: "com.instead.app"
+        applicationId playPackageName
         minSdk 23
         targetSdk 35
         versionCode Integer.parseInt(System.getenv("ANDROID_VERSION_CODE") ?: "1")
         versionName System.getenv("ANDROID_VERSION_NAME") ?: "1.0.0"
+        manifestPlaceholders = [
+            twaUrl: twaUrl,
+            twaHost: twaHost,
+        ]
     }
 
     signingConfigs {

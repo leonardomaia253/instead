@@ -116,6 +116,18 @@ requireIncludes(runbook, "x-instead-discord-secret", "RUNBOOK.md must document D
 
 if (migration.includes("auth.role()")) failures.push("Community migration must not use deprecated auth.role()");
 if (queueApi.includes("NEXT_PUBLIC") || discordApi.includes("NEXT_PUBLIC")) failures.push("Community secrets must not use NEXT_PUBLIC env vars");
+for (const fakeSocialUrl of [
+  "discord.gg/instead",
+  "t.me/insteadfinance",
+  "x.com/insteadfinance",
+  "warpcast.com/insteadfinance",
+  "reddit.com/r/insteadfinance",
+  "youtube.com/@insteadfinance",
+  "tiktok.com/@insteadfinance",
+  "insteadfinance.substack.com",
+]) {
+  if (migration.includes(fakeSocialUrl)) failures.push(`Community seed must not hardcode unverified external social URL: ${fakeSocialUrl}`);
+}
 
 if (failures.length > 0) {
   console.error("Community growth checks failed:");

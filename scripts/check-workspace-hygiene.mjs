@@ -40,6 +40,7 @@ function isIgnoredPath(path) {
 function isSuspiciousFile(path) {
   const name = basename(path);
   if (suspiciousNames.has(name)) return true;
+  if (/^(build|tsc_log|factory_page_tsc_log).*\.txt$/i.test(name)) return true;
   if (/\.err\.log$/i.test(name) || /\.log$/i.test(name)) return true;
   return suspiciousExtensions.some((extension) => name.toLowerCase().endsWith(extension));
 }

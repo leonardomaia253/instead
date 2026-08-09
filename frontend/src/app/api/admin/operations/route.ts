@@ -43,6 +43,13 @@ async function rpc(url: string, method: string, params: unknown[]) {
   return payload.result;
 }
 
+function resolveRpcUrl(network: (typeof EVM_NETWORKS)[number]) {
+  const configured = process.env[network.rpcEnv];
+  if (configured) return configured;
+  if (process.env.ALLOW_PUBLIC_RPC_FALLBACK === "true") return network.fallbackRpc;
+  throw new Error(`${network.rpcEnv} is required; set ALLOW_PUBLIC_RPC_FALLBACK=true only for local diagnostics`);
+}
+
 async function getBalanceChecks() {
   const address = process.env.BALANCE_MONITOR_EVM_ADDRESS || process.env.ASSISTED_DEPLOYER_ADDRESS || process.env.PRODUCTION_MULTISIG_ADDRESS;
   const checks = [];
@@ -52,7 +59,7 @@ async function getBalanceChecks() {
       continue;
     }
     try {
-      const rpcUrl = process.env[network.rpcEnv] || network.fallbackRpc;
+      const rpcUrl = resolveRpcUrl(network);
       const balanceRaw = BigInt(await rpc(rpcUrl, "eth_getBalance", [address, "latest"]));
       const thresholdRaw = parseUnits(process.env[network.thresholdEnv] || network.defaultThreshold, network.decimals);
       checks.push({

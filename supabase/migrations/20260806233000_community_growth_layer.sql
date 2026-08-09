@@ -247,14 +247,14 @@ CREATE POLICY "Service role manages community message queue"
 
 INSERT INTO public.community_channels (code, name, kind, url, description, sort_order)
 VALUES
-  ('discord-core', 'Instead Discord', 'discord', 'https://discord.gg/instead', 'Centro operacional da comunidade, suporte, cargos, holders e campanhas.', 10),
-  ('telegram-alerts', 'Telegram Alerts', 'telegram', 'https://t.me/insteadfinance', 'Alertas rapidos, onboarding e comunicacao global.', 20),
-  ('x-narrative', 'X / Twitter', 'x', 'https://x.com/insteadfinance', 'Narrativas publicas, threads, lancamentos e prova social.', 30),
-  ('farcaster-native', 'Farcaster', 'farcaster', 'https://warpcast.com/insteadfinance', 'Canal Web3 nativo para builders e early adopters.', 40),
-  ('reddit-research', 'Reddit', 'reddit', 'https://www.reddit.com/r/insteadfinance', 'Discussao analitica, feedback publico e descoberta organica.', 50),
-  ('youtube-education', 'YouTube', 'youtube', 'https://youtube.com/@insteadfinance', 'Educacao, tutoriais, demos e updates de produto para topo de funil.', 60),
-  ('tiktok-clips', 'TikTok', 'tiktok', 'https://www.tiktok.com/@insteadfinance', 'Clipes curtos, narrativas simples e descoberta para publico novo.', 70),
-  ('newsletter-thesis', 'Mirror / Substack', 'newsletter', 'https://insteadfinance.substack.com', 'Teses, updates de transparencia, governanca e conteudo mais serio.', 80)
+  ('discord-core', 'Instead Discord', 'discord', '/community?channel=discord', 'Centro operacional da comunidade, suporte, cargos, holders e campanhas.', 10),
+  ('telegram-alerts', 'Telegram Alerts', 'telegram', '/community?channel=telegram', 'Alertas rapidos, onboarding e comunicacao global.', 20),
+  ('x-narrative', 'X / Twitter', 'x', '/community?channel=x', 'Narrativas publicas, threads, lancamentos e prova social.', 30),
+  ('farcaster-native', 'Farcaster', 'farcaster', '/community?channel=farcaster', 'Canal Web3 nativo para builders e early adopters.', 40),
+  ('reddit-research', 'Reddit', 'reddit', '/community?channel=reddit', 'Discussao analitica, feedback publico e descoberta organica.', 50),
+  ('youtube-education', 'YouTube', 'youtube', '/community?channel=youtube', 'Educacao, tutoriais, demos e updates de produto para topo de funil.', 60),
+  ('tiktok-clips', 'TikTok', 'tiktok', '/community?channel=tiktok', 'Clipes curtos, narrativas simples e descoberta para publico novo.', 70),
+  ('newsletter-thesis', 'Mirror / Substack', 'newsletter', '/community?channel=newsletter', 'Teses, updates de transparencia, governanca e conteudo mais serio.', 80)
 ON CONFLICT (code) DO UPDATE SET
   name = EXCLUDED.name,
   kind = EXCLUDED.kind,

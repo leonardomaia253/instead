@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next';
 import { PUBLIC_OFFER_LANDINGS } from '@/lib/revenueLanding';
+import { getPublicAppOrigin } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://instead.volupai.com';
+  const baseUrl = getPublicAppOrigin();
   const locales = ['en', 'pt'];
   const routes = [
     '',

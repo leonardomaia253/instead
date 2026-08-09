@@ -6,7 +6,7 @@ import { cleanText, json, preflight, rateLimit, readJsonBody } from "../_shared/
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 const SUPABASE_JWT_SECRET = Deno.env.get("SUPABASE_JWT_SECRET")
-const SIWE_DOMAIN = Deno.env.get("SIWE_DOMAIN") ?? "instead.volupai.com"
+const SIWE_DOMAIN = Deno.env.get("SIWE_DOMAIN")
 
 function requiredEnv(value: string | undefined, name: string) {
   if (!value) throw new Error("Service unavailable")
@@ -40,14 +40,15 @@ async function signJwt(payload: Record<string, unknown>, secret: string) {
 }
 
 function createSiweMessage(address: string, nonce: string) {
+  const siweDomain = requiredEnv(SIWE_DOMAIN, "SIWE_DOMAIN")
   const issuedAt = new Date().toISOString()
   return [
-    `${SIWE_DOMAIN} wants you to sign in with your Ethereum account:`,
+    `${siweDomain} wants you to sign in with your Ethereum account:`,
     address,
     "",
     "Sign in to Instead Finance.",
     "",
-    `URI: https://${SIWE_DOMAIN}`,
+    `URI: https://${siweDomain}`,
     "Version: 1",
     "Chain ID: 1",
     `Nonce: ${nonce}`,

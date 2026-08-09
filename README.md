@@ -148,14 +148,14 @@ Cada deploy grava `deployments/<network>.json`. Verifique o manifesto e, opciona
 ```bash
 DEPLOYMENT_NETWORK=base DEPLOYMENT_RPC_URL=$BASE_RPC_URL pnpm deployments:verify
 DEPLOYMENT_NETWORK=base DEPLOYMENT_RPC_URL=$BASE_RPC_URL PRODUCTION_MULTISIG_ADDRESS=0x... pnpm ownership:verify
-APP_ORIGIN=https://instead.volupai.com SUPABASE_URL=https://... pnpm smoke:test
+APP_ORIGIN=https://seu-dominio.example SUPABASE_URL=https://... pnpm smoke:test
 pnpm db:migrations:check
 ```
 
 Health endpoint:
 
 ```bash
-curl https://instead.volupai.com/api/health
+curl "$APP_ORIGIN/api/health"
 ```
 
 Use `RUNBOOK.md` para a sequencia completa de go-live e resposta a incidentes.

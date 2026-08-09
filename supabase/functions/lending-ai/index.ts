@@ -10,6 +10,14 @@ function requireConfiguredGemini() {
   }
 }
 
+function extractGeminiText(data: any) {
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+  if (typeof text !== "string" || text.trim().length === 0) {
+    throw new Error("AI provider returned no content")
+  }
+  return text
+}
+
 serve(async (req) => {
   const methodResponse = preflight(req)
   if (methodResponse) return methodResponse
@@ -50,11 +58,18 @@ serve(async (req) => {
     })
 
     const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Não foi possível gerar dicas no momento. Verifique sua conexão."
+    if (!response.ok) {
+      console.error("Gemini lending-ai failed", response.status, data?.error?.message ?? data)
+      throw new Error("AI provider request failed")
+    }
+    const text = extractGeminiText(data)
 
     return json({ tips: text })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error"
-    return json({ error: message }, message === "Payload too large" ? 413 : message === "AI provider unavailable" ? 503 : 500)
+    return json(
+      { error: message },
+      message === "Payload too large" ? 413 : message === "AI provider unavailable" ? 503 : message.startsWith("AI provider ") ? 502 : 500,
+    )
   }
 })

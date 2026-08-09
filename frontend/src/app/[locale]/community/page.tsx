@@ -39,6 +39,10 @@ const channelIcon: Record<string, React.ReactNode> = {
   newsletter: <BellRing size={18} />,
 };
 
+function channelLinkAttrs(url: string) {
+  return url.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {};
+}
+
 export default function CommunityPage() {
   const { address, isConnected } = useAccount();
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -148,7 +152,7 @@ export default function CommunityPage() {
               <p>Discord, Telegram, X, Farcaster, Reddit, YouTube, TikTok e newsletter viram uma camada operacional: cargos, XP, missoes, rewards, governanca, CRM e campanhas com menos friccao.</p>
             <div className="community-actions">
               <WalletConnectButton />
-              <a href={channels.find((channel) => channel.kind === "discord")?.url ?? "#"} target="_blank" rel="noreferrer" className="btn-outline">
+              <a href={channels.find((channel) => channel.kind === "discord")?.url ?? "#"} {...channelLinkAttrs(channels.find((channel) => channel.kind === "discord")?.url ?? "#")} className="btn-outline">
                 Abrir Discord
               </a>
             </div>
@@ -252,7 +256,7 @@ export default function CommunityPage() {
           <h2>Canais vivos</h2>
           <div className="community-channel-list">
             {channels.map((channel) => (
-              <a key={channel.id} href={channel.url} target="_blank" rel="noreferrer">
+              <a key={channel.id} href={channel.url} {...channelLinkAttrs(channel.url)}>
                 <span>{channelIcon[channel.kind] ?? <Radio size={18} />}</span>
                 <strong>{channel.name}</strong>
                 <small>{channel.description}</small>

@@ -14,7 +14,7 @@
             android:exported="true">
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="https://instead.volupai.com" />
+                android:value="${twaUrl}" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -24,7 +24,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:host="instead.volupai.com"
+                    android:host="${twaHost}"
                     android:scheme="https" />
             </intent-filter>
         </activity>

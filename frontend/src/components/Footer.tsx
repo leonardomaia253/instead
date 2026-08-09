@@ -4,6 +4,13 @@ import React from "react";
 import Link from "next/link";
 import { Github, MessageSquare, ShieldCheck, Terminal, Twitter } from "lucide-react";
 
+const optionalSocialLinks: Array<{ href: string | undefined; label: string; icon: React.ReactNode }> = [
+  { href: process.env.NEXT_PUBLIC_COMMUNITY_X_URL || process.env.NEXT_PUBLIC_COMMUNITY_TWITTER_URL, label: "X/Twitter", icon: <Twitter size={18} /> },
+  { href: process.env.NEXT_PUBLIC_GITHUB_URL, label: "GitHub", icon: <Github size={18} /> },
+];
+
+const socialLinks = optionalSocialLinks.flatMap((link) => link.href ? [{ ...link, href: link.href }] : []);
+
 export function Footer() {
   return (
     <footer className="proto-footer">
@@ -37,13 +44,16 @@ export function Footer() {
 
           <div className="proto-footer__status">
             <span>STATUS</span>
-            <div><ShieldCheck size={16} /> Protocolo Auditado</div>
+            <div><ShieldCheck size={16} /> Arquitetura auditavel</div>
             <div><Terminal size={16} /> Autenticação Segura</div>
             <div><MessageSquare size={16} /> Redes Operacionais</div>
-            <div className="proto-footer__social">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter size={18} /></a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github size={18} /></a>
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="proto-footer__social">
+                {socialLinks.map((link) => (
+                  <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.label}>{link.icon}</a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

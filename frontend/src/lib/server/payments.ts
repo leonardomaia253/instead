@@ -44,7 +44,8 @@ const BR_STATE_RE = /^[A-Z]{2}$/;
 const PHONE_DIGITS_RE = /^\d{8,11}$/;
 const COUNTRY_CODE_RE = /^\d{1,3}$/;
 
-// ─── Fallback hardcoded (usado se Supabase inacessível) ─────────────────────
+// Local fallback for development only. Production checkout must fail closed if
+// platform_prices cannot be read, otherwise stale local values could be charged.
 const FALLBACK_PRICES: Record<string, { label: string; amountUsd: number; amountBrl: number }> = {
   ...Object.fromEntries(
     FIAT_REVENUE_SOURCES.map((source) => [
@@ -58,11 +59,11 @@ const FALLBACK_PRICES: Record<string, { label: string; amountUsd: number; amount
   ),
 } as Record<string, { label: string; amountUsd: number; amountBrl: number }>;
 
-// ─── Cache em memória com TTL 60s ────────────────────────────────────────────
 type PriceRow = { label: string; amountUsd: number; amountBrl: number };
 let _priceCache: Record<string, PriceRow> | null = null;
 let _priceCacheAt = 0;
 const PRICE_CACHE_TTL_MS = 60_000; // 60 segundos
+const ALLOW_LOCAL_PRICE_FALLBACK = process.env.NODE_ENV !== "production";
 
 export function invalidatePriceCache() {
   _priceCache = null;
@@ -93,8 +94,11 @@ async function getPricesFromDb(): Promise<Record<string, PriceRow>> {
     _priceCache = map;
     _priceCacheAt = now;
     return map;
-  } catch {
-    // Fallback silencioso — não derruba o checkout se o DB falhar
+  } catch (error) {
+    if (!ALLOW_LOCAL_PRICE_FALLBACK) {
+      console.error("Production checkout price lookup failed", error);
+      throw new Error("Payment prices are unavailable");
+    }
     return FALLBACK_PRICES;
   }
 }
@@ -197,7 +201,7 @@ function pagarmeShipping(input: CheckoutRequest, productLabel: string) {
 
 export async function getPaymentProduct(vertical: PaymentVertical, productCode: string, provider: PaymentProvider) {
   const prices = await getPricesFromDb();
-  const product = prices[productCode] ?? FALLBACK_PRICES[productCode];
+  const product = prices[productCode] ?? (ALLOW_LOCAL_PRICE_FALLBACK ? FALLBACK_PRICES[productCode] : undefined);
   const catalogItem = FIAT_REVENUE_SOURCES.find((source) => source.sourceCode === productCode);
   if (!product || !catalogItem || catalogItem.vertical !== vertical) throw new Error("Unsupported payment product");
   return {

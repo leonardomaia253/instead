@@ -96,10 +96,12 @@ run("address config", "pnpm", ["addresses:check"], { timeout: 60_000 });
 run("workspace hygiene", "pnpm", ["workspace:hygiene"], { timeout: 60_000 });
 run("performance budget check", "pnpm", ["performance:check"], { timeout: 60_000 });
 run("UX production check", "pnpm", ["ux:check"], { timeout: 60_000 });
+run("mobile config check", "pnpm", ["mobile:check"], { timeout: 60_000 });
 run("secret scan", "pnpm", ["secrets:check"], { timeout: 60_000 });
 run("API security check", "pnpm", ["api:security"], { timeout: 60_000 });
 run("Edge Function contract check", "pnpm", ["edge:functions:check"], { timeout: 60_000 });
 run("revenue source check", "pnpm", ["revenue:check"], { timeout: 60_000 });
+run("operations monitoring check", "pnpm", ["operations:check"], { timeout: 60_000 });
 run("community growth check", "pnpm", ["community:check"], { timeout: 60_000 });
 run("live platform price verification", "pnpm", ["prices:verify"], { timeout: 60_000 });
 run("production readiness", "pnpm", ["readiness"], { timeout: 120_000 });
@@ -151,11 +153,7 @@ if (env.REQUIRE_EXTERNAL_AUDIT === "true" && !hasRealExternalAudit()) {
   failures.push("External audit is required but SMART_CONTRACT_SECURITY_AUDIT.md does not declare `External Audit: Complete`");
 }
 
-if (env.APP_ORIGIN) {
-  run("production smoke", "pnpm", ["smoke:test"], { timeout: 120_000 });
-} else {
-  warnings.push("APP_ORIGIN not set; skipped production smoke");
-}
+run("production smoke", "pnpm", ["smoke:test"], { timeout: 120_000 });
 
 if (env.REQUIRE_STRICT_PRODUCTION_GATE === "true" && warnings.length > 0) {
   failures.push(`Strict production gate does not allow warnings:\n${warnings.map((warning) => `- ${warning}`).join("\n")}`);

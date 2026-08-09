@@ -26,8 +26,19 @@ if (!supabaseEnvHelper.includes("supabaseJwtInfo")) {
 if (!supabaseEnvHelper.includes("serviceRoleRef")) {
   failures.push("Supabase env diagnostics must validate service role key project refs");
 }
+if (!supabaseEnvHelper.includes("processValue !== undefined && processValue !== \"\" ? processValue : fileValue")) {
+  failures.push("Supabase env merge must let process env override local .env files for CI/deploy safety");
+}
 if (!supabaseEnvHelper.includes('role !== "anon"') || !supabaseEnvHelper.includes('role !== "service_role"')) {
   failures.push("Supabase env diagnostics must validate anon and service_role JWT roles");
+}
+
+const sharedSecurity = readFileSync(resolve(functionsDir, "_shared/security.ts"), "utf8");
+if (sharedSecurity.includes("https://instead.volupai.com")) {
+  failures.push("Shared Edge Function security helpers must not hardcode APP_ORIGIN fallback");
+}
+if (!sharedSecurity.includes('"Access-Control-Allow-Origin": appOrigin ?? "null"')) {
+  failures.push("Shared Edge Function CORS must deny unknown origins when APP_ORIGIN is missing");
 }
 
 for (const name of requiredFunctions) {
@@ -54,6 +65,19 @@ for (const name of requiredFunctions) {
     if (!source.includes('message === "AI provider unavailable" ? 503')) {
       failures.push(`${name} must return 503 for missing AI provider configuration`);
     }
+    if (!source.includes("extractGeminiText") || !source.includes("AI provider returned no content")) {
+      failures.push(`${name} must fail closed when the AI provider returns no candidate content`);
+    }
+    if (!source.includes("!response.ok") || !source.includes("AI provider request failed")) {
+      failures.push(`${name} must fail closed when the AI provider request fails`);
+    }
+    for (const forbiddenFallback of [
+      "Arquiteto online",
+      "Não foi possível gerar dicas no momento",
+      "NÃ£o foi possÃ­vel gerar dicas no momento",
+    ]) {
+      if (source.includes(forbiddenFallback)) failures.push(`${name} must not return static AI success fallback text`);
+    }
   }
   if (name === "telegram-bot" && !source.includes("x-telegram-bot-api-secret-token")) {
     failures.push("telegram-bot does not validate Telegram webhook secret header");
@@ -64,8 +88,21 @@ for (const name of requiredFunctions) {
   if (name === "telegram-bot" && source.includes("TELEGRAM_BOT_TOKEN is not configured")) {
     failures.push("telegram-bot exposes secret configuration names in responses");
   }
+  if (name === "telegram-bot") {
+    if (source.includes("https://instead.volupai.com")) {
+      failures.push("telegram-bot must not hardcode a production app URL fallback");
+    }
+    if (!source.includes('const APP_URL = Deno.env.get("APP_ORIGIN")')) {
+      failures.push("telegram-bot must read app links from APP_ORIGIN");
+    }
+    if (!source.includes("!APP_URL || !supabase")) {
+      failures.push("telegram-bot must fail closed when APP_ORIGIN or Supabase persistence is missing");
+    }
+  }
   if (name === "siwe-auth") {
     if (source.includes("is not configured")) failures.push("siwe-auth must not expose missing secret names in responses");
+    if (source.includes('?? "instead.volupai.com"')) failures.push("siwe-auth must not hardcode SIWE_DOMAIN fallback");
+    if (!source.includes('requiredEnv(SIWE_DOMAIN, "SIWE_DOMAIN")')) failures.push("siwe-auth must require SIWE_DOMAIN explicitly");
     if (!source.includes('message === "Service unavailable"') || !source.includes('json({ error: message }, 503)')) {
       failures.push("siwe-auth must return a generic 503 when required secrets are missing");
     }
@@ -84,6 +121,9 @@ for (const name of requiredFunctions) {
   if (name === "balance-monitor") {
     if (!source.includes('if (!cronSecret) return json({ error: "Service unavailable" }, 503)')) {
       failures.push("balance-monitor must fail closed when monitor secret is missing");
+    }
+    if (!source.includes("ALLOW_PUBLIC_RPC_FALLBACK") || source.includes("Deno.env.get(network.rpcEnv) || network.fallbackRpc")) {
+      failures.push("balance-monitor must not use public RPC fallback unless ALLOW_PUBLIC_RPC_FALLBACK=true");
     }
   }
 }

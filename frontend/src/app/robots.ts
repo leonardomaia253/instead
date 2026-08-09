@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
+import { getPublicAppOrigin } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = getPublicAppOrigin();
   return {
     rules: {
       userAgent: '*',
@@ -18,6 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         '/api/admin/',
       ],
     },
-    sitemap: 'https://instead.volupai.com/sitemap.xml',
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

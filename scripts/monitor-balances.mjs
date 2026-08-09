@@ -69,9 +69,16 @@ async function rpc(url, method, params) {
   return payload.result;
 }
 
+function resolveRpcUrl(network) {
+  const configured = env[network.rpcEnv];
+  if (configured) return configured;
+  if (env.ALLOW_PUBLIC_RPC_FALLBACK === "true") return network.fallbackRpc;
+  throw new Error(`${network.rpcEnv} is required; set ALLOW_PUBLIC_RPC_FALLBACK=true only for local diagnostics`);
+}
+
 async function checkEvm(network) {
   if (!EVM_ADDRESS) return { ...network, status: "skipped", reason: "BALANCE_MONITOR_EVM_ADDRESS/ASSISTED_DEPLOYER_ADDRESS/PRODUCTION_MULTISIG_ADDRESS missing" };
-  const rpcUrl = env[network.rpcEnv] || network.fallbackRpc;
+  const rpcUrl = resolveRpcUrl(network);
   const balanceHex = await rpc(rpcUrl, "eth_getBalance", [EVM_ADDRESS, "latest"]);
   const balanceWei = BigInt(balanceHex);
   const thresholdWei = parseUnits(env[network.thresholdEnv] || network.defaultThreshold, 18);
@@ -88,7 +95,7 @@ async function checkEvm(network) {
 
 async function checkSolana() {
   if (!SOLANA_ADDRESS) return { ...SOLANA_NETWORK, status: "skipped", reason: "BALANCE_MONITOR_SOLANA_ADDRESS/NEXT_PUBLIC_SOLANA_DEPLOYER_ADDRESS missing" };
-  const rpcUrl = env[SOLANA_NETWORK.rpcEnv] || SOLANA_NETWORK.fallbackRpc;
+  const rpcUrl = resolveRpcUrl(SOLANA_NETWORK);
   const result = await rpc(rpcUrl, "getBalance", [SOLANA_ADDRESS]);
   const lamports = BigInt(result.value);
   const thresholdLamports = parseUnits(env[SOLANA_NETWORK.thresholdEnv] || SOLANA_NETWORK.defaultThreshold, 9);

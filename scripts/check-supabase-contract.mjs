@@ -81,17 +81,48 @@ const supabaseLib = read("frontend/src/lib/supabase.ts");
 if (!supabaseLib.includes('.from("generated_tokens")')) failures.push("Supabase token helpers must use generated_tokens");
 if (!supabaseLib.includes('onConflict: "tx_hash,chain_id"')) failures.push("Token helper must upsert by tx_hash,chain_id");
 if (!supabaseLib.includes('onConflict: "wallet_address,borrow_asset,chain_id"')) failures.push("Lending helper must upsert by wallet_address,borrow_asset,chain_id");
+if (read("frontend/src/hooks/useTokenFactory.ts").includes('tokenAddress = "pending"')) {
+  failures.push("Token factory hook must not persist synthetic pending token addresses");
+}
+const tokenFactoryHook = read("frontend/src/hooks/useTokenFactory.ts");
+const tokenFactoryPage = read("frontend/src/app/[locale]/factory/page.tsx");
+const b2bWidgetApi = read("frontend/src/app/api/b2b/widget/route.ts");
+const paymentReconciliation = read("scripts/reconcile-payments.mjs");
+if (tokenFactoryPage.includes('tokenAddress = "pending"')) {
+  failures.push("Factory page must not persist synthetic pending token addresses");
+}
+if (!tokenFactoryHook.includes("TokenCreated event not found") || !tokenFactoryPage.includes("TokenCreated event not found")) {
+  failures.push("Token factory flows must fail closed when TokenCreated event is missing");
+}
+if (/NEXT_PUBLIC_CHAIN_ID\s*\|\|\s*["']42161["']/.test(tokenFactoryHook)) {
+  failures.push("Token factory hook must not default persisted chain_id to Arbitrum");
+}
+if (/body\.chainId\s*\?\?\s*8453/.test(b2bWidgetApi)) {
+  failures.push("B2B widget API must require chainId instead of defaulting to Base");
+}
+if (/chain_id:\s*42161/.test(paymentReconciliation)) {
+  failures.push("Payment reconciliation must not enqueue Arbitrum as a default chain_id");
+}
+if (read("frontend/src/lib/wagmi.ts").includes('?? "0x0"')) {
+  failures.push("Wagmi chain metadata must not use 0x0 as a contract-address sentinel");
+}
+if (!migrations.includes("ALTER COLUMN tx_hash DROP NOT NULL")) failures.push("Reconciliation queue must allow tx_hash null for pending off-chain anomalies");
+if (!supabaseLib.includes("tx_hash: string | null")) failures.push("Reconciliation operation type must allow null tx_hash for pending anomalies");
+if (paymentReconciliation.includes("0x0000000000000000000000000000000000000000000000000000000000000000")) {
+  failures.push("Payment reconciliation must not enqueue fake zero tx hashes");
+}
 if (!read("frontend/src/lib/lendingProtocols.ts").includes("morpho_blue")) failures.push("Lending protocol registry must include Morpho");
 if (!read("frontend/src/lib/lendingProtocols.ts").includes("solana_sdk")) failures.push("Lending protocol registry must classify Solana SDK protocols");
 if (!read("config/lending-protocols.json").includes("compound_v3")) failures.push("Seed config must include Compound III");
 if (!read("scripts/seed-lending-protocol-routes.mjs").includes("SUPABASE_SERVICE_ROLE_KEY")) failures.push("Lending protocol seed script must use service role server-side");
 if (!read("frontend/src/lib/server/supabaseAdmin.ts").includes("SUPABASE_SERVICE_ROLE_KEY")) failures.push("Payment helpers must use service role server-side");
 if (!read("frontend/src/lib/revenueCatalog.ts").includes("REVENUE_SOURCE_COUNT")) failures.push("Revenue catalog must expose canonical revenue source count");
-if (!read("frontend/src/app/[locale]/admin/revenue/page.tsx").includes("revenue_sources")) failures.push("Admin revenue page must expose revenue_sources");
+if (!read("frontend/src/app/[locale]/admin/revenue/page.tsx").includes("/api/admin/revenue")) failures.push("Admin revenue page must load revenue sources through the admin revenue API");
+if (!read("frontend/src/app/api/admin/revenue/route.ts").includes('.from("revenue_sources")')) failures.push("Admin revenue API must query revenue_sources");
 if (!read("frontend/src/lib/server/payments.ts").includes("FIAT_REVENUE_SOURCES")) failures.push("Payment helpers must support monetized revenue catalog products");
 if (!read("frontend/src/lib/server/payments.ts").includes("user_revenue_entitlements")) failures.push("Paid premium products must create user entitlements");
 if (!read("frontend/src/app/api/lending/automation-intents/route.ts").includes("lending_automation_intents")) failures.push("Lending premium automation intents API is missing");
-if (!read("frontend/src/app/api/b2b/widget/route.ts").includes("b2b_widget_clients")) failures.push("B2B widget API is missing");
+if (!b2bWidgetApi.includes("b2b_widget_clients")) failures.push("B2B widget API is missing");
 if (!read("frontend/src/app/api/admin/b2b-clients/route.ts").includes("apiKey")) failures.push("Admin B2B client provisioning API is missing");
 if (!read("frontend/src/app/api/revenue/me/route.ts").includes("user_revenue_entitlements")) failures.push("User revenue status API is missing");
 if (!read("frontend/src/app/api/revenue/me/route.ts").includes("assisted_token_deployments")) failures.push("User revenue status API must include assisted token deployment status");

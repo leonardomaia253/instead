@@ -1,4 +1,7 @@
 import { Metadata } from 'next';
+import { getPublicAppOrigin } from '@/lib/site';
+
+const siteUrl = getPublicAppOrigin();
 
 export const metadata: Metadata = {
   title: 'Empréstimos de Cripto (Lending) | Instead DeFi',
@@ -7,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Crypto Lending Facilitado | Instead DeFi',
     description: 'Deposite seus ativos e tome empréstimos em segundos.',
-    url: 'https://instead.volupai.com/lending',
+    url: `${siteUrl}/lending`,
   },
 };
 

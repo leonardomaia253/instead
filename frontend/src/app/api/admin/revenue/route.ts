@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { REVENUE_SOURCES } from "@/lib/revenueCatalog";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/server/supabaseAdmin";
 import { noStoreJson } from "@/lib/server/responses";
@@ -51,32 +50,8 @@ export async function GET(req: NextRequest) {
       },
       source: "supabase",
     });
-  } catch {
-    return noStoreJson({
-      sources: REVENUE_SOURCES.map((source) => ({
-        source_code: source.sourceCode,
-        label: source.label,
-        vertical: source.vertical,
-        category: source.category,
-        revenue_model: source.revenueModel,
-        billing_interval: source.billingInterval,
-        status: source.status,
-        production_ready: source.productionReady,
-        amount_usd_cents: source.amountUsdCents ?? null,
-        amount_brl_cents: source.amountBrlCents ?? null,
-        take_rate_bps: source.takeRateBps ?? null,
-        notes: source.notes,
-      })),
-      count: REVENUE_SOURCES.length,
-      operations: {
-        entitlements: 0,
-        automationIntents: 0,
-        b2bClients: 0,
-        alerts: 0,
-        b2bEvents: 0,
-        assistedDeployments: 0,
-      },
-      source: "fallback",
-    });
+  } catch (error) {
+    console.error("Admin revenue failed", error);
+    return noStoreJson({ error: "Revenue data unavailable", code: "revenue_unavailable" }, { status: 503 });
   }
 }

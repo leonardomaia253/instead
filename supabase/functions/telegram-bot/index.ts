@@ -32,7 +32,7 @@ type Session = {
 const TELEGRAM_API = "https://api.telegram.org";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")?.trim();
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
-const APP_URL = Deno.env.get("APP_ORIGIN") ?? "https://instead.volupai.com";
+const APP_URL = Deno.env.get("APP_ORIGIN");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -44,7 +44,7 @@ const supabase = SUPABASE_URL && SERVICE_ROLE_KEY
 // Helpers
 // ─────────────────────────────────────────
 function missingConfiguration() {
-  return !BOT_TOKEN || !WEBHOOK_SECRET || !supabase;
+  return !BOT_TOKEN || !WEBHOOK_SECRET || !APP_URL || !supabase;
 }
 function validateTelegramSecret(req: Request) {
   const received = req.headers.get("x-telegram-bot-api-secret-token");

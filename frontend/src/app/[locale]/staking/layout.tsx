@@ -1,4 +1,7 @@
 import { Metadata } from 'next';
+import { getPublicAppOrigin } from '@/lib/site';
+
+const siteUrl = getPublicAppOrigin();
 
 export const metadata: Metadata = {
   title: 'Staking de Tokens & Rendimentos | Instead DeFi',
@@ -7,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Instead Staking | Maximize seus Rendimentos',
     description: 'Participe dos pools de liquidez e ganhe recompensas diárias.',
-    url: 'https://instead.volupai.com/staking',
+    url: `${siteUrl}/staking`,
   },
 };
 

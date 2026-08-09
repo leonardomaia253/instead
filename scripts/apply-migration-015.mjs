@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 if (!token) {
@@ -6,13 +7,16 @@ if (!token) {
   process.exit(1);
 }
 
-const sql = readFileSync(
-  "C:/Users/Administrator/instead/supabase/migrations/015_platform_prices.sql",
-  "utf-8"
-);
+const projectRef = process.env.SUPABASE_PROJECT_REF;
+if (!projectRef || !/^[a-z0-9]{20}$/.test(projectRef)) {
+  console.error("SUPABASE_PROJECT_REF is required and must be a 20-character Supabase project ref");
+  process.exit(1);
+}
+
+const sql = readFileSync(resolve("supabase/migrations/015_platform_prices.sql"), "utf-8");
 
 const res = await fetch(
-  "https://api.supabase.com/v1/projects/wjvrcwvnznkisoerngal/database/query",
+  `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
   {
     method: "POST",
     headers: {

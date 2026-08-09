@@ -5,7 +5,7 @@ import { rateLimit, readLimitedJson } from "@/lib/server/rateLimit";
 const TELEGRAM_API = "https://api.telegram.org";
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN || "https://instead.volupai.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_ORIGIN;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -139,7 +139,7 @@ async function storeTelegramIntent(input: {
   flow: "token" | "lending";
   payload: Record<string, unknown>;
 }) {
-  if (!supabase) return `${input.flow}_${Date.now()}`;
+  if (!supabase) throw new Error("Telegram persistence unavailable");
   const { data, error } = await supabase
     .from("telegram_bot_intents")
     .insert({
@@ -155,7 +155,7 @@ async function storeTelegramIntent(input: {
     .single();
   if (error || !data) {
     console.warn("Telegram intent insert failed", error);
-    return `${input.flow}_${Date.now()}`;
+    throw new Error("Telegram intent persistence failed");
   }
   return String(data.id);
 }
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "telegram:webhook", 60, 60_000);
   if (!limited.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
-  if (!BOT_TOKEN || !WEBHOOK_SECRET) {
+  if (!BOT_TOKEN || !WEBHOOK_SECRET || !APP_URL || !supabase) {
     console.error("Telegram webhook is not configured");
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }

@@ -6,7 +6,7 @@ import { AAVE_VARIABLE_DEBT_TOKEN_ABI, CONTRACTS, ERC20_ABI, LENDING_POOL_ABI, L
 
 const ENABLE_PRODUCTION_LENDING = process.env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true";
 const LENDING_DISABLED_MESSAGE =
-  "O serviço de empréstimos inteligentes estará disponível em breve nesta rede.";
+  "Lending on-chain esta desativado neste ambiente. Configure contratos, rotas e NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING=true apos concluir os gates de producao.";
 
 export function useInsteadLending(assetAddress?: `0x${string}`) {
   const { address } = useAccount();

@@ -14,7 +14,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  const body = await readLimitedJson<{ token?: string }>(request, 4096).catch((): { token?: string } => ({}));
+  let body: { token?: string };
+  try {
+    body = await readLimitedJson<{ token?: string }>(request, 4096);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const token = String(body.token ?? "");
   const payload = verifyWalletToken(token);
   if (!payload?.wallet_address) {
