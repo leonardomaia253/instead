@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -12,6 +12,28 @@ function read(path) {
 
 function requireIncludes(path, needle, message) {
   if (!read(path).includes(needle)) failures.push(message);
+}
+
+function walkRouteFiles(dir) {
+  return readdirSync(resolve(root, dir), { withFileTypes: true }).flatMap((entry) => {
+    const absolute = resolve(root, dir, entry.name);
+    const projectPath = relative(root, absolute).replace(/\\/g, "/");
+    if (entry.isDirectory()) return walkRouteFiles(projectPath);
+    return entry.isFile() && entry.name === "route.ts" ? [projectPath] : [];
+  });
+}
+
+const apiRoutes = walkRouteFiles("frontend/src/app/api");
+const publicHealthRoute = "frontend/src/app/api/health/route.ts";
+const nextConfig = read("frontend/next.config.js");
+const apiNoStoreIsGlobal = nextConfig.includes("source: '/api/:path*'") && nextConfig.includes("no-store, max-age=0");
+for (const route of apiRoutes) {
+  requireIncludes(route, "rateLimit", `${route} must rate-limit Vercel function invocations`);
+  if (route === publicHealthRoute) {
+    requireIncludes(route, "Cache-Control", `${route} must disable response caching`);
+  } else if (!apiNoStoreIsGlobal) {
+    requireIncludes(route, "noStoreJson", `${route} must use noStoreJson or equivalent no-store response helper`);
+  }
 }
 
 const csrf = read("frontend/src/lib/server/csrf.ts");
@@ -145,6 +167,25 @@ for (const route of [
   requireIncludes(route, "noStoreJson", `${route} must disable caching of sensitive data`);
 }
 
+const wafPolicy = read("config/vercel-waf-rate-limit-policy.json");
+for (const expectedPath of [
+  "/api/admin",
+  "/api/affiliates",
+  "/api/auth",
+  "/api/b2b",
+  "/api/community",
+  "/api/compliance",
+  "/api/discord",
+  "/api/health",
+  "/api/lending",
+  "/api/os",
+  "/api/payments",
+  "/api/revenue",
+  "/api/telegram",
+]) {
+  if (!wafPolicy.includes(expectedPath)) failures.push(`Vercel WAF policy must cover ${expectedPath}`);
+}
+
 requireIncludes("frontend/src/app/api/payments/status/route.ts", "UUID_RE", "Payment status must validate payment intent ids before querying");
 
 const proxy = read("frontend/src/proxy.ts");
@@ -152,7 +193,6 @@ if (!proxy.includes("header.alg !== 'HS256'") || !proxy.includes("timingSafeEqua
   failures.push("Proxy must validate wallet JWT structure before trusting admin routes");
 }
 
-const nextConfig = read("frontend/next.config.js");
 for (const header of [
   "Content-Security-Policy",
   "Strict-Transport-Security",

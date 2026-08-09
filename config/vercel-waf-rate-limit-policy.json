@@ -11,10 +11,17 @@
     "planConstraint": "Vercel Hobby allows one rate-limit rule per project, so the Vercel production rule consolidates the Vercel-routed API surfaces below into one active rule.",
     "match": {
       "pathPrefixes": [
+        "/api/admin",
+        "/api/affiliates",
         "/api/auth",
         "/api/payments",
         "/api/lending",
         "/api/b2b",
+        "/api/community",
+        "/api/compliance",
+        "/api/discord",
+        "/api/health",
+        "/api/os",
         "/api/revenue",
         "/api/telegram"
       ]
@@ -38,6 +45,15 @@
           "/api/payments/status",
           "/api/lending/automation-intents",
           "/api/b2b/widget",
+          "/api/affiliates/click",
+          "/api/affiliates/me",
+          "/api/affiliates/payouts",
+          "/api/community/me",
+          "/api/community/event",
+          "/api/community/vote",
+          "/api/community/queue",
+          "/api/compliance/verification/session",
+          "/api/os/intents",
           "/api/revenue/me"
         ],
         "methods": ["POST", "PUT", "PATCH", "DELETE"]
@@ -56,10 +72,38 @@
       "match": {
         "paths": [
           "/api/telegram/webhook",
+          "/api/discord/webhook",
           "/api/payments/webhooks/stripe",
-          "/api/payments/webhooks/pagarme"
+          "/api/payments/webhooks/pagarme",
+          "/api/compliance/verification/webhooks/didit"
         ],
         "methods": ["POST"]
+      },
+      "rateLimit": {
+        "algorithm": "fixed-window",
+        "key": "ip",
+        "limit": 120,
+        "window": "60s",
+        "action": "deny",
+        "mitigationStatus": 429
+      }
+    },
+    {
+      "name": "instead-api-admin-read",
+      "match": {
+        "paths": [
+          "/api/admin/affiliates",
+          "/api/admin/assisted-deployments",
+          "/api/admin/community",
+          "/api/admin/operations",
+          "/api/admin/prices",
+          "/api/admin/revenue",
+          "/api/payments/status",
+          "/api/revenue/me",
+          "/api/compliance/verification/status",
+          "/api/health"
+        ],
+        "methods": ["GET"]
       },
       "rateLimit": {
         "algorithm": "fixed-window",

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { REVENUE_SOURCES } from "@/lib/revenueCatalog";
+import { rateLimit } from "@/lib/server/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/server/supabaseAdmin";
 import { noStoreJson } from "@/lib/server/responses";
 import { verifyAdminWallet } from "@/lib/server/walletAuth";
@@ -7,6 +8,14 @@ import { verifyAdminWallet } from "@/lib/server/walletAuth";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, "admin:revenue", 30, 60_000);
+  if (!limited.allowed) {
+    return noStoreJson(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSeconds) } },
+    );
+  }
+
   const authError = await verifyAdminWallet(req);
   if (authError) return authError;
 
