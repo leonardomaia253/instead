@@ -13,10 +13,8 @@ export function HealthGauge({ healthFactor, size = 140 }: HealthGaugeProps) {
   const capped = Math.min(healthFactor, 3);
   const pct    = Math.min(1, (capped - 0) / 3);
 
-  const color =
-    healthFactor >= 1.5 ? "#10b981" :
-    healthFactor >= 1.2 ? "#f59e0b" :
-    "#ef4444";
+  const tone = healthFactor >= 1.5 ? "healthy" : healthFactor >= 1.2 ? "warning" : "critical";
+  const color = `var(--risk-${tone})`;
 
   const label =
     healthFactor >= 1.5 ? "Saudável" :
@@ -40,14 +38,14 @@ export function HealthGauge({ healthFactor, size = 140 }: HealthGaugeProps) {
   const displayHF = healthFactor >= 999 ? "∞" : healthFactor.toFixed(2);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+    <div className="health-gauge" data-tone={tone}>
       <svg width={size} height={size * 0.7} viewBox="0 0 120 75" style={{ overflow: "visible" }}>
         {/* Background track */}
         <path d={bgArc} fill="none" stroke="var(--border)" strokeWidth={10} strokeLinecap="round" />
         {/* Filled arc */}
         {fgArc && (
           <path d={fgArc} fill="none" stroke={color} strokeWidth={10} strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 4px ${color})`, transition: "all 0.5s ease" }}
+            className="health-gauge__value"
           />
         )}
         {/* Center value */}
@@ -56,10 +54,7 @@ export function HealthGauge({ healthFactor, size = 140 }: HealthGaugeProps) {
           {displayHF}
         </text>
       </svg>
-      <div style={{
-        fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
-        color, padding: "3px 10px", background: `${color}15`, borderRadius: 999,
-      }}>
+      <div className="health-gauge__label">
         {label}
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { Github, MessageSquare, ShieldCheck, Terminal, Twitter } from "lucide-react";
 
 const optionalSocialLinks: Array<{ href: string | undefined; label: string; icon: React.ReactNode }> = [
@@ -16,10 +16,10 @@ export function Footer() {
     <footer className="proto-footer">
       <div className="container proto-footer__inner">
         <div className="proto-footer__manifesto">
-          <span>INSTEAD / PROTOCOL FOOTER</span>
-          <h2>Interface cripto não precisa parecer banco antigo.</h2>
+          <span>INSTEAD / LIQUIDITY INFRASTRUCTURE</span>
+          <h2>Capital on-chain com controle verificável.</h2>
           <p>
-            Lending, tokenização e operação multichain em uma superfície mais honesta: informação densa, controle visível e menos decoração vazia.
+            Crédito, garantias e execução multichain em uma única camada operacional. Cada posição mantém risco, custódia e histórico visíveis.
           </p>
         </div>
 
@@ -44,9 +44,9 @@ export function Footer() {
 
           <div className="proto-footer__status">
             <span>STATUS</span>
-            <div><ShieldCheck size={16} /> Arquitetura auditavel</div>
-            <div><Terminal size={16} /> Autenticação Segura</div>
-            <div><MessageSquare size={16} /> Redes Operacionais</div>
+            <div><ShieldCheck size={16} /> Arquitetura auditável</div>
+            <div><Terminal size={16} /> Autenticação segura</div>
+            <div><MessageSquare size={16} /> Operação multichain</div>
             {socialLinks.length > 0 && (
               <div className="proto-footer__social">
                 {socialLinks.map((link) => (
