@@ -20,6 +20,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { AIAssistant } from "@/components/shared/AIAssistant";
 import { PlainLanguageGlossary, SafetyChecklist, SimpleModeNotice, WalletHelpCard } from "@/components/ElderFriendly";
 import { analyzeTokenConfig, type TokenRiskLevel } from "@/lib/tokenIntelligence";
+import { PageHeader } from "@/components/ui/Institutional";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 type TokenForm = {
@@ -47,11 +48,11 @@ type TokenForm = {
 };
 
 const STEPS = [
-  { id: 1, label: "Rede", icon: "🌐" },
-  { id: 2, label: "Identidade", icon: "🏷️" },
-  { id: 3, label: "Supply", icon: "💰" },
-  { id: 4, label: "Funções", icon: "⚙️" },
-  { id: 5, label: "Revisão", icon: "✅" },
+  { id: 1, label: "Rede", icon: "01" },
+  { id: 2, label: "Identidade", icon: "02" },
+  { id: 3, label: "Oferta", icon: "03" },
+  { id: 4, label: "Funções", icon: "04" },
+  { id: 5, label: "Revisão", icon: "05" },
 ];
 
 const INITIAL_FORM: TokenForm = {
@@ -166,7 +167,7 @@ function StepNetwork({ form, setForm }: { form: TokenForm; setForm: (f: TokenFor
           { term: "Liquidez", meaning: "Facilidade para outras pessoas comprarem ou venderem o token depois." },
         ]}
       />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16, marginTop: 24 }}>
+      <div className="factory-option-grid">
         {Object.entries(CHAIN_META).map(([id, meta]) => {
           const chainId = parseInt(id);
           const active = form.chainId === chainId;
@@ -174,17 +175,12 @@ function StepNetwork({ form, setForm }: { form: TokenForm; setForm: (f: TokenFor
             <button
               key={id}
               onClick={() => { setForm({ ...form, chainId }); switchChain?.({ chainId }); }}
-              style={{
-                background: active ? `rgba(${hexToRgb(meta.color)},0.12)` : "var(--bg-card)",
-                border: `2px solid ${active ? meta.color : "var(--border)"}`,
-                borderRadius: 14, padding: "20px 16px", cursor: "pointer", textAlign: "left",
-                transition: "all 0.2s",
-              }}
+              className="factory-option"
+              data-active={active}
             >
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{meta.icon}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>{meta.name}</div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{meta.gasLabel}</div>
-              {active && <div style={{ marginTop: 10, fontSize: 11, color: meta.color, fontWeight: 600 }}>✓ Selecionada</div>}
+              <strong>{meta.name}</strong>
+              <span>{meta.gasLabel}</span>
+              {active && <small>Rede selecionada</small>}
             </button>
           );
         })}
@@ -219,11 +215,11 @@ function StepIdentity({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
           onChange={(e) => setForm({ ...form, symbol: e.target.value.toUpperCase().replace(/[^A-Z]/g, "") })}
           placeholder="IUT"
           maxLength={8}
-          style={{ textTransform: "uppercase" }}
+          className="ticker-input"
         />
         {form.symbol && (
-          <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
-            Aparecerá como: <span style={{ color: "var(--accent-1)", fontWeight: 700 }}>${symbolPreview}</span>
+          <div className="field-note">
+            Aparecerá como: <strong>${symbolPreview}</strong>
           </div>
         )}
       </FieldGroup>
@@ -235,17 +231,13 @@ function StepIdentity({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
           placeholder="Token de governança e utilidade da plataforma Instead..."
           maxLength={200}
           rows={3}
-          style={{
-            width: "100%", background: "var(--bg-surface)", border: "1px solid var(--border)",
-            borderRadius: 10, color: "var(--text-primary)", fontSize: 15, padding: "12px 16px",
-            outline: "none", fontFamily: "Inter, sans-serif", resize: "vertical",
-          }}
+          className="factory-textarea"
         />
         <CharCount current={form.description.length} max={200} />
       </FieldGroup>
 
       <InfoBox color="purple">
-        ⚠️ <strong>Importante:</strong> O nome e símbolo ficam <strong>gravados permanentemente</strong> na blockchain e <strong>não podem ser alterados</strong> após o deploy.
+        <strong>Importante:</strong> O nome e o símbolo ficam <strong>gravados permanentemente</strong> na blockchain e <strong>não podem ser alterados</strong> após a publicação.
       </InfoBox>
     </div>
   );
@@ -269,7 +261,7 @@ function StepSupply({ form, setForm }: { form: TokenForm; setForm: (f: TokenForm
           min={1}
           placeholder="1000000"
         />
-        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
+        <div className="field-note">
           = {formatNumber(form.initialSupply)} tokens criados imediatamente para a sua carteira.
         </div>
       </FieldGroup>
@@ -283,39 +275,34 @@ function StepSupply({ form, setForm }: { form: TokenForm; setForm: (f: TokenForm
           placeholder="10000000"
         />
         {max < initial && (
-          <div style={{ color: "var(--red)", fontSize: 12, marginTop: 6 }}>
-            ❌ O supply máximo não pode ser menor que o initial.
+          <div className="field-error">
+            O supply máximo não pode ser menor que o inicial.
           </div>
         )}
       </FieldGroup>
 
       {/* Barra visual de distribuição */}
-      <div style={{ margin: "24px 0", background: "var(--bg-surface)", borderRadius: 12, padding: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 13 }}>
-          <span style={{ color: "var(--text-muted)" }}>Supply Inicial</span>
-          <span style={{ fontWeight: 600, color: "var(--accent-1)" }}>{pct.toFixed(1)}% do máximo</span>
+      <div className="supply-preview">
+        <div className="supply-preview__header">
+          <span>Supply inicial</span>
+          <strong>{pct.toFixed(1)}% do máximo</strong>
         </div>
-        <div style={{ height: 8, borderRadius: 999, background: "var(--border)", overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: "var(--accent-grad)", borderRadius: 999, transition: "width 0.3s" }} />
+        <div className="supply-preview__track">
+          <div style={{ width: `${pct}%` }} />
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: "var(--text-muted)" }}>
+        <div className="supply-preview__range">
           <span>0</span><span>{formatNumber(form.maxSupply)}</span>
         </div>
       </div>
 
       <FieldGroup label="Casas Decimais" hint="18 é o padrão ERC-20 (igual ao ETH). Use 6 para tokens estáveis como USDC.">
-        <div style={{ display: "flex", gap: 10 }}>
+        <div className="segmented-options">
           {[6, 8, 18].map((d) => (
             <button
               key={d}
               onClick={() => setForm({ ...form, decimals: d })}
-              style={{
-                padding: "10px 24px", borderRadius: 10, cursor: "pointer", fontWeight: 600, fontSize: 14,
-                background: form.decimals === d ? "var(--accent-grad)" : "var(--bg-surface)",
-                color: form.decimals === d ? "white" : "var(--text-muted)",
-                border: `1px solid ${form.decimals === d ? "transparent" : "var(--border)"}`,
-                transition: "all 0.15s",
-              }}
+              className="segmented-options__button"
+              data-active={form.decimals === d}
             >
               {d}
             </button>
@@ -325,11 +312,11 @@ function StepSupply({ form, setForm }: { form: TokenForm; setForm: (f: TokenForm
             value={form.decimals}
             onChange={(e) => setForm({ ...form, decimals: parseInt(e.target.value) || 18 })}
             min={0} max={18}
-            style={{ width: 80 }}
+            className="segmented-options__input"
             placeholder="18"
           />
         </div>
-        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
+        <div className="field-note">
           Com {form.decimals} decimais: 1 token = 10<sup>{form.decimals}</sup> unidades mínimas.
         </div>
       </FieldGroup>
@@ -344,7 +331,7 @@ function StepSupply({ form, setForm }: { form: TokenForm; setForm: (f: TokenForm
             step={0.01}
             placeholder="0.1"
           />
-          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
+          <div className="field-note">
             No Fair Launch on-chain, o criador nao recebe tokens soltos no deploy; 100% do supply vai para liquidez.
           </div>
         </FieldGroup>
@@ -357,7 +344,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
   const features = [
     {
       key: "mintable" as const,
-      icon: "🪙",
+      icon: "M",
       title: "Mintável (Mintable)",
       desc: "O proprietário pode criar mais tokens após o deploy, respeitando o supply máximo definido.",
       risk: "Médio",
@@ -365,7 +352,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
     },
     {
       key: "burnable" as const,
-      icon: "🔥",
+      icon: "B",
       title: "Queimável (Burnable)",
       desc: "Qualquer holder pode destruir (queimar) seus próprios tokens, reduzindo o supply circulante permanentemente.",
       risk: "Baixo",
@@ -373,7 +360,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
     },
     {
       key: "taxable" as const,
-      icon: "💸",
+      icon: "%",
       title: "Taxa por Transferência",
       desc: "Cobra uma porcentagem automática a cada transferência, enviando para a treasury do protocolo.",
       risk: "Alto",
@@ -381,7 +368,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
     },
     {
       key: "hasBlacklist" as const,
-      icon: "🛡️",
+      icon: "S",
       title: "Blacklist/Compliance",
       desc: "Permite a carteira administradora bloquear enderecos. Use apenas quando houver motivo operacional ou regulatorio claro.",
       risk: "Alto",
@@ -389,7 +376,7 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
     },
     {
       key: "burnTax" as const,
-      icon: "🔥",
+      icon: "F",
       title: "Taxa de Queima Deflacionaria",
       desc: "Quando a taxa estiver ativa, envia a taxa para burn em vez de treasury.",
       risk: "Médio",
@@ -407,53 +394,38 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
           <button
             key={preset.id}
             onClick={() => setForm(preset.apply(form))}
-            style={{
-              textAlign: "left",
-              padding: 16,
-              borderRadius: 8,
-              border: `1px solid ${form.template === preset.id ? "var(--accent-1)" : "var(--border)"}`,
-              background: form.template === preset.id ? "rgba(124,58,237,0.1)" : "var(--bg-card)",
-              color: "var(--text-primary)",
-              cursor: "pointer",
-            }}
+            className="factory-preset"
+            data-active={form.template === preset.id}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+            <div>
               <strong>{preset.title}</strong>
-              <span style={{ color: "var(--accent-1)", fontSize: 11, fontWeight: 700 }}>{preset.tag}</span>
+              <span>{preset.tag}</span>
             </div>
-            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 12, lineHeight: 1.5 }}>{preset.description}</p>
+            <p>{preset.description}</p>
           </button>
         ))}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
+      <div className="factory-feature-list">
         {features.map((f) => (
           <div
             key={f.key}
             onClick={() => setForm({ ...form, [f.key]: !form[f.key] })}
-            style={{
-              display: "flex", alignItems: "flex-start", gap: 16, padding: "20px",
-              background: form[f.key] ? "rgba(124,58,237,0.08)" : "var(--bg-card)",
-              border: `2px solid ${form[f.key] ? "rgba(124,58,237,0.4)" : "var(--border)"}`,
-              borderRadius: 14, cursor: "pointer", transition: "all 0.15s",
-            }}
+            className="factory-feature"
+            data-active={form[f.key]}
           >
-            <div style={{ fontSize: 30, flexShrink: 0 }}>{f.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <span style={{ fontWeight: 700, fontSize: 16 }}>{f.title}</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999,
-                  background: `${f.riskColor}20`, color: f.riskColor,
-                }}>
+            <div className="factory-feature__copy">
+              <div className="factory-feature__header">
+                <strong>{f.title}</strong>
+                <span style={{ color: f.riskColor }}>
                   Risco {f.risk}
                 </span>
               </div>
-              <p style={{ fontSize: 14, color: "var(--text-muted)", lineHeight: 1.6 }}>{f.desc}</p>
+              <p>{f.desc}</p>
 
               {f.key === "taxable" && form.taxable && (
-                <div style={{ marginTop: 14 }} onClick={(e) => e.stopPropagation()}>
-                  <label style={{ fontSize: 13, color: "var(--text-muted)", display: "block", marginBottom: 8 }}>
+                <div className="factory-feature__nested" onClick={(e) => e.stopPropagation()}>
+                  <label>
                     Porcentagem da Taxa (%)
                   </label>
                   <input
@@ -461,26 +433,21 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
                     value={form.taxPercent}
                     onChange={(e) => setForm({ ...form, taxPercent: e.target.value })}
                     min={0.1} max={25} step={0.1}
-                    style={{ width: 120 }}
+                    className="factory-feature__input"
                     placeholder="2"
                   />
-                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
+                  <div className="field-note">
                     A cada transferência de 1.000 tokens, {parseFloat(form.taxPercent || "0") * 10} tokens vão para a treasury.
                   </div>
                 </div>
               )}
               {f.key === "burnTax" && form.burnTax && !form.taxable && (
-                <div style={{ marginTop: 8, color: "var(--red)", fontSize: 12 }}>
+                <div className="field-error">
                   Ative taxa por transferencia para usar queima deflacionaria.
                 </div>
               )}
             </div>
-            <div style={{
-              width: 24, height: 24, borderRadius: 6, border: `2px solid ${form[f.key] ? "var(--accent-1)" : "var(--border)"}`,
-              background: form[f.key] ? "var(--accent-1)" : "transparent",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, fontSize: 14, color: "white", transition: "all 0.15s",
-            }}>
+            <div className="factory-feature__check">
               {form[f.key] ? "✓" : ""}
             </div>
           </div>
@@ -495,13 +462,13 @@ function StepFeatures({ form, setForm }: { form: TokenForm; setForm: (f: TokenFo
           min={0}
           max={100}
           step={0.1}
-          style={{ width: 140 }}
+          className="factory-short-input"
           placeholder="0"
         />
       </FieldGroup>
 
       <InfoBox color="red">
-        ⚠️ Tokens com taxa por transação (taxable) são frequentemente sinalizados como <strong>suspeitos</strong> em scanners como Token Sniffer. Certifique-se de que a utilidade é legítima.
+        Ativos com taxa por transação são frequentemente sinalizados como <strong>suspeitos</strong> em scanners independentes. Confirme que a utilidade é legítima e documentada.
       </InfoBox>
     </div>
   );
@@ -541,9 +508,9 @@ function StepReview({
     ["Supply Máximo", formatNumber(form.maxSupply)],
     ["Decimais", `${form.decimals}`],
     ["Template", form.template],
-    ["Mintável", form.mintable ? "✅ Sim" : "❌ Não"],
-    ["Queimável", form.burnable ? "✅ Sim" : "❌ Não"],
-    ["Taxa Transferência", form.taxable ? `✅ ${form.taxPercent}%` : "❌ Não"],
+    ["Mintável", form.mintable ? "Sim" : "Não"],
+    ["Queimável", form.burnable ? "Sim" : "Não"],
+    ["Taxa de transferência", form.taxable ? `${form.taxPercent}%` : "Não"],
     ["Taxa queimada", form.burnTax ? "Sim" : "Nao"],
     ["Anti-whale", Number(form.maxWalletPercent) > 0 ? `${form.maxWalletPercent}%` : "Desativado"],
     ["Liquidez inicial", form.template === "fair_launch" ? `${form.fairLaunchLiquidityEth || "0"} ETH` : "n/a"],
@@ -554,15 +521,11 @@ function StepReview({
       <h2 style={styles.stepTitle}>Revisão Final</h2>
       <p style={styles.stepDesc}>Verifique todos os parâmetros antes de fazer o deploy. <strong>Após confirmado, não é possível alterar.</strong></p>
 
-      <div style={{ background: "var(--bg-surface)", borderRadius: 14, overflow: "hidden", border: "1px solid var(--border)", marginTop: 24 }}>
+      <div className="review-table">
         {rows.map(([label, value], i) => (
-          <div key={label} style={{
-            display: "flex", justifyContent: "space-between", padding: "14px 20px",
-            borderBottom: i < rows.length - 1 ? "1px solid var(--border)" : "none",
-            background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
-          }}>
-            <span style={{ fontSize: 14, color: "var(--text-muted)" }}>{label}</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", textAlign: "right", maxWidth: 260, wordBreak: "break-word" }}>{value}</span>
+          <div key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
           </div>
         ))}
       </div>
@@ -570,24 +533,20 @@ function StepReview({
       <TokenIntelligencePanel report={intelligence} />
 
       {!!feeInEth && (
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "18px 20px", background: "rgba(124,58,237,0.08)",
-          border: "1px solid rgba(124,58,237,0.2)", borderRadius: 14, marginTop: 20,
-        }}>
+        <div className="review-fee">
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>Taxa de Criação</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>Fixada em ~$5.00 USD — convertida ao preço atual do ETH via Chainlink</div>
+            <strong>Taxa de criação</strong>
+            <span>Fixada em aproximadamente US$ 5 e convertida pelo preço atual do ETH.</span>
           </div>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--accent-1)" }}>
+          <strong className="review-fee__value">
             {parseFloat(formatEther(feeInEth)).toFixed(6)} ETH
-          </div>
+          </strong>
         </div>
       )}
 
       {isConfirmed && txHash && (
-        <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 12, padding: 16, marginTop: 20 }}>
-          <div style={{ color: "var(--green)", fontWeight: 700, marginBottom: 6 }}>🎉 Token criado com sucesso!</div>
+        <div className="factory-feedback" data-tone="success">
+          <strong>Ativo criado com sucesso</strong>
           <a
             href={`${chainMeta?.explorer}/tx/${txHash}`}
             target="_blank"
@@ -600,21 +559,20 @@ function StepReview({
       )}
 
       {error && (
-        <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, padding: 16, marginTop: 20, color: "var(--red)", fontSize: 13 }}>
-          ❌ {error.message?.split("\n")[0]}
+        <div className="factory-feedback" data-tone="error">
+          {error.message?.split("\n")[0]}
         </div>
       )}
 
       <button
-        className="btn-primary"
         onClick={onDeploy}
         disabled={isPending || isConfirming || isConfirmed}
-        style={{ width: "100%", marginTop: 24, fontSize: 17, padding: "16px 0" }}
+        className="btn-primary factory-deploy"
       >
-        {isPending ? "⏳ Aguardando carteira..." :
-          isConfirming ? "⛓️ Confirmando na blockchain..." :
-            isConfirmed ? "✅ Token Lançado!" :
-              "🚀 Fazer Deploy do Token"}
+        {isPending ? "Aguardando carteira..." :
+          isConfirming ? "Confirmando na blockchain..." :
+            isConfirmed ? "Ativo lançado" :
+              "Publicar ativo"}
       </button>
       <div style={{ marginTop: 16, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Pagar sem crypto</div>
@@ -661,29 +619,29 @@ function StepReview({
 function TokenIntelligencePanel({ report }: { report: ReturnType<typeof analyzeTokenConfig> }) {
   const color = tokenRiskColor(report.riskLevel);
   return (
-    <section style={{ border: `1px solid ${color}`, background: "rgba(255,255,255,0.02)", borderRadius: 14, padding: 18, marginTop: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", flexWrap: "wrap" }}>
+    <section className="token-review" style={{ borderColor: color }}>
+      <div className="token-review__header">
         <div>
-          <div style={{ color: "var(--accent-1)", fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace", fontSize: 11, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-            Token Intelligence / revisao automatica
+          <div className="token-review__eyebrow">
+            Revisão dos parâmetros
           </div>
-          <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: "8px 0 4px", textTransform: "uppercase" }}>
+          <h3>
             {report.templateLabel}
           </h3>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55 }}>{report.docs.oneLiner}</p>
+          <p>{report.docs.oneLiner}</p>
         </div>
-        <div style={{ minWidth: 120, textAlign: "right" }}>
-          <span style={{ display: "inline-flex", border: `1px solid ${color}`, color, padding: "5px 9px", fontSize: 11, fontWeight: 900, textTransform: "uppercase" }}>
+        <div className="token-review__score">
+          <span style={{ borderColor: color, color }}>
             risco {report.riskLevel}
           </span>
-          <strong style={{ display: "block", marginTop: 8, fontFamily: "'Space Grotesk', sans-serif", fontSize: 30, color }}>
+          <strong style={{ color }}>
             {report.snapshot.trustScore}/100
           </strong>
-          <small style={{ color: "var(--text-muted)", textTransform: "uppercase" }}>trust score</small>
+          <small>índice de confiança</small>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 10, marginTop: 16 }}>
+      <div className="token-review__metrics">
         <Metric label="Supply inicial" value={`${report.snapshot.initialSupplyShare.toFixed(1)}%`} />
         <Metric label="Reserva/cap" value={formatNumber(String(report.snapshot.reserveSupply))} />
         <Metric label="Taxa" value={`${(report.snapshot.transferTaxBps / 100).toFixed(2)}%`} />
@@ -691,32 +649,32 @@ function TokenIntelligencePanel({ report }: { report: ReturnType<typeof analyzeT
       </div>
 
       {report.findings.length > 0 ? (
-        <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+        <div className="token-review__findings">
           {report.findings.map((finding) => {
             const findingColor = tokenRiskColor(finding.level);
             return (
-              <div key={`${finding.title}:${finding.level}`} style={{ border: `1px solid ${findingColor}`, background: `${findingColor}12`, padding: 12 }}>
+              <div key={`${finding.title}:${finding.level}`} style={{ borderColor: findingColor }}>
                 <strong style={{ color: findingColor }}>{finding.title}</strong>
-                <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.45, marginTop: 5 }}>{finding.detail}</p>
-                <p style={{ color: "var(--text-primary)", fontSize: 13, lineHeight: 1.45, marginTop: 5 }}>{finding.mitigation}</p>
+                <p>{finding.detail}</p>
+                <p>{finding.mitigation}</p>
               </div>
             );
           })}
         </div>
       ) : (
-        <div style={{ color: "var(--green)", marginTop: 16, fontSize: 13 }}>Nenhum alerta critico detectado nesta revisao automatica inicial.</div>
+        <div className="token-review__clear">Nenhum alerta crítico detectado nesta revisão inicial.</div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 12, marginTop: 16 }}>
+      <div className="token-review__lists">
         <div>
           <strong>Checklist antes de assinar</strong>
-          <ul style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55, margin: "8px 0 0", paddingLeft: 18 }}>
+          <ul>
             {report.checklist.map((item) => <li key={item}>{item}</li>)}
           </ul>
         </div>
         <div>
           <strong>Resumo publico sugerido</strong>
-          <ul style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55, margin: "8px 0 0", paddingLeft: 18 }}>
+          <ul>
             {report.docs.parameterSummary.map((item) => <li key={item}>{item}</li>)}
           </ul>
         </div>
@@ -727,9 +685,9 @@ function TokenIntelligencePanel({ report }: { report: ReturnType<typeof analyzeT
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ border: "1px solid var(--border)", padding: 10, background: "rgba(5,6,4,0.35)" }}>
-      <span style={{ display: "block", color: "var(--text-muted)", fontSize: 11, textTransform: "uppercase" }}>{label}</span>
-      <strong style={{ display: "block", marginTop: 5 }}>{value}</strong>
+    <div className="token-review__metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -743,9 +701,9 @@ function tokenRiskColor(level: TokenRiskLevel) {
 
 function FieldGroup({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <label style={{ display: "block", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{label}</label>
-      <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>{hint}</div>
+    <div className="factory-field">
+      <label>{label}</label>
+      <div>{hint}</div>
       {children}
     </div>
   );
@@ -754,17 +712,12 @@ function FieldGroup({ label, hint, children }: { label: string; hint: string; ch
 function CharCount({ current, max }: { current: number; max: number }) {
   const pct = current / max;
   const color = pct > 0.9 ? "var(--red)" : pct > 0.7 ? "#f59e0b" : "var(--text-muted)";
-  return <div style={{ textAlign: "right", fontSize: 11, color, marginTop: 4 }}>{current}/{max}</div>;
+  return <div className="char-count" style={{ color }}>{current}/{max}</div>;
 }
 
 function InfoBox({ children, color }: { children: React.ReactNode; color: "blue" | "purple" | "red" }) {
-  const colors = { blue: "37, 99, 235", purple: "124, 58, 237", red: "239, 68, 68" };
-  const rgb = colors[color];
   return (
-    <div style={{
-      background: `rgba(${rgb},0.07)`, border: `1px solid rgba(${rgb},0.2)`,
-      borderRadius: 12, padding: 16, marginTop: 24, fontSize: 13, color: "var(--text-muted)", lineHeight: 1.7,
-    }}>
+    <div className="factory-info" data-tone={color}>
       {children}
     </div>
   );
@@ -1141,19 +1094,12 @@ export default function FactoryPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", padding: "32px 24px" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto" }}>
+    <main className="product-page factory-page">
+      <div className="product-page__container">
         {/* Top bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
-          <div>
-            <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar</Link>
-            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 30, fontWeight: 700, marginTop: 8 }}>
-              🏭 <span className="gradient-text">Token Factory</span>
-            </h1>
-          </div>
-          <WalletConnectButton />
-        </div>
-        <SimpleModeNotice title="Criar token sem pressa">
+        <PageHeader eyebrow="Infraestrutura de emissão" title="Emissão de ativos" description="Configure rede, oferta e permissões. Revise todos os parâmetros antes de publicar o contrato." backHref="/" action={<WalletConnectButton />} />
+        <div className="product-guidance product-guidance--compact">
+        <SimpleModeNotice title="Crie com uma revisão clara">
           Este assistente guarda o modo avançado, mas explica cada decisão em linguagem simples. O token só é publicado depois da etapa de revisão final.
         </SimpleModeNotice>
         <SafetyChecklist
@@ -1163,36 +1109,29 @@ export default function FactoryPage() {
             "Se preferir, use checkout com cartão/PIX e deploy assistido.",
           ]}
         />
+        </div>
 
         {/* Progress Steps */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 40, gap: 0 }}>
+        <div className="product-steps">
           {STEPS.map((s, i) => {
             const done = step > s.id;
             const active = step === s.id;
             return (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : "none" }}>
+              <div key={s.id} className="product-step" data-last={i === STEPS.length - 1}>
                 <button
                   onClick={() => done && setStep(s.id)}
-                  style={{
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                    background: "none", border: "none", cursor: done ? "pointer" : "default",
-                  }}
+                  className="product-step__button"
+                  data-state={active ? "active" : done ? "done" : "pending"}
                 >
-                  <div style={{
-                    width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center",
-                    justifyContent: "center", fontSize: done ? 16 : 18,
-                    background: active ? "var(--accent-grad)" : done ? "rgba(16,185,129,0.2)" : "var(--bg-card)",
-                    border: `2px solid ${active ? "transparent" : done ? "#10b981" : "var(--border)"}`,
-                    transition: "all 0.2s",
-                  }}>
+                  <div className="product-step__index">
                     {done ? "✓" : s.icon}
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: active ? 700 : 400, color: active ? "var(--text-primary)" : "var(--text-muted)", whiteSpace: "nowrap" }}>
+                  <span>
                     {s.label}
                   </span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <div style={{ flex: 1, height: 2, background: done ? "#10b981" : "var(--border)", margin: "0 8px", marginBottom: 26, transition: "background 0.3s" }} />
+                  <div className="product-step__line" data-done={done} />
                 )}
               </div>
             );
@@ -1200,7 +1139,7 @@ export default function FactoryPage() {
         </div>
 
         {/* Step Content */}
-        <div className="card" style={{ minHeight: 400 }}>
+        <div className="card product-workspace">
           {step === 1 && <StepNetwork form={form} setForm={setForm} />}
           {step === 2 && <StepIdentity form={form} setForm={setForm} />}
           {step === 3 && <StepSupply form={form} setForm={setForm} />}
@@ -1222,7 +1161,7 @@ export default function FactoryPage() {
 
           {/* Navigation Buttons */}
           {step < 5 && (
-            <div style={{ display: "flex", justifyContent: step > 1 ? "space-between" : "flex-end", marginTop: 32, paddingTop: 24, borderTop: "1px solid var(--border)" }}>
+            <div className="product-workspace__nav" data-has-back={step > 1}>
               {step > 1 && (
                 <button className="btn-outline" onClick={() => setStep(step - 1)}>
                   ← Voltar
@@ -1253,9 +1192,9 @@ export default function FactoryPage() {
 
         {/* Fee banner */}
         {feeInEth && step < 5 && (
-          <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "var(--text-muted)" }}>
+          <div className="factory-fee-note">
             Taxa de deploy na {CHAIN_META[form.chainId]?.name}:{" "}
-            <strong style={{ color: "var(--accent-1)" }}>
+            <strong>
               {parseFloat(formatEther(feeInEth)).toFixed(6)} ETH
             </strong>{" "}
             (~$5.00 USD)

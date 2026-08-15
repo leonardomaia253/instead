@@ -48,7 +48,7 @@ export async function generateMetadata({
     twitter: {
       card: 'summary_large_image',
       title: 'Instead DeFi',
-      description: 'DeFi Lending & Token Factory in 7+ EVM networks.',
+      description: 'Infraestrutura para crédito com garantia e emissão de ativos em redes EVM.',
       images: ['/og-image.png'],
     },
     alternates: {

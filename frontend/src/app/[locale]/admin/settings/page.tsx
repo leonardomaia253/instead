@@ -1,4 +1,5 @@
 "use client";
+import { AdminPage, AdminSection, AdminStatus } from "@/components/ui/Admin";
 
 const settings = [
   ["Production lending", process.env.NEXT_PUBLIC_ENABLE_PRODUCTION_LENDING === "true" ? "Enabled" : "Disabled"],
@@ -9,17 +10,15 @@ const settings = [
 
 export default function AdminSettingsPage() {
   return (
-    <main style={{ padding: 32 }}>
-      <h1 style={{ margin: 0, fontSize: 32 }}>Settings</h1>
-      <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Estado publico de configuracao usado pelo frontend.</p>
-      <div className="card" style={{ marginTop: 24, display: "grid", gap: 12 }}>
+    <AdminPage title="Configuração" description="Estado público das integrações consumidas pelo frontend." width="standard">
+      <AdminSection title="Integrações e feature flags">
         {settings.map(([label, value]) => (
-          <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--border)" }}>
-            <span style={{ color: "var(--text-muted)" }}>{label}</span>
-            <strong>{value}</strong>
+          <div key={label} className="admin-setting-row">
+            <span>{label}</span>
+            <AdminStatus tone={value === "Enabled" || value === "Configured" ? "positive" : value === "Missing" ? "critical" : "neutral"}>{value}</AdminStatus>
           </div>
         ))}
-      </div>
-    </main>
+      </AdminSection>
+    </AdminPage>
   );
 }

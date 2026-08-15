@@ -13,7 +13,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isMobileAdmin, setIsMobileAdmin] = useState(false);
   const locale = pathname.split("/")[1] || "en";
   const adminBase = `/${locale}/admin`;
   const adminLoginPath = `${adminBase}/login`;
@@ -42,13 +41,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [isConnected, address]);
 
   useEffect(() => {
-    const onResize = () => setIsMobileAdmin(window.innerWidth < 900);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  useEffect(() => {
     if (isAdmin === false && pathname !== adminLoginPath) {
       router.push(adminLoginPath);
     }
@@ -65,17 +57,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (!isAdmin && pathname !== adminLoginPath) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: isMobileAdmin ? "column" : "row", minHeight: "100vh", background: "var(--bg-app)" }}>
-      <aside style={{ ...styles.sidebar, ...(isMobileAdmin ? styles.sidebarMobile : {}) }}>
-        <div style={styles.brand}>
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-brand">
           <Link href={`/${locale}`} style={{ textDecoration: "none" }}>
-            <div style={styles.brandText}>
-              <span className="gradient-text">Instead</span> Admin
+            <div className="admin-brand__text">
+              Instead <span>Operations</span>
             </div>
           </Link>
         </div>
 
-        <nav style={{ ...styles.nav, ...(isMobileAdmin ? styles.navMobile : {}) }}>
+        {isAdmin && <nav className="admin-nav">
           <SidebarLink href={adminBase} icon={<BarChart3 size={18} />} label="Dashboard" active={pathname === adminBase} />
           <SidebarLink href={`${adminBase}/users`} icon={<Users size={18} />} label="Users" active={pathname === `${adminBase}/users`} />
           <SidebarLink href={`${adminBase}/tokens`} icon={<Coins size={18} />} label="Tokens" active={pathname === `${adminBase}/tokens`} />
@@ -86,89 +78,27 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <SidebarLink href={`${adminBase}/community`} icon={<MessageCircle size={18} />} label="Comunidade" active={pathname === `${adminBase}/community`} />
           <SidebarLink href={`${adminBase}/operations`} icon={<Activity size={18} />} label="Operacao" active={pathname === `${adminBase}/operations`} />
           <SidebarLink href={`${adminBase}/settings`} icon={<Settings size={18} />} label="Settings" active={pathname === `${adminBase}/settings`} />
-        </nav>
+        </nav>}
 
-        <div style={{ ...styles.accountBox, ...(isMobileAdmin ? styles.accountBoxMobile : {}) }}>
-          <div style={styles.accountLabel}>CONNECTED AS</div>
-          <div style={styles.address}>{address}</div>
-          <button onClick={() => router.push(`/${locale}/login`)} style={styles.switchButton}>
-            Switch Account
+        {isAdmin && <div className="admin-account">
+          <div className="admin-account__label">Conta operacional</div>
+          <div className="admin-account__address">{address}</div>
+          <button onClick={() => router.push(`/${locale}/login`)}>
+            Trocar conta
           </button>
-        </div>
+        </div>}
       </aside>
 
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>{children}</main>
+      <main className="admin-main">{children}</main>
     </div>
   );
 }
 
 function SidebarLink({ href, icon, label, active }: { href: string; icon: ReactNode; label: string; active: boolean }) {
   return (
-    <Link href={href} style={{ ...styles.link, color: active ? "white" : "var(--text-muted)", background: active ? "var(--accent-grad)" : "transparent" }}>
-      <span style={styles.icon}>{icon}</span>
+    <Link href={href} className={`admin-nav__link ${active ? "is-active" : ""}`}>
+      <span>{icon}</span>
       {label}
     </Link>
   );
 }
-
-const styles = {
-  sidebar: {
-    width: 280,
-    background: "var(--bg-surface)",
-    borderRight: "1px solid var(--border)",
-    display: "flex",
-    flexDirection: "column" as const,
-    padding: "32px 20px",
-  },
-  sidebarMobile: {
-    width: "100%",
-    minWidth: 0,
-    borderRight: 0,
-    borderBottom: "1px solid var(--border)",
-    padding: "18px 14px",
-  },
-  brand: { marginBottom: 40, paddingLeft: 12 },
-  brandText: { fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 800 },
-  nav: { flex: 1, display: "flex", flexDirection: "column" as const, gap: 8 },
-  navMobile: {
-    flex: "0 0 auto",
-    flexDirection: "row" as const,
-    gap: 8,
-    overflowX: "auto" as const,
-    paddingBottom: 8,
-  },
-  link: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    padding: "12px 16px",
-    borderRadius: 8,
-    textDecoration: "none",
-    fontWeight: 600,
-    transition: "all 0.2s",
-  },
-  icon: { display: "inline-flex", width: 20 },
-  accountBox: {
-    marginTop: "auto",
-    padding: 16,
-    background: "rgba(255,255,255,0.03)",
-    borderRadius: 8,
-    border: "1px solid var(--border)",
-  },
-  accountBoxMobile: {
-    marginTop: 12,
-  },
-  accountLabel: { fontSize: 12, color: "var(--text-muted)", marginBottom: 4 },
-  address: { fontSize: 13, fontWeight: 600, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" },
-  switchButton: {
-    marginTop: 12,
-    width: "100%",
-    padding: 8,
-    borderRadius: 8,
-    background: "transparent",
-    border: "1px solid var(--border)",
-    color: "var(--text-secondary)",
-    fontSize: 13,
-    cursor: "pointer",
-  },
-};

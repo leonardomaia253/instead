@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
-import { AlertTriangle, Banknote, CheckCircle2, CircleDollarSign, Play, RefreshCw, RotateCcw, TrendingUp, XCircle } from "lucide-react";
+import { RefreshCw, RotateCcw, XCircle } from "lucide-react";
+import { AdminMetric, AdminMetrics, AdminPage, AdminSection, AdminStatus } from "@/components/ui/Admin";
 
 type RevenueRow = {
   source_code: string;
@@ -142,49 +142,36 @@ export default function AdminRevenuePage() {
   }
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div>
-          <div style={styles.kicker}>Catálogo comercial</div>
-          <h1 style={styles.title}>Planos e serviços da Instead</h1>
-          <p style={styles.subtitle}>
-            Inventário auditável de planos: produtos cobrados via Stripe/Pagar.me, taxas on-chain, assinaturas,
-            serviços premium e B2B disponíveis para ativação e acompanhamento.
-          </p>
-        </div>
-        <button onClick={() => { loadRevenue(); loadDeployments(); }} style={styles.refreshButton}>
+    <AdminPage
+      eyebrow="Catálogo comercial"
+      title="Planos e serviços"
+      description="Inventário auditável de produtos cobrados via fiat, taxas on-chain, assinaturas, serviços premium e integrações B2B."
+      action={<button className="admin-action admin-action--secondary" onClick={() => { loadRevenue(); loadDeployments(); }}>
           <RefreshCw size={16} />
           Atualizar
-        </button>
-      </header>
+        </button>}
+    >
 
-      {error && <div style={styles.error}>{error}</div>}
-      {source === "loading" && !error && <div style={styles.warning}>Carregando dados operacionais de receita.</div>}
+      {error && <div className="admin-notice" data-tone="critical">{error}</div>}
+      {source === "loading" && !error && <div className="admin-notice" data-tone="warning">Carregando dados operacionais de receita.</div>}
 
-      <section style={styles.metricGrid}>
-        <Metric icon={<TrendingUp size={20} />} label="Planos ativos" value={String(sources.length)} />
-        <Metric icon={<CheckCircle2 size={20} />} label="Production ready" value={String(metrics.ready)} />
-        <Metric icon={<Banknote size={20} />} label="Checkout fiat" value={String(metrics.checkoutProducts)} />
-        <Metric icon={<CircleDollarSign size={20} />} label="Taxas on-chain" value={String(metrics.feeBased)} />
-        <Metric icon={<CheckCircle2 size={20} />} label="Entitlements" value={String(operations.entitlements)} />
-        <Metric icon={<RefreshCw size={20} />} label="Intenções lending" value={String(operations.automationIntents)} />
-        <Metric icon={<Banknote size={20} />} label="Clientes B2B" value={String(operations.b2bClients)} />
-        <Metric icon={<RefreshCw size={20} />} label="Alertas risco" value={String(operations.alerts)} />
-        <Metric icon={<Banknote size={20} />} label="Eventos B2B" value={String(operations.b2bEvents)} />
-        <Metric icon={<Play size={20} />} label="Deploys fila" value={String(deploymentMetrics.queued)} />
-        <Metric icon={<RefreshCw size={20} />} label="Deploys executando" value={String(deploymentMetrics.executing)} />
-        <Metric icon={<AlertTriangle size={20} />} label="Deploys falhos" value={String(deploymentMetrics.failed)} />
-      </section>
+      <AdminMetrics>
+        <AdminMetric label="Planos ativos" value={sources.length} />
+        <AdminMetric label="Prontos para produção" value={metrics.ready} tone="positive" />
+        <AdminMetric label="Checkout fiat" value={metrics.checkoutProducts} />
+        <AdminMetric label="Taxas on-chain" value={metrics.feeBased} />
+        <AdminMetric label="Entitlements" value={operations.entitlements} />
+        <AdminMetric label="Intenções de crédito" value={operations.automationIntents} />
+        <AdminMetric label="Clientes B2B" value={operations.b2bClients} />
+        <AdminMetric label="Alertas de risco" value={operations.alerts} />
+        <AdminMetric label="Eventos B2B" value={operations.b2bEvents} />
+        <AdminMetric label="Emissões na fila" value={deploymentMetrics.queued} tone={deploymentMetrics.queued ? "warning" : "default"} />
+        <AdminMetric label="Emissões executando" value={deploymentMetrics.executing} />
+        <AdminMetric label="Emissões com falha" value={deploymentMetrics.failed} tone={deploymentMetrics.failed ? "critical" : "default"} />
+      </AdminMetrics>
 
-      <section className="card" style={styles.tableCard}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Controle de deploys assistidos</h2>
-            <p style={styles.model}>Fila Pix/cartao do relayer, com filtros por rede, status, wallet, retries, erro operacional e links on-chain.</p>
-          </div>
-          <span style={styles.badge}>{deployments.length} recentes</span>
-        </div>
-        <div style={styles.filterGrid}>
+      <AdminSection title="Emissões assistidas" description="Fila fiat do relayer, com filtros, tentativas, erros operacionais e referências on-chain." action={<AdminStatus>{deployments.length} recentes</AdminStatus>}>
+        <div className="admin-filter-grid">
           <select value={deploymentFilters.status} onChange={(event) => setDeploymentFilters((prev) => ({ ...prev, status: event.target.value }))}>
             <option value="all">Todos status</option>
             <option value="queued">Queued</option>
@@ -204,55 +191,49 @@ export default function AdminRevenuePage() {
             <option value="8453">Base</option>
           </select>
           <input placeholder="Wallet do cliente" value={deploymentFilters.wallet} onChange={(event) => setDeploymentFilters((prev) => ({ ...prev, wallet: event.target.value }))} />
-          <button onClick={() => loadDeployments()} style={styles.primaryButton}>Filtrar</button>
+          <button onClick={() => loadDeployments()} className="admin-action">Filtrar</button>
         </div>
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
+        <div className="admin-table-wrap">
+          <table className="admin-data-table admin-data-table--wide">
             <thead>
               <tr>
-                <th style={styles.th}>Token</th>
-                <th style={styles.th}>Cliente / rede</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Relayer</th>
-                <th style={styles.th}>Erro / proxima tentativa</th>
-                <th style={styles.th}>On-chain</th>
-                <th style={styles.th}>Acoes</th>
+                <th>Ativo</th><th>Cliente / rede</th><th>Status</th><th>Relayer</th><th>Erro / próxima tentativa</th><th>On-chain</th><th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {deployments.map((item) => (
                 <tr key={item.id}>
-                  <td style={styles.td}>
+                  <td>
                     <strong>{item.token_name}</strong>
-                    <small style={styles.code}>${item.token_symbol}</small>
+                    <small className="admin-code">${item.token_symbol}</small>
                   </td>
-                  <td style={styles.td}>
+                  <td>
                     <span>{shortAddress(item.wallet_address)}</span>
-                    <small style={styles.code}>chain {item.chain_id}</small>
+                    <small className="admin-code">chain {item.chain_id}</small>
                   </td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.status, ...deploymentStatusStyle(item.status) }}>{item.status}</span>
-                    <small style={styles.code}>{item.attempts} tentativa(s)</small>
+                  <td>
+                    <AdminStatus tone={deploymentStatusTone(item.status)}>{item.status}</AdminStatus>
+                    <small className="admin-code">{item.attempts} tentativa(s)</small>
                   </td>
-                  <td style={styles.td}>
+                  <td>
                     {item.relayer_wallet ? shortAddress(item.relayer_wallet) : "Aguardando"}
-                    <small style={styles.code}>{shortAddress(item.factory_address)}</small>
+                    <small className="admin-code">{shortAddress(item.factory_address)}</small>
                   </td>
-                  <td style={styles.td}>
-                    <span style={item.error_message ? styles.errorText : styles.mutedText}>{item.error_message ?? "Sem erro"}</span>
-                    <small style={styles.code}>{new Date(item.next_attempt_at).toLocaleString("pt-BR")}</small>
+                  <td>
+                    <span className={item.error_message ? "admin-text-critical" : "admin-text-muted"}>{item.error_message ?? "Sem erro"}</span>
+                    <small className="admin-code">{new Date(item.next_attempt_at).toLocaleString("pt-BR")}</small>
                   </td>
-                  <td style={styles.td}>
-                    {item.tx_hash ? <a href={explorerTxUrl(item.chain_id, item.tx_hash)} target="_blank" rel="noreferrer" style={styles.link}>tx</a> : <span style={styles.mutedText}>sem tx</span>}
-                    {item.token_address && <a href={explorerAddressUrl(item.chain_id, item.token_address)} target="_blank" rel="noreferrer" style={styles.link}>token</a>}
+                  <td>
+                    {item.tx_hash ? <a href={explorerTxUrl(item.chain_id, item.tx_hash)} target="_blank" rel="noreferrer" className="admin-link">tx</a> : <span className="admin-text-muted">sem tx</span>}
+                    {item.token_address && <a href={explorerAddressUrl(item.chain_id, item.token_address)} target="_blank" rel="noreferrer" className="admin-link">ativo</a>}
                   </td>
-                  <td style={styles.td}>
-                    <div style={styles.actionRow}>
-                      <button disabled={deploymentBusyId === item.id || item.status === "confirmed"} onClick={() => updateDeployment(item.id, "retry")} style={styles.smallButton}>
-                        <RotateCcw size={14} /> Retry
+                  <td>
+                    <div className="admin-row-actions">
+                      <button className="admin-action admin-action--secondary" disabled={deploymentBusyId === item.id || item.status === "confirmed"} onClick={() => updateDeployment(item.id, "retry")}>
+                        <RotateCcw size={13} /> Repetir
                       </button>
-                      <button disabled={deploymentBusyId === item.id || item.status === "confirmed" || item.status === "cancelled"} onClick={() => updateDeployment(item.id, "cancel")} style={styles.dangerButton}>
-                        <XCircle size={14} /> Cancelar
+                      <button className="admin-action admin-action--danger" disabled={deploymentBusyId === item.id || item.status === "confirmed" || item.status === "cancelled"} onClick={() => updateDeployment(item.id, "cancel")}>
+                        <XCircle size={13} /> Cancelar
                       </button>
                     </div>
                   </td>
@@ -260,151 +241,80 @@ export default function AdminRevenuePage() {
               ))}
               {deployments.length === 0 && (
                 <tr>
-                  <td style={styles.td} colSpan={7}>Nenhum deploy assistido encontrado para os filtros atuais.</td>
+                  <td colSpan={7} className="admin-table-empty">Nenhuma emissão assistida encontrada para os filtros atuais.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </section>
+      </AdminSection>
 
-      <section className="card" style={styles.tableCard}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Provisionar Widget/API B2B</h2>
-            <p style={styles.model}>Cria cliente parceiro, gera API key e habilita embed de lending/risk dashboard.</p>
-          </div>
-          <span style={styles.badge}>B2B ready</span>
-        </div>
-        <div style={styles.formGrid}>
+      <AdminSection title="Provisionar Widget/API B2B" description="Crie um cliente parceiro, gere a credencial e habilite o módulo de crédito e risco." action={<AdminStatus tone="positive">Disponível</AdminStatus>}>
+        <div className="admin-form-grid">
           <input placeholder="Nome do parceiro" value={b2bForm.name} onChange={(event) => setB2bForm((prev) => ({ ...prev, name: event.target.value }))} />
           <input placeholder="dominio.com" value={b2bForm.domain} onChange={(event) => setB2bForm((prev) => ({ ...prev, domain: event.target.value }))} />
           <input placeholder="contato@dominio.com" value={b2bForm.contactEmail} onChange={(event) => setB2bForm((prev) => ({ ...prev, contactEmail: event.target.value }))} />
-          <button onClick={createB2bClient} style={styles.primaryButton}>Gerar API key</button>
+          <button onClick={createB2bClient} className="admin-action">Gerar credencial</button>
         </div>
         {b2bResult && (
-          <div style={styles.secretBox}>
-            <strong>API key criada. Copie agora — ela não será exibida novamente.</strong>
-            <code style={styles.secretCode}>{b2bResult.apiKey}</code>
-            <code style={styles.embedCode}>{`fetch("/api/b2b/widget?domain=${b2bResult.domain}", { headers: { "x-instead-widget-key": "${b2bResult.apiKey}" } })`}</code>
+          <div className="admin-secret-box">
+            <strong>Credencial criada. Copie agora — ela não será exibida novamente.</strong>
+            <code>{b2bResult.apiKey}</code>
+            <code>{`fetch("/api/b2b/widget?domain=${b2bResult.domain}", { headers: { "x-instead-widget-key": "${b2bResult.apiKey}" } })`}</code>
           </div>
         )}
-      </section>
+      </AdminSection>
 
-      <section className="card" style={styles.tableCard}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Mapa de planos</h2>
-          <span style={styles.badge}>{metrics.active} ativas hoje</span>
-        </div>
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
+      <AdminSection title="Mapa de planos" action={<AdminStatus tone="positive">{metrics.active} ativos</AdminStatus>}>
+        <div className="admin-table-wrap">
+          <table className="admin-data-table admin-data-table--wide">
             <thead>
               <tr>
-                <th style={styles.th}>Fonte</th>
-                <th style={styles.th}>Vertical</th>
-                <th style={styles.th}>Modelo</th>
-                <th style={styles.th}>Preço/Fee</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Nota operacional</th>
+                <th>Fonte</th><th>Vertical</th><th>Modelo</th><th>Preço / taxa</th><th>Status</th><th>Nota operacional</th>
               </tr>
             </thead>
             <tbody>
               {sources.map((item) => (
                 <tr key={item.source_code}>
-                  <td style={styles.td}>
+                  <td>
                     <strong>{item.label}</strong>
-                    <small style={styles.code}>{item.source_code}</small>
+                    <small className="admin-code">{item.source_code}</small>
                   </td>
-                  <td style={styles.td}>{item.vertical}</td>
-                  <td style={styles.td}>
-                    <span style={styles.category}>{item.category}</span>
-                    <p style={styles.model}>{item.revenue_model}</p>
+                  <td>{item.vertical}</td>
+                  <td>
+                    <span className="admin-category">{item.category}</span>
+                    <p className="admin-table-description">{item.revenue_model}</p>
                   </td>
-                  <td style={styles.td}>
+                  <td>
                     {item.amount_usd_cents && item.amount_brl_cents
                       ? `${usd.format(item.amount_usd_cents / 100)} / ${brl.format(item.amount_brl_cents / 100)}`
                       : `${item.take_rate_bps ?? 0} bps`}
-                    <small style={styles.code}>{item.billing_interval}</small>
+                    <small className="admin-code">{item.billing_interval}</small>
                   </td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.status, ...(item.status === "active" ? styles.statusActive : styles.statusReady) }}>
-                      {item.status}
-                    </span>
-                    {item.production_ready && <small style={styles.ready}>produção</small>}
+                  <td>
+                    <AdminStatus tone={item.status === "active" ? "positive" : "warning"}>{item.status}</AdminStatus>
+                    {item.production_ready && <small className="admin-ready">produção</small>}
                   </td>
-                  <td style={styles.td}>{item.notes}</td>
+                  <td>{item.notes}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
-    </div>
+      </AdminSection>
+    </AdminPage>
   );
 }
-
-function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return (
-    <div className="card" style={styles.metricCard}>
-      <div style={styles.metricIcon}>{icon}</div>
-      <span style={styles.metricLabel}>{label}</span>
-      <strong style={styles.metricValue}>{value}</strong>
-    </div>
-  );
-}
-
-const styles = {
-  page: { padding: 32, display: "grid", gap: 24 },
-  header: { display: "flex", justifyContent: "space-between", gap: 20, alignItems: "start" },
-  kicker: { color: "var(--accent-1)", fontSize: 12, fontWeight: 800, textTransform: "uppercase" as const },
-  title: { fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(32px, 5vw, 54px)", margin: "8px 0 0" },
-  subtitle: { color: "var(--text-muted)", fontSize: 16, lineHeight: 1.6, maxWidth: 880 },
-  refreshButton: { display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)", cursor: "pointer", fontWeight: 700 },
-  warning: { border: "1px solid rgba(255,200,0,0.35)", background: "rgba(255,200,0,0.08)", padding: 14, color: "var(--text-primary)" },
-  error: { border: "1px solid rgba(255,80,80,0.35)", background: "rgba(255,80,80,0.08)", padding: 14, color: "#ffb4b4" },
-  metricGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 16 },
-  metricCard: { display: "grid", gap: 8, minHeight: 130 },
-  metricIcon: { width: 40, height: 40, display: "grid", placeItems: "center", color: "var(--accent-1)", background: "rgba(220,255,69,0.1)", border: "1px solid rgba(220,255,69,0.25)" },
-  metricLabel: { color: "var(--text-muted)", fontSize: 12, fontWeight: 800, textTransform: "uppercase" as const },
-  metricValue: { fontSize: 34, lineHeight: 1 },
-  tableCard: { display: "grid", gap: 14 },
-  sectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 },
-  sectionTitle: { margin: 0, fontSize: 22 },
-  badge: { color: "var(--accent-1)", border: "1px solid rgba(220,255,69,0.28)", background: "rgba(220,255,69,0.08)", padding: "8px 10px", fontWeight: 800 },
-  tableWrap: { overflowX: "auto" as const },
-  table: { width: "100%", borderCollapse: "collapse" as const, minWidth: 1050 },
-  th: { textAlign: "left" as const, padding: "12px 10px", borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: 12, textTransform: "uppercase" as const },
-  td: { padding: "14px 10px", borderBottom: "1px solid var(--border)", verticalAlign: "top" as const, color: "var(--text-primary)", fontSize: 14 },
-  code: { display: "block", color: "var(--text-muted)", fontFamily: "monospace", fontSize: 12, marginTop: 4 },
-  category: { color: "var(--accent-1)", fontSize: 12, fontWeight: 800, textTransform: "uppercase" as const },
-  model: { margin: "4px 0 0", color: "var(--text-muted)", lineHeight: 1.45 },
-  status: { display: "inline-block", padding: "4px 8px", fontSize: 12, fontWeight: 800, textTransform: "uppercase" as const },
-  statusActive: { background: "rgba(85,240,192,0.12)", color: "var(--green)" },
-  statusReady: { background: "rgba(220,255,69,0.1)", color: "var(--accent-1)" },
-  ready: { display: "block", color: "var(--green)", marginTop: 6, fontWeight: 700 },
-  formGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 },
-  filterGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12 },
-  primaryButton: { border: 0, background: "var(--accent-grad)", color: "#000", fontWeight: 900, padding: "12px 14px", cursor: "pointer" },
-  smallButton: { display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)", fontWeight: 800, padding: "8px 10px", cursor: "pointer" },
-  dangerButton: { display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid rgba(255,80,80,0.35)", background: "rgba(255,80,80,0.08)", color: "#ffb4b4", fontWeight: 800, padding: "8px 10px", cursor: "pointer" },
-  actionRow: { display: "flex", flexWrap: "wrap" as const, gap: 8 },
-  link: { color: "var(--accent-1)", fontWeight: 800, marginRight: 10, textDecoration: "none" },
-  errorText: { color: "#ffb4b4", lineHeight: 1.45 },
-  mutedText: { color: "var(--text-muted)" },
-  secretBox: { display: "grid", gap: 10, border: "1px solid rgba(85,240,192,0.28)", background: "rgba(85,240,192,0.08)", padding: 14 },
-  secretCode: { color: "var(--green)", wordBreak: "break-all" as const },
-  embedCode: { color: "var(--text-muted)", whiteSpace: "pre-wrap" as const, wordBreak: "break-word" as const },
-};
 
 function shortAddress(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
-function deploymentStatusStyle(status: AssistedDeployment["status"]) {
-  if (status === "confirmed") return styles.statusActive;
-  if (status === "failed") return { background: "rgba(255,80,80,0.12)", color: "#ffb4b4" };
-  if (status === "cancelled") return { background: "rgba(148,163,184,0.12)", color: "var(--text-muted)" };
-  return styles.statusReady;
+function deploymentStatusTone(status: AssistedDeployment["status"]): "neutral" | "positive" | "warning" | "critical" {
+  if (status === "confirmed") return "positive";
+  if (status === "failed") return "critical";
+  if (status === "cancelled") return "neutral";
+  return "warning";
 }
 
 function explorerTxUrl(chainId: number, txHash: string) {

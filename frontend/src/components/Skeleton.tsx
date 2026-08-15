@@ -10,17 +10,17 @@ export function Skeleton({ width = "100%", height = 20, radius = 8, style }: Ske
 
 export function TokenCardSkeleton() {
   return (
-    <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <div className="card skeleton-card">
+      <div className="skeleton-card__header">
         <Skeleton width={44} height={44} radius={999} />
-        <div style={{ flex: 1 }}>
+        <div className="skeleton-card__copy">
           <Skeleton height={16} width="60%" style={{ marginBottom: 8 }} />
           <Skeleton height={12} width="40%" />
         </div>
       </div>
       <Skeleton height={12} />
       <Skeleton height={12} width="80%" />
-      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+      <div className="skeleton-card__actions">
         <Skeleton height={28} width={80} radius={999} />
         <Skeleton height={28} width={80} radius={999} />
       </div>
@@ -32,7 +32,7 @@ export function PositionCardSkeleton() {
   return (
     <div className="card">
       <Skeleton height={18} width="50%" style={{ marginBottom: 16 }} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 12 }}>
+      <div className="skeleton-card__metrics">
         {[...Array(4)].map((_, i) => (
           <div key={i}>
             <Skeleton height={12} width="60%" style={{ marginBottom: 6 }} />

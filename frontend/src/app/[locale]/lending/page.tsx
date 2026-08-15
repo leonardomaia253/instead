@@ -15,6 +15,7 @@ import { CHAIN_META } from "@/lib/wagmi";
 import { Shield } from "lucide-react";
 import { formatRevenuePrice, LENDING_PREMIUM_PRODUCTS, liquidationRecommendation, liquidationRiskLabel } from "@/lib/lendingPremium";
 import { PlainLanguageGlossary, RiskWarning, SafetyChecklist, SimpleModeNotice, WalletHelpCard } from "@/components/ElderFriendly";
+import { PageHeader, PanelHeader } from "@/components/ui/Institutional";
 
 const LENDING_ASSETS = {
   USDC: {
@@ -298,23 +299,13 @@ export default function LendingPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <main className="product-page lending-page">
+      <div className="product-page__container">
 
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40, gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar</Link>
-            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700, marginTop: 8 }}>
-              🏦 <span className="gradient-text">Crédito Descentralizado</span>
-            </h1>
-            <p style={{ color: "var(--text-muted)", marginTop: 8 }}>
-              Acesse liquidez institucional com seus ativos digitais como garantia, sem abrir mão da custódia.
-            </p>
-          </div>
-          <WalletConnectButton />
-        </div>
-        <SimpleModeNotice title="Credito com garantia, explicado">
+        <PageHeader eyebrow="Crédito on-chain" title="Crédito com garantia" description="Deposite uma garantia, acompanhe o fator de saúde e revise o risco antes de confirmar qualquer operação." backHref="/" action={<WalletConnectButton />} />
+        <div className="product-guidance">
+        <SimpleModeNotice title="Crédito com garantia, explicado">
           Voce deposita um ativo como garantia e pode tomar outro emprestado. Se o valor da garantia cair demais, a posicao pode ser liquidada automaticamente.
         </SimpleModeNotice>
         <RiskWarning>
@@ -327,36 +318,19 @@ export default function LendingPage() {
             { term: "Fator de saude", meaning: "Indicador de seguranca. Quanto maior, mais distante da liquidacao." },
           ]}
         />
+        </div>
 
         {/* Lending desabilitado — card institucional limpo, sem expor lógica interna */}
         {!isLendingEnabled && (
-          <div style={{
-            background: "linear-gradient(135deg, rgba(220,255,69,0.05), rgba(85,240,192,0.05))",
-            border: "1px solid rgba(220,255,69,0.18)",
-            padding: "48px 32px",
-            marginBottom: 32,
-            display: "grid",
-            gap: 14,
-            textAlign: "center",
-            justifyItems: "center",
-          }}>
-            <div style={{ fontSize: 40 }}>🔒</div>
-            <strong style={{ fontSize: 20, color: "var(--text-primary)" }}>Lending on-chain desativado neste ambiente</strong>
-            <p style={{ color: "var(--text-muted)", fontSize: 15, lineHeight: 1.65, maxWidth: 500 }}>
+          <div className="availability-notice">
+            <strong>Operações on-chain indisponíveis neste ambiente</strong>
+            <p>
               Configure contratos, rotas e gates de producao antes de liberar operacoes com capital real.
             </p>
             {SUPPORT_EMAIL ? (
               <a
                 href={`mailto:${SUPPORT_EMAIL}?subject=Interesse%20em%20Emprestimos`}
-                style={{
-                  marginTop: 8,
-                  padding: "13px 32px",
-                  background: "var(--accent-grad)",
-                  color: "#000",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  textDecoration: "none",
-                }}
+                className="btn-primary"
               >
                 Falar com especialista
               </a>
@@ -364,38 +338,31 @@ export default function LendingPage() {
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 24, alignItems: "start" }}>
+        <div className="lending-workspace">
 
           {/* Left Column: Action Form */}
-          <div className="card" style={{ padding: "clamp(20px, 5vw, 32px)" }}>
+          <div className="card lending-operation">
 
             {/* Tabs */}
-            <div style={{ display: "flex", gap: 4, background: "var(--bg-surface)", padding: 4, borderRadius: 12, marginBottom: 28 }}>
+            <div className="operation-tabs">
               {(["deposit", "borrow", "repay"] as Tab[]).map((tBtn) => (
-                <button key={tBtn} onClick={() => setTab(tBtn)} style={{
-                  flex: 1,
-                  background: tab === tBtn ? "var(--accent-grad)" : "transparent",
-                  color: tab === tBtn ? "white" : "var(--text-muted)",
-                  border: "none", borderRadius: 10, padding: "10px 12px",
-                  fontWeight: 600, cursor: "pointer", textTransform: "capitalize", transition: "all 0.15s",
-                  fontSize: 13,
-                }}>
+                <button key={tBtn} onClick={() => setTab(tBtn)} data-active={tab === tBtn}>
                   {tBtn === "deposit" ? "Depositar" : tBtn === "borrow" ? "Tomar" : "Repagar"}
                 </button>
               ))}
             </div>
 
             {!isConnected ? (
-              <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: 15 }}>
+              <div className="operation-connect">
+                <p>
                   Conecte sua carteira para ver valores reais e simular com seus ativos. Nenhuma operação acontece sem uma confirmação separada.
                 </p>
                 <WalletHelpCard compact />
               </div>
             ) : (
               <>
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <div className="operation-field">
+                  <label>
                     {tab === "borrow" ? "Ativo para Tomar Emprestado" : "Ativo"}
                   </label>
                   <select value={selectedAsset} onChange={(e) => setSelectedAsset(e.target.value as `0x${string}`)}>
@@ -406,8 +373,8 @@ export default function LendingPage() {
                 </div>
 
                 {tab === "borrow" && (
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  <div className="operation-field">
+                    <label>
                       Colateral Depositado
                     </label>
                     <select value={colAsset} onChange={(e) => setColAsset(e.target.value as `0x${string}`)}>
@@ -418,27 +385,16 @@ export default function LendingPage() {
                   </div>
                 )}
 
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10, flexWrap: "wrap" }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <div className="operation-field">
+                  <div className="operation-field__header">
+                    <label>
                       Quantidade
                     </label>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <div className="amount-presets">
                       {[25, 50, 75, 100].map((pct) => (
                         <button
                           key={pct}
                           onClick={() => applyPreset(pct)}
-                          style={{
-                            background: "rgba(255,255,255,0.03)",
-                            border: "1px solid var(--border)",
-                            borderRadius: 6,
-                            padding: "2px 8px",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: "var(--text-muted)",
-                            cursor: "pointer",
-                            transition: "all 0.15s",
-                          }}
                         >
                           {pct === 100 ? "MAX" : `${pct}%`}
                         </button>
@@ -451,33 +407,24 @@ export default function LendingPage() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     min={0}
-                    style={{ fontSize: 16, padding: "14px 16px" }}
+                    className="operation-amount"
                   />
                 </div>
 
                 {isConfirmed && (
-                  <div style={{
-                    background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
-                    borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 14,
-                    color: "var(--green)",
-                  }}>
-                    ✅ Transação confirmada com sucesso!
+                  <div className="operation-feedback" data-tone="success">
+                    Transação confirmada com sucesso.
                   </div>
                 )}
 
                 {(error || actionError) && (
-                  <div style={{
-                    background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-                    borderRadius: 12, padding: 14, marginBottom: 18, fontSize: 13,
-                    color: "var(--red)",
-                  }}>
+                  <div className="operation-feedback" data-tone="error">
                     Não foi possível concluir a operação. Verifique sua conexão e tente novamente.
                   </div>
                 )}
 
                 <button
-                  className="btn-primary"
-                  style={{ width: "100%", padding: "14px 0", fontSize: 16 }}
+                  className="btn-primary operation-submit"
                   onClick={handleAction}
                   disabled={isPending || !amount || !isLendingEnabled}
                 >
@@ -497,77 +444,73 @@ export default function LendingPage() {
 
           {/* Right Column: Live Position Monitor */}
           {isConnected && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "clamp(20px, 5vw, 32px)", gap: 16, flexWrap: "wrap" }}>
+            <div className="position-stack">
+              <div className="card health-card">
                 <div>
-                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+                  <h3>
                     Fator de Saúde
                   </h3>
-                  <p style={{ color: "var(--text-muted)", fontSize: 13, maxWidth: 200, lineHeight: 1.5 }}>
+                  <p>
                     Mantenha seu fator acima de 1.2 para evitar liquidação automática.
                   </p>
                 </div>
                 <HealthGauge healthFactor={liveHF} size={130} />
               </div>
 
-              <div className="card" style={{ padding: "clamp(20px, 5vw, 28px)" }}>
-                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="card position-card">
+                <h3>
                   <Shield size={18} /> Sua Posição On-Chain
                 </h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12, flexWrap: "wrap" }}>
-                    <span style={{ color: "var(--text-muted)" }}>Colateral Depositado:</span>
-                    <span style={{ fontWeight: 600, color: "white" }}>{liveCollateral.toFixed(4)} WETH</span>
+                <div className="position-data">
+                  <div>
+                    <span>Colateral depositado</span><strong>{liveCollateral.toFixed(4)} WETH</strong>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12, flexWrap: "wrap" }}>
-                    <span style={{ color: "var(--text-muted)" }}>Dívida Ativa:</span>
-                    <span style={{ fontWeight: 600, color: "white" }}>{liveBorrow.toFixed(4)} USDC</span>
+                  <div>
+                    <span>Dívida ativa</span><strong>{liveBorrow.toFixed(4)} USDC</strong>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, borderTop: "1px solid var(--border)", paddingTop: 16, gap: 12, flexWrap: "wrap" }}>
-                    <span style={{ color: "var(--text-muted)" }}>LTV Atual:</span>
-                    <span style={{ fontWeight: 600, color: liveHF < 1.5 ? "var(--red)" : "var(--green)" }}>
+                  <div>
+                    <span>LTV atual</span>
+                    <strong style={{ color: liveHF < 1.5 ? "var(--red)" : "var(--green)" }}>
                       {liveBorrow > 0 ? ((liveBorrow / (liveCollateral || 1)) * 100).toFixed(1) : "0.0"}%
-                    </span>
+                    </strong>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, gap: 12, flexWrap: "wrap" }}>
-                    <span style={{ color: "var(--text-muted)" }}>Limite de Liquidação:</span>
-                    <span style={{ fontWeight: 600, color: "white" }}>80%</span>
+                  <div>
+                    <span>Limite de liquidação</span><strong>80%</strong>
                   </div>
                 </div>
               </div>
 
-              <div className="card" style={{ padding: "clamp(20px, 5vw, 28px)", display: "grid", gap: 18 }}>
+              <div className="card protection-card">
                 <div>
-                  <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
-                    Protection Layer
+                  <h3>
+                    Proteção da posição
                   </h3>
-                  <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.55 }}>
+                  <p>
                     Risco atual: <strong style={{ color: liveHF < 1.35 ? "var(--red)" : "var(--accent-1)" }}>{riskLabel}</strong>. {recommendation}
                   </p>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: 10 }}>
+                <div className="protection-card__controls">
                   <input
                     type="email"
                     placeholder="email para recibo e alertas"
                     value={premiumEmail}
                     onChange={(event) => setPremiumEmail(event.target.value)}
-                    style={{ fontSize: 13, padding: "10px 12px" }}
                   />
                   <select value={premiumProvider} onChange={(event) => setPremiumProvider(event.target.value as "stripe" | "pagarme")}>
                     <option value="stripe">Stripe</option>
                     <option value="pagarme">Pagar.me</option>
                   </select>
                 </div>
-                {premiumStatus && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{premiumStatus}</div>}
+                {premiumStatus && <div className="operation-status">{premiumStatus}</div>}
               </div>
             </div>
           )}
         </div>
 
-        <section style={{ marginTop: 28, display: "grid", gap: 16 }}>
+        <section className="lending-services">
           <div>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, marginBottom: 8 }}>Lending Pro Stack</h2>
-            <p style={{ color: "var(--text-muted)", maxWidth: 780, lineHeight: 1.6 }}>
+            <PanelHeader title="Serviços de proteção e acompanhamento" description="Recursos complementares para alertas, simulações, redução de risco e gestão multichain." />
+            <p className="lending-services__intro">
               Recursos extras da Instead para alertas, simulações, redução de risco, estratégias guiadas, rebalanceamento, painel multichain e proteção recorrente.
             </p>
             <SafetyChecklist
@@ -578,19 +521,18 @@ export default function LendingPage() {
               ]}
             />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 14 }}>
+          <div className="service-grid">
             {LENDING_PREMIUM_PRODUCTS.map((product) => (
-              <article key={product.sourceCode} className="card" style={{ padding: 18, display: "grid", gap: 12 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) max-content", gap: 12, alignItems: "start" }}>
-                  <strong style={{ minWidth: 0 }}>{product.label}</strong>
-                  <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{formatRevenuePrice(product)}</span>
+              <article key={product.sourceCode} className="card service-card">
+                <div className="service-card__header">
+                  <strong>{product.label}</strong><span>{formatRevenuePrice(product)}</span>
                 </div>
-                <p style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.45 }}>{product.notes}</p>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: "auto" }}>
+                <p>{product.notes}</p>
+                <div className="service-card__actions">
                   {product.amountUsdCents && product.vertical !== "token_factory" ? (
                     <button
                       onClick={() => createPremiumCheckout(product.sourceCode, product.vertical === "services" ? "services" : "lending")}
-                      style={{ padding: "9px 12px", background: "var(--accent-grad)", color: "#000", border: 0, fontWeight: 800, cursor: "pointer" }}
+                      className="btn-primary"
                     >
                       Contratar
                     </button>
@@ -598,7 +540,7 @@ export default function LendingPage() {
                   {product.vertical === "lending" && product.sourceCode !== "lending_pro_subscription" ? (
                     <button
                       onClick={() => createAutomationIntent(product.sourceCode)}
-                      style={{ padding: "9px 12px", background: "transparent", color: "var(--text-primary)", border: "1px solid var(--border)", fontWeight: 700, cursor: "pointer" }}
+                      className="btn-outline"
                     >
                       Criar intenção
                     </button>

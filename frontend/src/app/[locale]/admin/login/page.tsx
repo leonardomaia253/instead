@@ -73,20 +73,16 @@ export default function AdminLoginPage() {
   }, [address, isConnected, locale, nextPath, router, signMessageAsync]);
 
   return (
-    <main style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "24px", background: "radial-gradient(circle at top right, #1a1a2e, #0f0f1a)",
-    }}>
-      <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
-        <div style={{ marginBottom: "40px" }}>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 36, fontWeight: 800, marginBottom: 8 }}>
-            <span className="gradient-text">Instead</span> Admin
-          </div>
-          <p style={{ color: "var(--text-muted)" }}>Painel restrito para operadores autorizados</p>
+    <main className="admin-login">
+      <div className="admin-login__inner">
+        <div className="admin-login__header">
+          <span>Instead Operations</span>
+          <h1>Acesso operacional</h1>
+          <p>Ambiente restrito a carteiras autorizadas.</p>
         </div>
 
-        <div className="card" style={{ padding: "40px 32px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "24px" }}>Autenticacao de administrador</h2>
+        <div className="card admin-login__card">
+          <h2>Verificação de administrador</h2>
           
           {error && (
             <div style={{ 
@@ -114,7 +110,7 @@ export default function AdminLoginPage() {
             {loading && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", color: "var(--accent-1)" }}>
                 <div className="loading-spinner" style={{ width: "20px", height: "20px" }} />
-                <span>Verifying credentials...</span>
+              <span>Verificando credenciais...</span>
               </div>
             )}
           </div>
@@ -122,7 +118,7 @@ export default function AdminLoginPage() {
 
         <div style={{ marginTop: "32px" }}>
           <Link href={`/${locale}`} style={{ color: "var(--text-muted)", fontSize: "14px", textDecoration: "none" }}>
-            ← Back to Main Platform
+            ← Voltar à plataforma
           </Link>
         </div>
       </div>

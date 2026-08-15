@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { LENDING_PROTOCOLS } from "@/lib/lendingProtocols";
+import { AdminPage, AdminSection, AdminStatus } from "@/components/ui/Admin";
 
 type LendingRow = {
   id: string;
@@ -32,45 +33,34 @@ export default function AdminLendingPage() {
   }, []);
 
   return (
-    <main style={{ padding: 32 }}>
-      <h1 style={{ margin: 0, fontSize: 32 }}>Lending</h1>
-      <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Posicoes registradas para auditoria operacional e suporte.</p>
-      <section className="card" style={{ marginTop: 24, marginBottom: 24 }}>
-        <h2 style={{ marginTop: 0, fontSize: 20 }}>Protocol adapter map</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+    <AdminPage title="Crédito" description="Posições e adaptadores registrados para auditoria operacional e suporte.">
+      <AdminSection title="Adaptadores de protocolo" description="Rotas disponíveis para originação e gestão de posições.">
+        <div className="admin-adapter-grid">
           {LENDING_PROTOCOLS.map((protocol) => (
-            <article key={protocol.id} style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 14, background: "var(--bg-card)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+            <article key={protocol.id} className="admin-adapter">
+              <div>
                 <strong>{protocol.name}</strong>
-                <span style={{ color: protocol.status === "active" ? "var(--green)" : "var(--text-muted)", fontSize: 12 }}>{protocol.status}</span>
+                <AdminStatus tone={protocol.status === "active" ? "positive" : "neutral"}>{protocol.status}</AdminStatus>
               </div>
-              <div style={{ color: "var(--text-muted)", fontSize: 12 }}>{protocol.runtime} / {protocol.adapterKind}</div>
+              <small>{protocol.runtime} / {protocol.adapterKind}</small>
             </article>
           ))}
         </div>
-      </section>
+      </AdminSection>
       {error ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
-      <div className="card" style={{ overflowX: "auto", marginTop: 24 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr>{["Wallet", "Pair", "Collateral", "Borrowed", "Health", "Updated"].map((header) => <th key={header} style={th}>{header}</th>)}</tr></thead>
+      <AdminSection title="Posições registradas">
+        <table>
+          <thead><tr>{["Wallet", "Pair", "Collateral", "Borrowed", "Health", "Updated"].map((header) => <th key={header}>{header}</th>)}</tr></thead>
           <tbody>
             {positions.map((position) => (
               <tr key={position.id}>
-                <td style={td}>{position.wallet_address}</td>
-                <td style={td}>{position.collateral_asset} / {position.borrow_asset}</td>
-                <td style={td}>{position.collateral_amount}</td>
-                <td style={td}>{position.borrowed_amount}</td>
-                <td style={td}>{position.health_factor ?? "n/a"}</td>
-                <td style={td}>{new Date(position.updated_at).toLocaleString()}</td>
+                <td>{position.wallet_address}</td><td>{position.collateral_asset} / {position.borrow_asset}</td><td>{position.collateral_amount}</td><td>{position.borrowed_amount}</td><td>{position.health_factor ?? "n/a"}</td><td>{new Date(position.updated_at).toLocaleString()}</td>
               </tr>
             ))}
-            {positions.length === 0 ? <tr><td colSpan={6} style={td}>Sem registros.</td></tr> : null}
+            {positions.length === 0 ? <tr><td colSpan={6}>Sem registros.</td></tr> : null}
           </tbody>
         </table>
-      </div>
-    </main>
+      </AdminSection>
+    </AdminPage>
   );
 }
-
-const th = { padding: "14px 12px", textAlign: "left" as const, color: "var(--text-muted)", borderBottom: "1px solid var(--border)" };
-const td = { padding: "14px 12px", borderBottom: "1px solid var(--border)", fontSize: 14 };

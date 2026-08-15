@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { AdminPage, AdminSection } from "@/components/ui/Admin";
 
 type TokenRow = {
   id: string;
@@ -36,35 +37,27 @@ export default function AdminTokensPage() {
   }, []);
 
   return (
-    <main style={{ padding: 32 }}>
-      <h1 style={{ margin: 0, fontSize: 32 }}>Tokens</h1>
-      <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Deploys criados pela factory e prontos para follow-up comercial.</p>
+    <AdminPage title="Ativos emitidos" description="Deploys criados pela plataforma e disponíveis para acompanhamento operacional.">
       {error ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
-      <div className="card" style={{ overflowX: "auto", marginTop: 24 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr>{["Token", "Template", "Liquidity", "Chain", "Contract", "Created"].map((header) => <th key={header} style={th}>{header}</th>)}</tr></thead>
+      <AdminSection title="Registro de contratos">
+        <table>
+          <thead><tr>{["Token", "Template", "Liquidity", "Chain", "Contract", "Created"].map((header) => <th key={header}>{header}</th>)}</tr></thead>
           <tbody>
             {tokens.map((token) => (
               <tr key={token.id}>
-                <td style={td}>{token.name} ({token.symbol})</td>
-                <td style={td}>
+                <td>{token.name} ({token.symbol})</td>
+                <td>
                   {token.token_template ?? "standard"}
                   {token.burn_tax ? " / burn" : ""}
                   {token.max_wallet_bps ? ` / max ${token.max_wallet_bps / 100}%` : ""}
                 </td>
-                <td style={td}>{token.liquidity_eth ? `${token.liquidity_eth} ETH` : "n/a"}</td>
-                <td style={td}>{token.chain_id}</td>
-                <td style={td}>{token.token_address ?? "Pending"}</td>
-                <td style={td}>{new Date(token.created_at).toLocaleString()}</td>
+                <td>{token.liquidity_eth ? `${token.liquidity_eth} ETH` : "n/a"}</td><td>{token.chain_id}</td><td>{token.token_address ?? "Pending"}</td><td>{new Date(token.created_at).toLocaleString()}</td>
               </tr>
             ))}
-            {tokens.length === 0 ? <tr><td colSpan={6} style={td}>Sem registros.</td></tr> : null}
+            {tokens.length === 0 ? <tr><td colSpan={6}>Sem registros.</td></tr> : null}
           </tbody>
         </table>
-      </div>
-    </main>
+      </AdminSection>
+    </AdminPage>
   );
 }
-
-const th = { padding: "14px 12px", textAlign: "left" as const, color: "var(--text-muted)", borderBottom: "1px solid var(--border)" };
-const td = { padding: "14px 12px", borderBottom: "1px solid var(--border)", fontSize: 14 };

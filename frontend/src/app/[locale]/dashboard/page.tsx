@@ -10,6 +10,7 @@ import { supabase, getAuditsByWallet, type GeneratedToken, type Audit, type Reve
 import { CHAIN_META } from "@/lib/wagmi";
 import { useTranslations } from "next-intl";
 import { WalletHelpCard } from "@/components/ElderFriendly";
+import { MetricCard, MetricGrid, PageHeader, PanelHeader, ProductShell } from "@/components/ui/Institutional";
 
 type LendingPosition = {
   collateral_asset: string;
@@ -90,84 +91,60 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-      <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, textAlign: "center" }}>
-          Conecte sua carteira para ver seu painel
-        </h1>
-        <p style={{ color: "var(--text-muted)", maxWidth: 460, textAlign: "center", lineHeight: 1.6, padding: "0 20px" }}>
-          O painel mostra tokens criados, posicoes de credito, alertas e historico. A conexao serve apenas para identificar sua conta.
-        </p>
-        <div style={{ width: "min(440px, calc(100vw - 32px))" }}>
+      <ProductShell width="narrow" className="dashboard-connect">
+        <PageHeader
+          eyebrow="Área privada"
+          title="Seu patrimônio, em uma visão"
+          description="Conecte a carteira para consultar posições de crédito, ativos emitidos, alertas e histórico. A conexão apenas identifica a conta."
+        />
+        <div className="dashboard-connect__wallet">
           <WalletHelpCard compact />
         </div>
-      </main>
+      </ProductShell>
     );
   }
 
   return (
-    <main style={{ minHeight: "100vh", padding: "32px clamp(16px, 5vw, 24px)" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+    <ProductShell width="standard" className="dashboard-shell">
 
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36, flexWrap: "wrap", gap: 16 }}>
-          <div>
-            <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Início</Link>
-            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 700, marginTop: 8 }}>
-              📊 Dashboard
-            </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
-              {address?.slice(0, 6)}...{address?.slice(-4)}
-            </p>
-          </div>
-          <WalletConnectButton />
-        </div>
+        <PageHeader
+          eyebrow={`Conta ${address?.slice(0, 6)}...${address?.slice(-4)}`}
+          title="Visão patrimonial"
+          description="Posições, ativos, benefícios e eventos operacionais reunidos em uma leitura verificável."
+          backHref="/"
+          backLabel="Início"
+          action={<WalletConnectButton />}
+        />
 
         {/* Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16, marginBottom: 36 }}>
-          {[
-            { label: "Posições Abertas", value: positions.length, icon: "🏦" },
-            { label: "Tokens Criados", value: totalTokens, icon: "🏭" },
-            { label: "Posições em Risco", value: positions.filter(p => p.health_factor < 1.2).length, icon: "⚠️" },
-          ].map((s) => (
-            <div key={s.label} className="card" style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 700 }}>{s.value}</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>{s.label}</div>
-            </div>
-          ))}
-          {/* Health Factor Gauge Card */}
-          <div className="card" style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 8 }}>Health Factor Mínimo</div>
-            <HealthGauge healthFactor={lowestHF} size={120} />
-          </div>
-        </div>
+        <MetricGrid>
+          <MetricCard label="Posições abertas" value={positions.length} />
+          <MetricCard label="Ativos emitidos" value={totalTokens} />
+          <MetricCard label="Posições em risco" value={positions.filter(p => p.health_factor < 1.2).length} tone={positions.some(p => p.health_factor < 1.2) ? "critical" : "default"} />
+          <MetricCard label="Menor fator de saúde" value={lowestHF >= 999 ? "—" : lowestHF.toFixed(2)} tone={lowestHF < 1.2 ? "critical" : lowestHF < 1.5 ? "warning" : "positive"} />
+        </MetricGrid>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, marginBottom: 40 }}>
-          <div className="card" style={{ padding: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 16 }}>
-              <div>
-                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Meu plano Instead</h2>
-                <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6 }}>Planos ativos e benefícios liberados.</p>
-              </div>
-              <Link href="/lending" style={{ color: "var(--accent-1)", textDecoration: "none", fontSize: 13 }}>Upgrade</Link>
-            </div>
+        <div className="dashboard-ops-grid">
+          <div className="card dashboard-panel">
+            <PanelHeader title="Plano Instead" description="Planos ativos e benefícios liberados." action={<Link href="/solutions">Ver planos</Link>} />
             {revenueAuthRequired ? (
-              <div style={{ color: "var(--accent-1)", fontSize: 14, lineHeight: 1.55 }}>
+              <div className="dashboard-message" data-tone="accent">
                 Entre com sua wallet para assinar a sessao e carregar planos, pagamentos e automacoes premium.
               </div>
             ) : entitlements.length === 0 ? (
-              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>
+              <div className="dashboard-message">
                 Nenhum plano premium ativo. Ative alertas, risk shield ou Lending Pro quando quiser proteção mais robusta.
               </div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+              <div className="dashboard-list">
                 {entitlements.map((item) => (
-                  <div key={item.id} style={{ border: "1px solid var(--border)", padding: 14, background: "rgba(255,255,255,0.02)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div key={item.id} className="dashboard-list__item">
+                    <div className="dashboard-list__header">
                       <strong>{item.revenue_sources?.label ?? item.source_code}</strong>
-                      <span style={{ color: item.status === "active" ? "var(--green)" : "var(--text-muted)", fontWeight: 800 }}>{item.status}</span>
+                      <span style={{ color: item.status === "active" ? "var(--green)" : "var(--text-muted)" }}>{item.status}</span>
                     </div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 6 }}>
+                    <div className="dashboard-list__meta">
                       {item.expires_at ? `Renova/expira em ${new Date(item.expires_at).toLocaleDateString("pt-BR")}` : "Compra pontual / serviço assistido"}
                     </div>
                   </div>
@@ -176,35 +153,34 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Deploys assistidos</h2>
-            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Tokens pagos via Pix/cartao e executados pelo relayer da plataforma.</p>
+          <div className="card dashboard-panel">
+            <PanelHeader title="Emissões assistidas" description="Ativos pagos em moeda fiduciária e executados pelo relayer." />
             {revenueAuthRequired ? (
-              <div style={{ color: "var(--accent-1)", fontSize: 14 }}>Assine a sessao wallet para carregar seus deploys assistidos.</div>
+              <div className="dashboard-message" data-tone="accent">Assine a sessão para carregar suas emissões assistidas.</div>
             ) : assistedDeployments.length === 0 ? (
-              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhum deploy assistido em andamento.</div>
+              <div className="dashboard-message">Nenhuma emissão assistida em andamento.</div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+              <div className="dashboard-list">
                 {assistedDeployments.slice(0, 5).map((deployment) => {
                   const chain = CHAIN_META[deployment.chain_id];
                   return (
-                    <div key={deployment.id} style={{ border: "1px solid var(--border)", padding: 14, background: "rgba(255,255,255,0.02)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                    <div key={deployment.id} className="dashboard-list__item">
+                      <div className="dashboard-list__header">
                         <div>
-                          <strong>{deployment.token_name} <span style={{ color: "var(--accent-1)" }}>${deployment.token_symbol}</span></strong>
-                          <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 5 }}>{chain?.icon} {chain?.name ?? `Chain ${deployment.chain_id}`} · {new Date(deployment.created_at).toLocaleString("pt-BR")}</div>
+                          <strong>{deployment.token_name} <span className="dashboard-symbol">${deployment.token_symbol}</span></strong>
+                          <div className="dashboard-list__meta">{chain?.name ?? `Chain ${deployment.chain_id}`} · {new Date(deployment.created_at).toLocaleString("pt-BR")}</div>
                         </div>
-                        <span style={{ color: statusColor(deployment.status), fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>{deployment.status}</span>
+                        <span className="dashboard-status" style={{ color: statusColor(deployment.status) }}>{deployment.status}</span>
                       </div>
                       {deployment.error_message && (
-                        <div style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{deployment.error_message}</div>
+                        <div className="dashboard-error">{deployment.error_message}</div>
                       )}
-                      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                      <div className="dashboard-links">
                         {deployment.token_address && (
-                          <Link href={`/token/${deployment.token_address}?chain=${deployment.chain_id}`} style={{ color: "var(--accent-1)", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>Ver token</Link>
+                          <Link href={`/token/${deployment.token_address}?chain=${deployment.chain_id}`}>Ver ativo</Link>
                         )}
                         {deployment.tx_hash && (
-                          <a href={explorerTxUrl(deployment.chain_id, deployment.tx_hash)} target="_blank" rel="noreferrer" style={{ color: "var(--accent-1)", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>Ver tx</a>
+                          <a href={explorerTxUrl(deployment.chain_id, deployment.tx_hash)} target="_blank" rel="noreferrer">Ver transação</a>
                         )}
                       </div>
                     </div>
@@ -214,45 +190,43 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Timeline operacional</h2>
-            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Deleverage, rebalance, risk shield, estratégias e solicitações B2B.</p>
+          <div className="card dashboard-panel">
+            <PanelHeader title="Timeline operacional" description="Proteção, rebalanceamento, estratégias e solicitações B2B." />
             {revenueAuthRequired ? (
-              <div style={{ color: "var(--accent-1)", fontSize: 14 }}>Assine a sessao wallet para carregar a timeline premium.</div>
+              <div className="dashboard-message" data-tone="accent">Assine a sessão para carregar a timeline.</div>
             ) : intents.length === 0 ? (
-              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhuma intenção premium criada ainda.</div>
+              <div className="dashboard-message">Nenhuma intenção operacional criada.</div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+              <div className="timeline-list">
                 {intents.slice(0, 5).map((intent) => (
-                  <div key={intent.id} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", gap: 12, alignItems: "start" }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 99, background: statusColor(intent.status), marginTop: 5 }} />
+                  <div key={intent.id}>
+                    <span style={{ background: statusColor(intent.status) }} />
                     <div>
-                      <strong style={{ fontSize: 14 }}>{intent.revenue_sources?.label ?? intent.source_code}</strong>
-                      <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 4 }}>{intent.recommendation ?? "Aguardando próxima ação."}</div>
+                      <strong>{intent.revenue_sources?.label ?? intent.source_code}</strong>
+                      <div>{intent.recommendation ?? "Aguardando próxima ação."}</div>
                     </div>
-                    <span style={{ fontSize: 11, color: statusColor(intent.status), fontWeight: 800, textTransform: "uppercase" }}>{intent.status}</span>
+                    <span className="dashboard-status" style={{ color: statusColor(intent.status) }}>{intent.status}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="card" style={{ padding: 24 }}>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, margin: 0 }}>Alertas de risco</h2>
-            <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, marginBottom: 16 }}>Liquidação, risk shield e recomendações geradas por automação.</p>
+          <div className="card dashboard-panel">
+            <PanelHeader title="Alertas de risco" description="Liquidação, proteção e recomendações operacionais." />
             {revenueAuthRequired ? (
-              <div style={{ color: "var(--accent-1)", fontSize: 14 }}>Assine a sessao wallet para carregar alertas privados.</div>
+              <div className="dashboard-message" data-tone="accent">Assine a sessão para carregar alertas privados.</div>
             ) : alerts.length === 0 ? (
-              <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Nenhum alerta recente.</div>
+              <div className="dashboard-message">Nenhum alerta recente.</div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+              <div className="dashboard-list">
                 {alerts.slice(0, 5).map((alert) => (
-                  <div key={alert.id} style={{ border: "1px solid var(--border)", padding: 12, background: "rgba(255,255,255,0.02)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <strong style={{ color: alertSeverityColor(alert.severity), textTransform: "uppercase", fontSize: 12 }}>{alert.severity}</strong>
-                      <span style={{ color: "var(--text-muted)", fontSize: 11 }}>{new Date(alert.created_at).toLocaleString("pt-BR")}</span>
+                  <div key={alert.id} className="dashboard-list__item">
+                    <div className="dashboard-list__header">
+                      <strong className="dashboard-status" style={{ color: alertSeverityColor(alert.severity) }}>{alert.severity}</strong>
+                      <span className="dashboard-list__meta">{new Date(alert.created_at).toLocaleString("pt-BR")}</span>
                     </div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 6, lineHeight: 1.45 }}>{alert.message}</div>
+                    <div className="dashboard-list__meta">{alert.message}</div>
                   </div>
                 ))}
               </div>
@@ -260,61 +234,57 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, marginBottom: 40 }}>
+        <div className="dashboard-assets-grid">
           {/* Posições de Lending */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, fontWeight: 700 }}>Posições de Lending</h2>
-              <Link href="/lending" style={{ fontSize: 13, color: "var(--accent-1)", textDecoration: "none" }}>+ Nova posição</Link>
-            </div>
+            <PanelHeader title="Posições de crédito" description="Garantias, dívida e saúde por rede." action={<Link href="/lending">Nova posição</Link>} />
             {loading ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="dashboard-stack">
                 <PositionCardSkeleton /><PositionCardSkeleton />
               </div>
             ) : positions.length === 0 ? (
-              <div className="card" style={{ textAlign: "center", padding: "40px 24px", color: "var(--text-muted)" }}>
-                Nenhuma posição aberta. <Link href="/lending" style={{ color: "var(--accent-1)" }}>Começar agora</Link>
+              <div className="card dashboard-empty">
+                Nenhuma posição aberta. <Link href="/lending">Abrir uma posição</Link>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="dashboard-stack">
                 {positions.map((p, i) => {
                   const hf = p.health_factor ?? 999;
                   const hfColor = hf >= 1.5 ? "#10b981" : hf >= 1.2 ? "#f59e0b" : "#ef4444";
                   const chain = CHAIN_META[p.chain_id];
                   return (
-                    <div key={i} className="card" style={{ borderColor: p.is_liquidatable ? "rgba(239,68,68,0.4)" : undefined }}>
+                    <div key={i} className={`card dashboard-position${p.is_liquidatable ? " dashboard-position--risk" : ""}`}>
                       {p.is_liquidatable && (
-                        <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
-                          🚨 RISCO DE LIQUIDAÇÃO
+                        <div className="dashboard-risk-label">
+                          Risco de liquidação
                         </div>
                       )}
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+                      <div className="dashboard-position__header">
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 700 }}>
-                            {chain?.icon} {chain?.name}
+                          <div className="dashboard-position__network">
+                            {chain?.name}
                           </div>
-                          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                          <div className="dashboard-position__pair">
                             {p.borrow_asset.slice(0, 8)}... / {p.collateral_asset.slice(0, 8)}...
                           </div>
                         </div>
                         <HealthGauge healthFactor={hf} size={70} />
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 13 }}>
+                      <div className="dashboard-position__values">
                         <div>
-                          <div style={{ color: "var(--text-muted)" }}>Colateral</div>
-                          <div style={{ fontWeight: 600 }}>{p.collateral_amount.toFixed(4)}</div>
+                          <span>Colateral</span>
+                          <strong>{p.collateral_amount.toFixed(4)}</strong>
                         </div>
                         <div>
-                          <div style={{ color: "var(--text-muted)" }}>Dívida</div>
-                          <div style={{ fontWeight: 600 }}>{p.borrowed_amount.toFixed(4)}</div>
+                          <span>Dívida</span>
+                          <strong>{p.borrowed_amount.toFixed(4)}</strong>
                         </div>
                       </div>
                       {/* HF progress bar */}
-                      <div style={{ marginTop: 12, height: 6, borderRadius: 999, background: "var(--border)", overflow: "hidden" }}>
+                      <div className="dashboard-health-track">
                         <div style={{
                           width: `${Math.min(100, (hf / 3) * 100)}%`,
-                          height: "100%", background: hfColor, borderRadius: 999,
-                          transition: "width 0.5s",
+                          background: hfColor,
                         }} />
                       </div>
                     </div>
@@ -326,37 +296,34 @@ export default function DashboardPage() {
 
           {/* Tokens Criados */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, fontWeight: 700 }}>Meus Tokens</h2>
-              <Link href="/factory" style={{ fontSize: 13, color: "var(--accent-1)", textDecoration: "none" }}>+ Criar token</Link>
-            </div>
+            <PanelHeader title="Ativos emitidos" description="Instrumentos criados e seus registros on-chain." action={<Link href="/factory">Emitir ativo</Link>} />
             {loading ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="dashboard-stack">
                 <TokenCardSkeleton /><TokenCardSkeleton />
               </div>
             ) : tokens.length === 0 ? (
-              <div className="card" style={{ textAlign: "center", padding: "40px 24px", color: "var(--text-muted)" }}>
-                Nenhum token criado ainda. <Link href="/factory" style={{ color: "var(--accent-1)" }}>Criar meu primeiro token</Link>
+              <div className="card dashboard-empty">
+                Nenhum ativo emitido. <Link href="/factory">Iniciar emissão</Link>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="dashboard-stack">
                 {tokens.map((t) => {
                   const chain = CHAIN_META[t.chain_id];
                   return (
-                    <Link key={t.id} href={`/token/${t.token_address}?chain=${t.chain_id}`} style={{ textDecoration: "none" }}>
-                      <div className="card" style={{ cursor: "pointer" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                    <Link key={t.id} href={`/token/${t.token_address}?chain=${t.chain_id}`} className="dashboard-asset-link">
+                      <div className="card dashboard-asset-card">
+                        <div className="dashboard-asset-card__header">
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: 16 }}>{t.name}</div>
-                            <div style={{ color: "var(--accent-1)", fontSize: 13, fontWeight: 600 }}>${t.symbol}</div>
+                            <div className="dashboard-asset-card__name">{t.name}</div>
+                            <div className="dashboard-symbol">${t.symbol}</div>
                           </div>
-                          <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "right" }}>
-                            {chain?.icon} {chain?.name}<br />
+                          <div className="dashboard-asset-card__meta">
+                            {chain?.name}<br />
                             {new Date(t.created_at).toLocaleDateString("pt-BR")}
                           </div>
                         </div>
-                        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                          {t.mintable && <Badge color="#7c3aed">Mintable</Badge>}
+                        <div className="dashboard-badges">
+                          {t.mintable && <Badge color="var(--accent-2)">Mintable</Badge>}
                           <Badge color="#64748b">Supply: {formatNum(t.initial_supply)}</Badge>
                           <Badge color="#334155">Chain {t.chain_id}</Badge>
                         </div>
@@ -370,15 +337,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Histórico de Atividades e Auditoria */}
-        <div className="card" style={{ padding: 32 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700 }}>🛡️ Histórico de Atividades & Auditoria</h2>
-              <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>Todas as suas ações on-chain registradas e auditadas com segurança.</p>
-            </div>
+        <div className="card dashboard-audit">
+          <div className="dashboard-audit__header">
+            <PanelHeader title="Histórico e auditoria" description="Ações on-chain registradas em ordem cronológica." />
             
             {/* Filtros */}
-            <div style={{ display: "flex", gap: 8, background: "var(--bg-surface)", padding: 4, borderRadius: 10, flexWrap: "wrap", width: "min(100%, max-content)" }}>
+            <div className="dashboard-filter" role="tablist" aria-label="Filtrar histórico">
               {[
                 { id: "all", label: "Todos" },
                 { id: "lending", label: "Lending" },
@@ -388,12 +352,7 @@ export default function DashboardPage() {
                 <button
                   key={f.id}
                   onClick={() => setAuditFilter(f.id as any)}
-                  style={{
-                    background: auditFilter === f.id ? "var(--accent-grad)" : "transparent",
-                    color: auditFilter === f.id ? "white" : "var(--text-muted)",
-                    border: "none", borderRadius: 8, padding: "6px 14px",
-                    fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s"
-                  }}
+                  className={auditFilter === f.id ? "is-active" : ""}
                 >
                   {f.label}
                 </button>
@@ -402,41 +361,36 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="dashboard-stack">
               <PositionCardSkeleton />
             </div>
           ) : filteredAudits.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: 14 }}>
+            <div className="dashboard-empty dashboard-empty--bare">
               Nenhuma atividade registrada para este filtro.
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="dashboard-stack">
               {filteredAudits.map((audit) => {
                 const date = new Date(audit.created_at).toLocaleString("pt-BR");
                 const isLending = ["DEPOSIT", "BORROW", "REPAY"].includes(audit.action);
                 const isStaking = ["STAKE", "UNSTAKE", "CLAIM"].includes(audit.action);
-                const actionColor = isLending ? "#3b82f6" : isStaking ? "#10b981" : "#7c3aed";
+                const actionColor = isLending ? "var(--accent-2)" : isStaking ? "var(--risk-healthy)" : "var(--text-secondary)";
 
                 return (
-                  <div key={audit.id} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "16px 20px", background: "rgba(255,255,255,0.015)",
-                    border: "1px solid var(--border)", borderRadius: 12, flexWrap: "wrap", gap: 12
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", minWidth: 0 }}>
+                  <div key={audit.id} className="dashboard-audit-row">
+                    <div className="dashboard-audit-row__main">
                       <span style={{
-                        fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 6,
-                        background: `${actionColor}15`, color: actionColor, textTransform: "uppercase"
+                        background: `${actionColor}15`, color: actionColor, borderColor: `${actionColor}30`
                       }}>
                         {audit.action}
                       </span>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 600 }}>
+                        <div className="dashboard-audit-row__title">
                           {audit.action === "CREATE_TOKEN" ? `Criou o token ${audit.metadata?.name || ""}` : 
                            audit.action === "STAKE" ? `Realizou stake de ${audit.metadata?.amount || ""} INST` :
                            `${audit.action === "DEPOSIT" ? "Depositou" : "Tomou"} ${audit.metadata?.amount || ""} no Lending`}
                         </div>
-                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{date}</div>
+                        <div className="dashboard-audit-row__date">{date}</div>
                       </div>
                     </div>
 
@@ -445,11 +399,7 @@ export default function DashboardPage() {
                         href={`https://arbiscan.io/tx/${audit.metadata.tx_hash}`}
                         target="_blank"
                         rel="noreferrer"
-                        style={{
-                          fontSize: 12, color: "var(--accent-1)", textDecoration: "none",
-                          fontWeight: 600, background: "rgba(124,58,237,0.08)",
-                          padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(124,58,237,0.15)"
-                        }}
+                        className="dashboard-audit-row__link"
                       >
                         Ver Transação ↗
                       </a>
@@ -461,17 +411,13 @@ export default function DashboardPage() {
           )}
         </div>
 
-      </div>
-    </main>
+    </ProductShell>
   );
 }
 
 function Badge({ children, color }: { children: React.ReactNode; color: string }) {
   return (
-    <span style={{
-      fontSize: 11, fontWeight: 600, padding: "3px 10px",
-      borderRadius: 999, background: `${color}20`, color, border: `1px solid ${color}30`,
-    }}>
+    <span className="dashboard-badge" style={{ background: `${color}20`, color, borderColor: `${color}30` }}>
       {children}
     </span>
   );

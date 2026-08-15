@@ -96,16 +96,16 @@ const steps = [
   {
     title: "Empréstimos & Alavancagem",
     description: "O próximo passo para o sucesso do seu token é a utilidade.",
-    icon: <Coins className="w-12 h-12 text-purple-500" />,
+    icon: <Coins className="w-12 h-12 onboarding-icon" />,
     color: "var(--accent-1)",
     content: (name: string, symbol: string, handleClose?: () => void) => (
       <div className="space-y-4">
         <p className="text-sm text-gray-300">
           Sabia que você pode usar o {`Instead Lending`} para permitir que holders usem seu token como colateral?
         </p>
-        <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
-          <h4 className="font-bold text-purple-300 text-sm mb-2">Vantagens de Integrar ao Lending:</h4>
-          <ul className="text-xs space-y-1 text-purple-200">
+        <div className="p-4 rounded-xl onboarding-callout">
+          <h4 className="font-bold text-sm mb-2">Antes de integrar ao crédito</h4>
+          <ul className="text-xs space-y-1">
             <li>✓ Reduz pressão de venda (holders pegam empréstimo em vez de vender).</li>
             <li>✓ Cria demanda orgânica pelo token.</li>
             <li>✓ Gera utilidade financeira real desde o dia 1.</li>
@@ -114,7 +114,7 @@ const steps = [
         <a
           href="/lending"
           onClick={handleClose}
-          className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 transition-colors font-bold text-sm block text-center text-white no-underline"
+          className="w-full py-3 rounded-xl onboarding-action transition-colors font-bold text-sm block text-center no-underline"
         >
           Explorar Protocolo de Empréstimo
         </a>
@@ -196,7 +196,7 @@ export function OnboardingWizard({ isOpen, onClose, tokenName, tokenSymbol }: On
                   <div 
                     key={i}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === currentStep ? "w-8 bg-purple-500" : "w-2 bg-white/10"
+                      i === currentStep ? "w-8 onboarding-progress" : "w-2 bg-white/10"
                     }`}
                   />
                 ))}
@@ -213,7 +213,7 @@ export function OnboardingWizard({ isOpen, onClose, tokenName, tokenSymbol }: On
                 )}
                 <button 
                   onClick={next}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:opacity-90 rounded-xl text-white font-bold text-sm shadow-lg shadow-purple-500/20 transition-all active:scale-95"
+                  className="flex items-center gap-2 px-6 py-2.5 onboarding-action rounded-xl font-bold text-sm transition-all active:scale-95"
                 >
                   {currentStep === steps.length - 1 ? "Entendido!" : "Próximo"}
                   {currentStep < steps.length - 1 && <ArrowRight className="w-4 h-4" />}

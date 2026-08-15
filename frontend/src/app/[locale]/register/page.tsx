@@ -5,10 +5,8 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
 import { Link } from "@/navigation";
-import { CHAIN_META } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/Toast";
-import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
   const { address, isConnected } = useAccount();
@@ -35,7 +33,7 @@ export default function RegisterPage() {
 
       if (error) throw error;
 
-      toast.success("Perfil criado com sucesso! 🚀");
+      toast.success("Perfil criado com sucesso.");
       router.push("/dashboard");
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao criar perfil.");
@@ -45,42 +43,29 @@ export default function RegisterPage() {
   }
 
   return (
-    <main style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "24px", position: "relative", overflow: "hidden",
-    }}>
-      <div style={{
-        position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)",
-        width: 600, height: 400, pointerEvents: "none",
-        background: "radial-gradient(ellipse, rgba(124,58,237,0.1) 0%, transparent 70%)",
-      }} />
-
-      <div style={{ width: "100%", maxWidth: 480, position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }} className="gradient-text">
-            Crie seu Perfil
-          </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
-            Personalize sua experiência no Instead DeFi
-          </p>
+    <main className="register-shell">
+      <div className="register-shell__inner">
+        <div className="register-shell__header">
+          <span>Identidade da conta</span>
+          <h1>Crie seu perfil</h1>
+          <p>Associe um nome à carteira para usar as áreas privadas da Instead.</p>
         </div>
 
         {!isConnected ? (
-          <div className="card" style={{ textAlign: "center", padding: 40 }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>🦊</div>
-            <h2 style={{ fontSize: 18, marginBottom: 12 }}>Conecte sua wallet primeiro</h2>
-            <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: 14 }}>
-              Precisamos da sua wallet para vincular seu perfil na rede.
+          <div className="card register-shell__card">
+            <h2>Conecte sua carteira</h2>
+            <p className="register-shell__description">
+              Precisamos da sua carteira para vincular seu perfil à conta.
             </p>
-            <div style={{ display: "flex", justifyContent: "center" }}>
+            <div className="register-shell__wallet-action">
               <WalletConnectButton />
             </div>
           </div>
         ) : (
-          <div className="card" style={{ padding: 32 }}>
-            <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div>
-                <label style={{ display: "block", fontSize: 13, color: "var(--text-muted)", marginBottom: 8, fontWeight: 600 }}>USERNAME</label>
+          <div className="card register-shell__card">
+            <form onSubmit={handleRegister} className="register-form">
+              <label>
+                <span>Nome de usuário</span>
                 <input 
                   type="text" 
                   value={username} 
@@ -90,36 +75,34 @@ export default function RegisterPage() {
                   minLength={3}
                   maxLength={20}
                 />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: 13, color: "var(--text-muted)", marginBottom: 8, fontWeight: 600 }}>BIO</label>
+              </label>
+              <label>
+                <span>Apresentação</span>
                 <textarea 
                   value={bio} 
                   onChange={(e) => setBio(e.target.value)} 
                   placeholder="Conte um pouco sobre você..." 
-                  style={{ minHeight: 100, resize: 'none' }}
+                  className="register-form__bio"
                   maxLength={160}
                 />
-              </div>
+              </label>
               
-              <div style={{
-                background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 16, border: "1px solid var(--border)"
-              }}>
-                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>WALLET VINCULADA</div>
-                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: "monospace", color: "var(--accent-1)" }}>
+              <div className="register-form__wallet">
+                <span>Carteira vinculada</span>
+                <code>
                   {address}
-                </div>
+                </code>
               </div>
 
-              <button type="submit" className="btn-primary" disabled={loading} style={{ width: "100%", height: 48 }}>
-                {loading ? "⏳ Criando Perfil..." : "Finalizar Cadastro 🚀"}
+              <button type="submit" className="btn-primary register-form__submit" disabled={loading}>
+                {loading ? "Criando perfil..." : "Finalizar cadastro"}
               </button>
             </form>
           </div>
         )}
 
-        <p style={{ textAlign: "center", marginTop: 24, fontSize: 14, color: "var(--text-muted)" }}>
-          Já tem conta? <Link href="/login" style={{ color: "var(--accent-1)", fontWeight: 600, textDecoration: "none" }}>Fazer Login</Link>
+        <p className="register-shell__login">
+          Já tem conta? <Link href="/login">Entrar</Link>
         </p>
       </div>
     </main>

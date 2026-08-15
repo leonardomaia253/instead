@@ -1,21 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
 import {
-  Activity,
   Banknote,
   CalendarDays,
   CheckCircle2,
   Flame,
   Megaphone,
   MessageSquareText,
-  Target,
-  TrendingUp,
-  Users,
-  DollarSign,
   Zap,
 } from "lucide-react";
+import { AdminMetric, AdminMetrics, AdminPage, AdminSection, AdminStatus } from "@/components/ui/Admin";
 
 type RevenueLever = {
   name: string;
@@ -196,72 +191,25 @@ export default function AdminDashboard() {
   const gap = Math.max(0, monthlyTarget - projectedRevenue);
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div>
-          <div style={styles.kicker}>Revenue Command Center</div>
-          <h1 style={styles.title}>Plano comercial 10x da Instead</h1>
-          <p style={styles.subtitle}>
-            Painel para o time administrativo e comercial transformar a Token Factory em receita previsivel:
-            metas, funil, canais, ofertas e rotina semanal em um so lugar.
-          </p>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
-          <div style={styles.targetBox}>
-            <Target size={22} />
-            <span>Meta de 6 meses</span>
-            <strong>{currencyFormatter.format(monthlyTarget)}/mes</strong>
-          </div>
-          <a
-            href="../admin/prices"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 16px",
-              background: "rgba(220,255,69,0.08)",
-              border: "1px solid rgba(220,255,69,0.3)",
-              color: "var(--accent-1)",
-              textDecoration: "none",
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            💲 Gerenciar Preços
-          </a>
-        </div>
-      </header>
+    <AdminPage
+      title="Planejamento comercial"
+      description="Metas, funil, ofertas e cadência operacional para acompanhar receita previsível."
+      action={<a href="../admin/prices" className="btn-outline">Gerenciar preços</a>}
+    >
 
-      <section style={styles.metricGrid}>
-        <MetricCard title="Receita projetada" value={currencyFormatter.format(projectedRevenue)} note={`${targetProgress}% da meta`} icon={<TrendingUp size={20} />} />
-        <MetricCard title="Leads qualificados" value={qualifiedLeads.toLocaleString("en-US")} note={`${Math.round(leadConversion * 100)}% dos visitantes`} icon={<Users size={20} />} />
-        <MetricCard title="Clientes estimados" value={projectedCustomers.toLocaleString("en-US")} note={`${Math.round(salesConversion * 100)}% dos leads`} icon={<CheckCircle2 size={20} />} />
-        <MetricCard title="Gap mensal" value={currencyFormatter.format(gap)} note="Ajuste trafego, conversao ou ticket" icon={<Activity size={20} />} />
-        <MetricCard
-          title="Lucro/dia planejado"
-          value={`$${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}`}
-          note={dailyProfitBreakdown.daily >= dailyGoal ? "✅ Meta $1.000/dia atingida" : `${dailyProgress}% da meta de $1.000/dia`}
-          icon={<DollarSign size={20} />}
-          highlight={dailyProfitBreakdown.daily >= dailyGoal}
-        />
-      </section>
+      <AdminMetrics>
+        <AdminMetric label="Receita projetada" value={currencyFormatter.format(projectedRevenue)} />
+        <AdminMetric label="Leads qualificados" value={qualifiedLeads.toLocaleString("en-US")} />
+        <AdminMetric label="Clientes estimados" value={projectedCustomers.toLocaleString("en-US")} />
+        <AdminMetric label="Gap mensal" value={currencyFormatter.format(gap)} tone={gap > 0 ? "warning" : "positive"} />
+        <AdminMetric label="Lucro diário planejado" value={`$${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}`} tone={dailyProfitBreakdown.daily >= dailyGoal ? "positive" : "default"} />
+      </AdminMetrics>
 
       {/* ===== PLANEJADOR $1.000/DIA ===== */}
-      <section className="card" style={styles.fullSection}>
-        <div style={styles.sectionHeader}>
+      <AdminSection className="commercial-section" title="Planejador de lucro diário" description="Ajuste o volume mensal por produto e estime as conversões necessárias para a meta líquida." action={<Zap size={18} />}>
+        <div className="commercial-daily-grid">
           <div>
-            <h2 style={styles.sectionTitle}>Planejador — $1.000 de lucro por dia</h2>
-            <p style={styles.sectionNote}>
-              Ajuste o volume mensal de cada produto e veja em tempo real quantas conversões são necessárias para
-              atingir <strong style={{ color: "var(--accent-1)" }}>$1.000/dia líquido</strong>.
-            </p>
-          </div>
-          <Zap size={22} color="var(--accent-1)" />
-        </div>
-
-        <div style={styles.dailySimGrid}>
-          {/* Sliders da esquerda */}
-          <div style={{ display: "grid", gap: 20 }}>
+          <div className="commercial-sliders">
             <Slider label="Token Deploy On-chain ($5 × 95%)" value={qOnchain} min={0} max={2000} step={10} suffix=" deploys/mês" onChange={setQOnchain} />
             <Slider label="Creator Dashboard ($29/mês × 85%)" value={qDashboard} min={0} max={1000} step={5} suffix=" assinaturas ativas" onChange={setQDashboard} />
             <Slider label="Deploy Assistido ($49 × 70%)" value={qAssisted} min={0} max={200} step={1} suffix=" vendas/mês" onChange={setQAssisted} />
@@ -270,30 +218,28 @@ export default function AdminDashboard() {
           </div>
 
           {/* Painel de resultados da direita */}
-          <div style={styles.dailyResultPanel}>
-            <div style={styles.dailyBigNumber}>
-              <span style={styles.dailyLabel}>Lucro Líquido / Dia</span>
-              <strong style={{
-                ...styles.dailyValue,
-                color: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-1)"
-              }}>
+          </div>
+          <div className="commercial-result">
+            <div className="commercial-result__total">
+              <span>Lucro líquido / dia</span>
+              <strong data-achieved={dailyProfitBreakdown.daily >= dailyGoal}>
                 ${Math.round(dailyProfitBreakdown.daily).toLocaleString("en-US")}
               </strong>
-              <span style={styles.dailyMonthly}>
+              <small>
                 {currencyFormatter.format(Math.round(dailyProfitBreakdown.totalMonthly))}/mês
-              </span>
+              </small>
             </div>
 
-            <div style={styles.progressTrack}>
-              <div style={{ ...styles.progressFill, width: `${dailyProgress}%`, background: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-grad)" }} />
+            <div className="commercial-progress">
+              <div style={{ width: `${dailyProgress}%`, background: dailyProfitBreakdown.daily >= dailyGoal ? "var(--green)" : "var(--accent-1)" }} />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="commercial-progress__labels">
               <span>$0</span>
-              <span style={{ color: "var(--accent-1)", fontWeight: 700 }}>Meta: $1.000/dia</span>
+              <strong>Meta: $1.000/dia</strong>
               <span>$2.000</span>
             </div>
 
-            <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            <div className="commercial-breakdown">
               {([
                 { label: "On-chain",   profit: dailyProfitBreakdown.onchain.profit,   qty: dailyProfitBreakdown.onchain.qty,   unit: "deploys" },
                 { label: "Dashboard",  profit: dailyProfitBreakdown.dashboard.profit, qty: dailyProfitBreakdown.dashboard.qty, unit: "assin." },
@@ -301,49 +247,36 @@ export default function AdminDashboard() {
                 { label: "Premium",    profit: dailyProfitBreakdown.premium.profit,   qty: dailyProfitBreakdown.premium.qty,   unit: "vendas" },
                 { label: "Agência",    profit: dailyProfitBreakdown.agency.profit,    qty: dailyProfitBreakdown.agency.qty,    unit: "setup" },
               ] as const).map(({ label, profit, qty, unit }) => (
-                <div key={label} style={styles.breakdownRow}>
+                <div key={label}>
                   <span>{label}</span>
-                  <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{qty} {unit}</span>
-                  <span style={{ color: "var(--green)", fontWeight: 700 }}>${Math.round(profit / 30).toLocaleString("en-US")}/dia</span>
+                  <small>{qty} {unit}</small>
+                  <strong>${Math.round(profit / 30).toLocaleString("en-US")}/dia</strong>
                 </div>
               ))}
             </div>
 
-            {dailyProfitBreakdown.daily >= dailyGoal && (
-              <div style={styles.goalBadge}>🎯 $1.000/dia atingido com este mix!</div>
+              {dailyProfitBreakdown.daily >= dailyGoal && (
+              <div className="commercial-goal">Meta diária atingida com este mix.</div>
             )}
           </div>
         </div>
-      </section>
+      </AdminSection>
 
-      <section style={styles.sectionGrid}>
-        <div className="card" style={styles.calculator}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Planejador de metas</h2>
-              <p style={styles.sectionNote}>Use nas reunioes semanais para decidir se falta volume, oferta ou fechamento.</p>
-            </div>
-            <Banknote size={22} color="var(--accent-1)" />
-          </div>
+      <section className="commercial-two-column">
+        <AdminSection title="Planejador de metas" description="Use nas reuniões semanais para identificar falta de volume, oferta ou fechamento." action={<Banknote size={18} />} className="commercial-section commercial-section--stack">
 
           <Slider label="Visitantes mensais" value={monthlyVisitors} min={1000} max={50000} step={500} suffix="" onChange={setMonthlyVisitors} />
           <Slider label="Conversao visitante -> lead" value={Math.round(leadConversion * 100)} min={2} max={40} step={1} suffix="%" onChange={(value) => setLeadConversion(value / 100)} />
           <Slider label="Conversao lead -> cliente" value={Math.round(salesConversion * 100)} min={3} max={45} step={1} suffix="%" onChange={(value) => setSalesConversion(value / 100)} />
           <Slider label="Ticket medio" value={averageTicket} min={49} max={1500} step={25} suffix=" USD" onChange={setAverageTicket} />
 
-          <div style={styles.progressTrack}>
-            <div style={{ ...styles.progressFill, width: `${targetProgress}%` }} />
+          <div className="commercial-progress">
+            <div style={{ width: `${targetProgress}%` }} />
           </div>
-        </div>
+        </AdminSection>
 
-        <div className="card" style={styles.playbook}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Playbook de fechamento</h2>
-              <p style={styles.sectionNote}>Oferta curta, diagnostico rapido e proximo passo com prazo.</p>
-            </div>
-            <Flame size={22} color="var(--accent-1)" />
-          </div>
+        <AdminSection title="Playbook de fechamento" description="Oferta curta, diagnóstico objetivo e próximo passo com prazo." action={<Flame size={18} />} className="commercial-section">
+          <div className="commercial-checklist">
           {[
             "Gancho: crie seu token seguro em minutos, sem dev Solidity.",
             "Entrada: revisao gratuita de tokenomics para abrir conversa.",
@@ -351,33 +284,25 @@ export default function AdminDashboard() {
             "Expansao: premium launch e assinatura do dashboard apos o deploy.",
             "Prova: publicar tokens criados, prints do processo e depoimentos.",
           ].map((item) => (
-            <div key={item} style={styles.checkItem}>
-              <CheckCircle2 size={17} color="var(--green)" />
+            <div key={item}>
+              <CheckCircle2 size={14} />
               <span>{item}</span>
             </div>
           ))}
-        </div>
+          </div>
+        </AdminSection>
       </section>
 
-      <section className="card" style={styles.fullSection}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Escada de receita</h2>
-            <p style={styles.sectionNote}>
-              Mix mensal desenhado para bater 10x as metas iniciais sem depender de lending no curto prazo.
-            </p>
-          </div>
-          <strong style={styles.revenueBadge}>{currencyFormatter.format(leverRevenue)}/mes</strong>
-        </div>
-        <div style={styles.offerGrid}>
+      <AdminSection title="Composição de receita" description="Mix mensal de ofertas para reduzir dependência de uma única linha de produto." action={<AdminStatus>{currencyFormatter.format(leverRevenue)}/mês</AdminStatus>} className="commercial-section">
+        <div className="commercial-offers">
           {revenueLevers.map((lever) => (
-            <article key={lever.name} style={styles.offerCard}>
-              <div style={styles.offerTopline}>
+            <article key={lever.name}>
+              <div className="commercial-offers__topline">
                 <strong>{lever.name}</strong>
                 <span>{currencyFormatter.format(lever.price)}</span>
               </div>
-              <p style={styles.offerPromise}>{lever.promise}</p>
-              <div style={styles.offerMeta}>
+              <p>{lever.promise}</p>
+              <div className="commercial-offers__meta">
                 <span>{lever.monthlyGoal} vendas/mes</span>
                 <span>{Math.round(lever.closeRate * 100)}% close</span>
                 <span>{lever.responsible}</span>
@@ -385,56 +310,33 @@ export default function AdminDashboard() {
             </article>
           ))}
         </div>
-      </section>
+      </AdminSection>
 
-      <section style={styles.sectionGrid}>
-        <div className="card" style={styles.fullSection}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Funil comercial mensal</h2>
-              <p style={styles.sectionNote}>Numeros de trabalho para perseguir aproximadamente {currencyFormatter.format(monthlyTarget)}/mes.</p>
-            </div>
-            <MessageSquareText size={22} color="var(--accent-1)" />
-          </div>
-          <div style={styles.pipeline}>
+      <section className="commercial-two-column">
+        <AdminSection title="Funil comercial mensal" description={`Metas operacionais para perseguir aproximadamente ${currencyFormatter.format(monthlyTarget)}/mês.`} action={<MessageSquareText size={18} />} className="commercial-section">
+          <div className="commercial-pipeline">
             {pipelineStages.map((stage, index) => (
-              <div key={stage.stage} style={styles.pipelineRow}>
-                <div style={styles.pipelineIndex}>{index + 1}</div>
+              <div key={stage.stage}>
+                <span>{index + 1}</span>
                 <div>
                   <strong>{stage.stage}</strong>
                   <p>{stage.action}</p>
                 </div>
-                <div style={styles.pipelineGoal}>{stage.goal.toLocaleString("en-US")}</div>
+                <strong>{stage.goal.toLocaleString("en-US")}</strong>
               </div>
             ))}
           </div>
-        </div>
+        </AdminSection>
 
-        <div className="card" style={styles.fullSection}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Ritmo semanal</h2>
-              <p style={styles.sectionNote}>Rotina simples para manter volume sem investimento em midia.</p>
-            </div>
-            <CalendarDays size={22} color="var(--accent-1)" />
-          </div>
-          {weeklyOperatingRhythm.map((item) => (
-            <div key={item} style={styles.rhythmItem}>{item}</div>
-          ))}
-        </div>
+        <AdminSection title="Ritmo semanal" description="Rotina para manter consistência operacional sem mídia paga." action={<CalendarDays size={18} />} className="commercial-section">
+          <div className="commercial-rhythm">{weeklyOperatingRhythm.map((item) => <div key={item}>{item}</div>)}</div>
+        </AdminSection>
       </section>
 
-      <section className="card" style={styles.fullSection}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Canais de tracao zero budget</h2>
-            <p style={styles.sectionNote}>Cada canal tem cadencia, responsavel e ativo que precisa ser produzido.</p>
-          </div>
-          <Megaphone size={22} color="var(--accent-1)" />
-        </div>
-        <div style={styles.channelGrid}>
+      <AdminSection title="Canais de aquisição" description="Cadência, responsável e ativo necessário por canal." action={<Megaphone size={18} />} className="commercial-section">
+        <div className="commercial-channels">
           {channels.map((channel) => (
-            <article key={channel.channel} style={styles.channelCard}>
+            <article key={channel.channel}>
               <strong>{channel.channel}</strong>
               <span>{channel.cadence}</span>
               <p>{channel.asset}</p>
@@ -442,22 +344,8 @@ export default function AdminDashboard() {
             </article>
           ))}
         </div>
-      </section>
-    </div>
-  );
-}
-
-function MetricCard({ title, value, note, icon, highlight = false }: { title: string; value: string; note: string; icon: ReactNode; highlight?: boolean }) {
-  return (
-    <div className="card" style={{
-      ...styles.metricCard,
-      ...(highlight ? { border: "1px solid var(--green)", background: "rgba(85,240,192,0.06)" } : {})
-    }}>
-      <div style={{ ...styles.metricIcon, ...(highlight ? { background: "rgba(85,240,192,0.15)", color: "var(--green)", border: "1px solid rgba(85,240,192,0.3)" } : {}) }}>{icon}</div>
-      <span style={styles.metricTitle}>{title}</span>
-      <strong style={{ ...styles.metricValue, ...(highlight ? { color: "var(--green)" } : {}) }}>{value}</strong>
-      <small style={styles.metricNote}>{note}</small>
-    </div>
+      </AdminSection>
+    </AdminPage>
   );
 }
 
@@ -479,7 +367,7 @@ function Slider({
   onChange: (value: number) => void;
 }) {
   return (
-    <label style={styles.sliderLabel}>
+    <label className="commercial-slider">
       <span>
         {label}
         <strong>{value.toLocaleString("en-US")}{suffix}</strong>
@@ -491,277 +379,7 @@ function Slider({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        style={styles.range}
       />
     </label>
   );
 }
-
-const styles: Record<string, CSSProperties> = {
-  page: {
-    padding: "32px",
-    display: "grid",
-    gap: "24px",
-  },
-  dailySimGrid: {
-    display: "grid",
-    gridTemplateColumns: "minmax(0, 1.2fr) minmax(280px, 1fr)",
-    gap: 32,
-    alignItems: "start",
-  },
-  dailyResultPanel: {
-    display: "grid",
-    gap: 14,
-    border: "1px solid var(--border)",
-    background: "var(--bg-surface)",
-    padding: 24,
-    alignContent: "start",
-  },
-  dailyBigNumber: {
-    display: "grid",
-    gap: 4,
-    textAlign: "center",
-  },
-  dailyLabel: {
-    fontSize: 12,
-    fontWeight: 700,
-    textTransform: "uppercase" as const,
-    color: "var(--text-muted)",
-    letterSpacing: 1,
-  },
-  dailyValue: {
-    fontSize: 56,
-    lineHeight: 1,
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
-  dailyMonthly: {
-    fontSize: 14,
-    color: "var(--text-muted)",
-  },
-  breakdownRow: {
-    display: "grid",
-    gridTemplateColumns: "80px 1fr auto",
-    gap: 8,
-    alignItems: "center",
-    fontSize: 13,
-    borderBottom: "1px solid var(--border)",
-    paddingBottom: 8,
-  },
-  goalBadge: {
-    background: "rgba(85,240,192,0.12)",
-    border: "1px solid rgba(85,240,192,0.3)",
-    color: "var(--green)",
-    padding: "10px 14px",
-    textAlign: "center" as const,
-    fontWeight: 700,
-    fontSize: 14,
-  },
-  header: {
-    display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) auto",
-    gap: "24px",
-    alignItems: "end",
-  },
-  kicker: {
-    color: "var(--accent-1)",
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: 0,
-    textTransform: "uppercase",
-    marginBottom: 10,
-  },
-  title: {
-    fontFamily: "'Space Grotesk', sans-serif",
-    fontSize: "clamp(32px, 5vw, 54px)",
-    lineHeight: 1,
-    margin: 0,
-  },
-  subtitle: {
-    color: "var(--text-muted)",
-    fontSize: 16,
-    lineHeight: 1.6,
-    maxWidth: 820,
-    marginTop: 14,
-  },
-  targetBox: {
-    minWidth: 220,
-    border: "1px solid var(--border)",
-    background: "var(--bg-card)",
-    padding: 18,
-    display: "grid",
-    gap: 6,
-  },
-  metricGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-    gap: 16,
-  },
-  metricCard: {
-    minHeight: 150,
-    display: "grid",
-    gap: 8,
-    alignContent: "start",
-  },
-  metricIcon: {
-    width: 38,
-    height: 38,
-    display: "grid",
-    placeItems: "center",
-    background: "rgba(220,255,69,0.12)",
-    color: "var(--accent-1)",
-    border: "1px solid rgba(220,255,69,0.25)",
-  },
-  metricTitle: {
-    color: "var(--text-muted)",
-    fontSize: 13,
-    fontWeight: 700,
-    textTransform: "uppercase",
-  },
-  metricValue: {
-    fontSize: 30,
-    lineHeight: 1,
-  },
-  metricNote: {
-    color: "var(--text-muted)",
-  },
-  sectionGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
-    gap: 24,
-  },
-  calculator: {
-    display: "grid",
-    gap: 20,
-  },
-  playbook: {
-    display: "grid",
-    gap: 16,
-    alignContent: "start",
-  },
-  sectionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 18,
-    alignItems: "start",
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    margin: 0,
-  },
-  sectionNote: {
-    color: "var(--text-muted)",
-    fontSize: 14,
-    lineHeight: 1.5,
-    marginTop: 6,
-  },
-  sliderLabel: {
-    display: "grid",
-    gap: 10,
-  },
-  range: {
-    accentColor: "#dcff45",
-    padding: 0,
-  },
-  progressTrack: {
-    height: 12,
-    background: "var(--bg-surface)",
-    border: "1px solid var(--border)",
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    background: "var(--accent-grad)",
-    transition: "width 0.2s ease",
-  },
-  checkItem: {
-    display: "grid",
-    gridTemplateColumns: "20px 1fr",
-    gap: 10,
-    color: "var(--text-primary)",
-    lineHeight: 1.45,
-  },
-  fullSection: {
-    display: "grid",
-    gap: 18,
-  },
-  revenueBadge: {
-    whiteSpace: "nowrap",
-    color: "var(--accent-1)",
-    border: "1px solid rgba(220,255,69,0.28)",
-    padding: "10px 12px",
-    background: "rgba(220,255,69,0.08)",
-  },
-  offerGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-    gap: 14,
-  },
-  offerCard: {
-    border: "1px solid var(--border)",
-    background: "var(--bg-surface)",
-    padding: 16,
-    display: "grid",
-    gap: 12,
-  },
-  offerTopline: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "start",
-  },
-  offerPromise: {
-    color: "var(--text-muted)",
-    fontSize: 13,
-    lineHeight: 1.45,
-  },
-  offerMeta: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  pipeline: {
-    display: "grid",
-    gap: 10,
-  },
-  pipelineRow: {
-    display: "grid",
-    gridTemplateColumns: "34px minmax(0, 1fr) auto",
-    gap: 12,
-    alignItems: "center",
-    border: "1px solid var(--border)",
-    background: "var(--bg-surface)",
-    padding: 12,
-  },
-  pipelineIndex: {
-    width: 28,
-    height: 28,
-    display: "grid",
-    placeItems: "center",
-    background: "rgba(85,240,192,0.12)",
-    color: "var(--green)",
-    fontWeight: 800,
-  },
-  pipelineGoal: {
-    color: "var(--accent-1)",
-    fontWeight: 800,
-  },
-  rhythmItem: {
-    borderLeft: "2px solid var(--accent-1)",
-    padding: "10px 0 10px 12px",
-    color: "var(--text-primary)",
-  },
-  channelGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: 14,
-  },
-  channelCard: {
-    border: "1px solid var(--border)",
-    background: "var(--bg-surface)",
-    padding: 16,
-    display: "grid",
-    gap: 8,
-  },
-};
-

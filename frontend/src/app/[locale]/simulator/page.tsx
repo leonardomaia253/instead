@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Link } from "@/navigation";
-import { CHAIN_META } from "@/lib/wagmi";
-import { useTranslations } from "next-intl";
+import { MetricCard, MetricGrid, PageHeader, ProductShell } from "@/components/ui/Institutional";
 
 // Cenário educativo com preços de referência. Não trate como cotação executável.
 const ASSET_PRICES: Record<string, number> = {
@@ -43,28 +42,37 @@ export default function SimulatorPage() {
   const ASSETS = Object.keys(ASSET_PRICES);
 
   return (
-    <main style={{ minHeight: "100vh", padding: "32px clamp(16px, 5vw, 24px)" }}>
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <Link href="/lending" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Voltar ao Lending</Link>
-        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 700, marginTop: 10, marginBottom: 6 }}>
-          🧮 Simulador de Empréstimo
-        </h1>
-        <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 14 }}>
-          Calcule o impacto estimado de uma posição antes de confirmar na blockchain. Confira preço/oracle antes da execução.
-        </p>
-        <div style={{ border: "1px solid rgba(245,158,11,0.35)", background: "rgba(245,158,11,0.08)", color: "var(--text-primary)", padding: 14, marginBottom: 20, fontSize: 13, lineHeight: 1.5 }}>
+    <ProductShell width="narrow" className="simulator-shell">
+        <PageHeader
+          eyebrow="Análise de risco"
+          title="Simule antes de comprometer capital"
+          description="Entenda a sensibilidade da posição a LTV, juros e variação do colateral antes de qualquer assinatura on-chain."
+          backHref="/lending"
+          backLabel="Crédito"
+        />
+        <div className="risk-disclosure">
           Aviso de produção: este simulador não é cotação, promessa de liquidação ou aconselhamento financeiro. Ele serve para entender sensibilidade de LTV, juros e health factor.
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 24 }}>
+        <MetricGrid>
+          <MetricCard label="Colateral estimado" value={`$${colUSD.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} />
+          <MetricCard label="Crédito simulado" value={`$${borrowUSD.toFixed(0)}`} />
+          <MetricCard
+            label="Fator de saúde"
+            value={healthFactor >= 999 ? "∞" : healthFactor.toFixed(2)}
+            tone={healthFactor >= 1.5 ? "positive" : healthFactor >= 1.2 ? "warning" : "critical"}
+          />
+        </MetricGrid>
+
+        <div className="simulator-grid">
           {/* Inputs */}
-          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <h3 style={{ fontWeight: 700, marginBottom: 0 }}>Parâmetros</h3>
+          <div className="card simulator-controls">
+            <h3>Parâmetros</h3>
 
             <Field label="Colateral">
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <input type="number" value={colAmount} onChange={(e) => setColAmount(e.target.value)} placeholder="1" style={{ flex: 1 }} />
-                <select value={colAsset} onChange={(e) => setColAsset(e.target.value)} style={{ width: "min(100%, 100px)" }}>
+              <div className="simulator-asset-input">
+                <input type="number" value={colAmount} onChange={(e) => setColAmount(e.target.value)} placeholder="1" />
+                <select value={colAsset} onChange={(e) => setColAsset(e.target.value)}>
                   {ASSETS.map(a => <option key={a}>{a}</option>)}
                 </select>
               </div>
@@ -79,9 +87,9 @@ export default function SimulatorPage() {
             <Field label={`% do Máximo (${borrowPct}%)`}>
               <input type="range" min={1} max={100} value={borrowPct}
                 onChange={(e) => setBorrowPct(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent-1)" }}
+                className="simulator-range"
               />
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+              <div className="simulator-range-labels">
                 <span>Conservador</span><span>Máximo (70% LTV)</span>
               </div>
             </Field>
@@ -89,37 +97,37 @@ export default function SimulatorPage() {
             <Field label={`Duração do Empréstimo: ${loanDays} dias`}>
               <input type="range" min={1} max={365} value={loanDays}
                 onChange={(e) => setLoanDays(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent-1)" }}
+                className="simulator-range"
               />
             </Field>
           </div>
 
           {/* Results */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="simulator-results">
             {/* Health Factor */}
-            <div className="card" style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Health Factor</div>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 42, fontWeight: 800, color: hfColor }}>
+            <div className="card simulator-health">
+              <div className="simulator-health__label">Fator de saúde</div>
+              <div className="simulator-health__value" style={{ color: hfColor }}>
                 {healthFactor >= 999 ? "∞" : healthFactor.toFixed(2)}
               </div>
-              <div style={{ fontSize: 11, color: hfColor, fontWeight: 600, marginTop: 4 }}>
-                {healthFactor >= 1.5 ? "✅ Posição Saudável" : healthFactor >= 1.2 ? "⚠️ Em Risco" : "🚨 Risco Crítico"}
+              <div className="simulator-health__status" style={{ color: hfColor }}>
+                {healthFactor >= 1.5 ? "Posição saudável" : healthFactor >= 1.2 ? "Posição em risco" : "Risco crítico"}
               </div>
             </div>
 
             {/* Resultados */}
-            <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: 14 }}>
+            <div className="card simulator-breakdown">
               <Row label="Valor do Colateral" value={`$${colUSD.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}`} />
               <Row label="Máximo que pode tomar" value={`$${maxBorrowUSD.toFixed(2)}`} />
               <Row label="Valor do Empréstimo" value={`$${borrowUSD.toFixed(2)}`} accent />
               <Row label="Quantidade a receber" value={`${borrowQty.toFixed(4)} ${borrowAsset}`} />
-              <div style={{ borderTop: "1px solid var(--border)", marginTop: 4, paddingTop: 14 }}>
+              <div className="simulator-breakdown__group">
                 <Row label={`Juros (${loanDays}d @ 4%/ano)`} value={`$${interest.toFixed(4)}`} />
                 <Row label="Total a repagar" value={`$${totalRepay.toFixed(2)}`} accent />
               </div>
-              <div style={{ borderTop: "1px solid var(--border)", marginTop: 4, paddingTop: 14, background: "rgba(239,68,68,0.06)", borderRadius: 8, padding: 10 }}>
+              <div className="simulator-breakdown__group simulator-breakdown__group--risk">
                 <Row label="Preço de Liquidação" value={liquidationPrice > 0 ? `$${liquidationPrice.toFixed(2)}` : "—"} />
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
+                <div className="simulator-breakdown__note">
                   Se {colAsset} cair abaixo deste preço, sua posição será liquidada.
                 </div>
               </div>
@@ -127,20 +135,19 @@ export default function SimulatorPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 24, textAlign: "center" }}>
-          <Link href="/lending" className="btn-primary" style={{ textDecoration: "none" }}>
-            Ir para Lending →
+        <div className="simulator-actions">
+          <Link href="/lending" className="btn-primary">
+            Abrir área de crédito
           </Link>
         </div>
-      </div>
-    </main>
+    </ProductShell>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--text-muted)", marginBottom: 8 }}>{label}</label>
+    <div className="field-group">
+      <label>{label}</label>
       {children}
     </div>
   );
@@ -148,11 +155,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-      <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{label}</span>
-      <span style={{ fontWeight: accent ? 700 : 500, color: accent ? "var(--text-primary)" : "var(--text-muted)", fontSize: accent ? 15 : 13 }}>
+    <div className={`data-row${accent ? " data-row--accent" : ""}`}>
+      <span>{label}</span>
+      <strong>
         {value}
-      </span>
+      </strong>
     </div>
   );
 }

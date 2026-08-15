@@ -23,27 +23,27 @@ const productPanels = [
   },
   {
     code: "TKN",
-    title: "Token factory",
-    copy: "Launchpad sem codigo para ativos ERC-20 com supply, mint, burn e taxas configuraveis.",
+    title: "Emissão de ativos",
+    copy: "Emissão ERC-20 com oferta, permissões e taxas configuráveis, seguida de revisão técnica.",
     href: "/factory",
   },
   {
     code: "STK",
-    title: "Staking vaults",
-    copy: "APR, lock period e TVL em uma tela preparada para decisao rapida.",
+    title: "Staking",
+    copy: "APR, período de bloqueio e TVL em uma leitura preparada para decisão consciente.",
     href: "/staking",
   },
   {
     code: "SIM",
-    title: "Risk simulator",
-    copy: "Simule liquidacao e eficiencia de capital antes de colocar patrimonio em jogo.",
+    title: "Simulador de risco",
+    copy: "Simule liquidação e eficiência de capital antes de comprometer patrimônio.",
     href: "/simulator",
     lime: true,
   },
   {
     code: "PLN",
-    title: "Planos e servicos",
-    copy: "Criacao de token, lending, alertas, protecao de risco e painel multichain.",
+    title: "Planos e serviços",
+    copy: "Emissão, crédito, alertas, proteção de risco e acompanhamento multichain.",
     href: "/solutions",
   },
 ];
@@ -107,9 +107,8 @@ export default function Home() {
                 revisao antes de qualquer assinatura ou custo.
               </SimpleModeNotice>
               <div className="hero-actions">
-                <Link href="/lending" className="btn-primary brutal-button">Abrir lending</Link>
-                <Link href="/factory" className="btn-outline brutal-button">Criar token</Link>
-                <Link href="/solutions" className="btn-outline brutal-button">Ver planos</Link>
+                <Link href="/lending" className="btn-primary brutal-button">Abrir crédito</Link>
+                <Link href="/solutions" className="btn-outline brutal-button">Conhecer a plataforma</Link>
               </div>
               <div className="signal-strip" aria-label="Protocol signals">
                 <span>AUTH SEM CUSTODIA</span>
@@ -165,14 +164,14 @@ export default function Home() {
           <div className="container">
             <div className="section-ledger">
               <span>01 / PRODUCT SURFACE</span>
-              <h2>Quatro maquinas, uma linguagem de operacao.</h2>
+              <h2>Quatro produtos, uma linguagem operacional.</h2>
             </div>
 
             <div className="brutal-grid">
               <Link href="/lending" className="brutal-panel brutal-panel--large brutal-panel--instrument">
                 <span className="panel-index">LND</span>
-                <h3>Lending hub</h3>
-                <p>Deposito, borrow e health factor com leitura de risco clara antes da assinatura.</p>
+                <h3>Crédito com garantia</h3>
+                <p>Depósito, tomada de crédito e fator de saúde com leitura clara antes da assinatura.</p>
                 <div className="panel-meter"><HealthGauge healthFactor={1.85} size={112} /></div>
               </Link>
               {productPanels.map((panel) => {
@@ -226,7 +225,7 @@ export default function Home() {
         <section className="chain-tape">
           <div className="chain-tape__track">
             {Array(4).fill(Object.values(CHAIN_META)).flat().map((chain, index) => (
-              <span key={`${chain.name}-${index}`}>{chain.icon} {chain.name}</span>
+              <span key={`${chain.name}-${index}`}>{chain.name}</span>
             ))}
           </div>
         </section>

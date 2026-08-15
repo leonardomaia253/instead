@@ -24,22 +24,22 @@ export function Footer() {
         </div>
 
         <div className="proto-footer__columns">
-          <FooterColumn title="Protocol">
-            <FooterLink href="/lending">Lending Hub</FooterLink>
-            <FooterLink href="/os">Instead OS</FooterLink>
-            <FooterLink href="/factory">Token Factory</FooterLink>
+          <FooterColumn title="Produtos">
+            <FooterLink href="/lending">Crédito com garantia</FooterLink>
+            <FooterLink href="/os">Camada operacional</FooterLink>
+            <FooterLink href="/factory">Emissão de ativos</FooterLink>
             <FooterLink href="/solutions">Planos e serviços</FooterLink>
-            <FooterLink href="/staking">Staking Vaults</FooterLink>
-            <FooterLink href="/simulator">Risk Simulator</FooterLink>
-            <FooterLink href="/dashboard">Command Desk</FooterLink>
+            <FooterLink href="/staking">Staking</FooterLink>
+            <FooterLink href="/simulator">Simulador de risco</FooterLink>
+            <FooterLink href="/dashboard">Visão patrimonial</FooterLink>
           </FooterColumn>
 
-          <FooterColumn title="Intel">
-            <FooterLink href="/docs">Protocol Docs</FooterLink>
-            <FooterLink href="/security">Security Stack</FooterLink>
-            <FooterLink href="/tokens">Token Explorer</FooterLink>
-            <FooterLink href="/legal/terms">Terms</FooterLink>
-            <FooterLink href="/legal/privacy">Privacy</FooterLink>
+          <FooterColumn title="Informações">
+            <FooterLink href="/docs">Documentação</FooterLink>
+            <FooterLink href="/security">Segurança</FooterLink>
+            <FooterLink href="/tokens">Registro de ativos</FooterLink>
+            <FooterLink href="/legal/terms">Termos</FooterLink>
+            <FooterLink href="/legal/privacy">Privacidade</FooterLink>
           </FooterColumn>
 
           <div className="proto-footer__status">
@@ -59,8 +59,8 @@ export function Footer() {
 
         <div className="proto-footer__bottom">
           <span>2026 Instead Finance</span>
-          <span>Non-custodial by design</span>
-          <span>Built for sovereign operators</span>
+          <span>Sem custódia por princípio</span>
+          <span>Construída para operadores independentes</span>
         </div>
       </div>
     </footer>

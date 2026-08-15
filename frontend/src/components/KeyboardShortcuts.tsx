@@ -29,11 +29,11 @@ export function KeyboardShortcuts() {
         switch (e.key.toLowerCase()) {
           case "l":
             targetPath = "/lending";
-            pageName = "Lending Hub";
+            pageName = "Crédito com garantia";
             break;
           case "f":
             targetPath = "/factory";
-            pageName = "Token Factory";
+            pageName = "Emissão de ativos";
             break;
           case "s":
             targetPath = "/staking";
@@ -50,7 +50,7 @@ export function KeyboardShortcuts() {
         if (targetPath) {
           e.preventDefault();
           router.push(targetPath);
-          toast.info(`Navegando para ${pageName} 🚀`);
+          toast.info(`Navegando para ${pageName}.`);
         }
       }
     };

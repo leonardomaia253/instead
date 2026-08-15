@@ -6,7 +6,7 @@ import { ToastProvider } from "@/components/Toast";
 import { wagmiConfig } from "@/lib/wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Banknote, Coins, Factory, Wallet } from "lucide-react";
+import { Banknote, Coins, Factory, Wallet, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { WagmiProvider } from "wagmi";
@@ -30,7 +30,7 @@ const onboardingSteps = [
   },
   {
     icon: Factory,
-    title: "Token Factory",
+    title: "Instead — Emissão de ativos",
     desc: "Crie seu proprio token ERC-20 em minutos, sem codigo, pagando cerca de US$5.",
   },
 ];
@@ -46,8 +46,8 @@ function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
         position: "fixed",
         inset: 0,
         zIndex: 10000,
-        background: "rgba(0,0,0,0.8)",
-        backdropFilter: "blur(8px)",
+        background: "rgba(6,8,7,0.66)",
+        backdropFilter: "blur(3px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -58,23 +58,27 @@ function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
         style={{
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          borderRadius: 20,
+          borderRadius: 12,
           padding: "clamp(22px, 6vw, 36px) clamp(18px, 5vw, 32px)",
           maxWidth: 420,
           width: "100%",
           maxHeight: "calc(100dvh - 32px)",
           overflowY: "auto",
-          textAlign: "center",
+          textAlign: "left",
+          boxShadow: "0 24px 80px rgba(0,0,0,.36)",
         }}
       >
+        <button className="onboarding-close" onClick={onDismiss} aria-label="Fechar introdução">
+          <X size={18} />
+        </button>
         <div
           style={{
             width: 56,
             height: 56,
-            margin: "0 auto 16px",
+            margin: "0 0 20px",
             display: "grid",
             placeItems: "center",
-            borderRadius: 16,
+            borderRadius: 8,
             color: "var(--accent-1)",
             background: "rgba(196,255,43,0.08)",
             border: "1px solid rgba(196,255,43,0.24)",
@@ -100,7 +104,7 @@ function OnboardingModal({ onDismiss }: { onDismiss: () => void }) {
           {current.desc}
         </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "flex-start", gap: 6, marginBottom: 24 }}>
           {onboardingSteps.map((_, index) => (
             <div
               key={index}
@@ -144,6 +148,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!["/pt", "/en"].includes(pathname)) return;
     try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("welcome") !== "1") return;
       const dismissed = localStorage.getItem("instead_onboarding_dismissed");
       if (!dismissed) setShowOnboarding(true);
     } catch {
@@ -181,9 +187,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme({
-            accentColor: "#7c3aed",
-            accentColorForeground: "white",
-            borderRadius: "large",
+            accentColor: "#d8ff5f",
+            accentColorForeground: "#11140d",
+            borderRadius: "medium",
           })}
         >
           {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}

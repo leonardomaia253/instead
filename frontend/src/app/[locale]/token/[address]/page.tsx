@@ -6,7 +6,10 @@ import { Link } from "@/navigation";
 import { supabase, type GeneratedToken } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { Skeleton } from "@/components/Skeleton";
-import { useTranslations } from "next-intl";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { EmptyState, PageHeader, ProductShell } from "@/components/ui/Institutional";
+import { Check, Copy, ExternalLink, Star, Wallet } from "lucide-react";
 
 export default function TokenPage() {
   const params       = useParams();
@@ -47,53 +50,61 @@ export default function TokenPage() {
   }
 
   if (loading) return (
-    <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
-      <div style={{ maxWidth: 640, margin: "0 auto" }}>
-        <Skeleton height={32} width="60%" style={{ marginBottom: 16 }} />
-        <Skeleton height={20} width="40%" style={{ marginBottom: 32 }} />
-        <div className="card">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} height={18} style={{ marginBottom: 16 }} />)}
+    <div className="public-page-frame">
+      <Navbar />
+      <ProductShell width="narrow" className="token-detail-shell">
+        <div className="token-detail-loading">
+          <Skeleton height={32} width="60%" />
+          <Skeleton height={20} width="40%" />
+          <div className="card token-detail-loading__card">
+            {[...Array(6)].map((_, i) => <Skeleton key={i} height={18} />)}
+          </div>
         </div>
-      </div>
-    </main>
+      </ProductShell>
+    </div>
   );
 
   if (!token) return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, padding: "32px 16px", textAlign: "center" }}>
-      <div style={{ fontSize: 48 }}>🔍</div>
-      <h2>Token não encontrado</h2>
-      <p style={{ color: "var(--text-muted)" }}>Esse token pode não ter sido indexado ainda.</p>
-      <Link href="/factory" className="btn-primary" style={{ textDecoration: "none" }}>Criar um Token</Link>
-    </main>
+    <div className="public-page-frame">
+      <Navbar />
+      <ProductShell width="narrow" className="token-detail-shell">
+        <EmptyState
+          title="Ativo não encontrado"
+          description="O contrato pode ainda não ter sido indexado ou não pertencer à rede informada."
+          action={<Link href="/tokens" className="btn-primary">Voltar ao registro</Link>}
+        />
+      </ProductShell>
+      <Footer />
+    </div>
   );
 
   const explorerUrl = chain?.explorer ? `${chain.explorer}/address/${token.token_address}` : "#";
 
   return (
-    <main style={{ minHeight: "100vh", padding: "40px clamp(16px, 5vw, 24px)" }}>
-      <div style={{ maxWidth: 640, margin: "0 auto" }}>
-        <Link href="/factory" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>← Token Factory</Link>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 12, marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 800, marginBottom: 4 }}>
-              {token.name}
-            </h1>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={{ color: "var(--accent-1)", fontWeight: 700, fontSize: 18 }}>${token.symbol}</span>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{chain?.icon} {chain?.name}</span>
-            </div>
-          </div>
+    <div className="public-page-frame">
+      <Navbar />
+      <ProductShell width="narrow" className="token-detail-shell">
+        <PageHeader
+          eyebrow={`${chain?.name ?? `Rede ${chainId}`} · $${token.symbol}`}
+          title={token.name}
+          description="Registro do contrato, parâmetros de emissão e referências para verificação independente."
+          backHref="/tokens"
+          backLabel="Registro de ativos"
+          action={
           <button
+            className={`token-favorite${favorited ? " is-active" : ""}`}
             onClick={() => setFavorited(!favorited)}
-            style={{ background: "none", border: "none", fontSize: 28, cursor: "pointer" }}
+            aria-pressed={favorited}
+            aria-label={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           >
-            {favorited ? "❤️" : "🤍"}
+            <Star size={16} fill={favorited ? "currentColor" : "none"} />
+            {favorited ? "Acompanhando" : "Acompanhar"}
           </button>
-        </div>
+          }
+        />
 
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 20 }}>
+        <section className="card token-record">
+          <div className="token-record__grid">
             {[
               ["Endereço", `${token.token_address.slice(0, 10)}...${token.token_address.slice(-6)}`],
               ["Criador",  `${token.creator_wallet.slice(0, 10)}...${token.creator_wallet.slice(-6)}`],
@@ -102,47 +113,45 @@ export default function TokenPage() {
               ["Criado em", new Date(token.created_at).toLocaleDateString("pt-BR")],
               ["Chain ID", chainId],
             ].map(([label, value]) => (
-              <div key={String(label)}>
-                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, wordBreak: "break-all" }}>{value}</div>
+              <div key={String(label)} className="token-record__field">
+                <span>{label}</span>
+                <strong>{value}</strong>
               </div>
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-            {token.mintable && <Badge color="#7c3aed">Mintable</Badge>}
+          <div className="token-record__badges">
+            {token.mintable && <Badge color="var(--accent-2)">Mintable</Badge>}
             <Badge color="#10b981">Burnable</Badge>
             <Badge color="#334155">ERC-20</Badge>
           </div>
-        </div>
+        </section>
 
         {/* Actions */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <a href={explorerUrl} target="_blank" rel="noreferrer" className="btn-outline" style={{ textDecoration: "none", fontSize: 14 }}>
-            🔍 Ver no Explorer
+        <div className="token-record__actions">
+          <a href={explorerUrl} target="_blank" rel="noreferrer" className="btn-outline">
+            <ExternalLink size={14} /> Ver no explorer
           </a>
-          <button className="btn-outline" onClick={addToMetaMask} style={{ fontSize: 14 }}>
-            🦊 Adicionar à MetaMask
+          <button className="btn-outline" onClick={addToMetaMask}>
+            <Wallet size={14} /> Adicionar à carteira
           </button>
           <button
             className="btn-outline"
-            style={{ fontSize: 14 }}
             onClick={handleCopy}
           >
-            {copied ? "✅ Endereço Copiado!" : "📋 Copiar Endereço"}
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? "Endereço copiado" : "Copiar endereço"}
           </button>
         </div>
-      </div>
-    </main>
+      </ProductShell>
+      <Footer />
+    </div>
   );
 }
 
 function Badge({ children, color }: { children: React.ReactNode; color: string }) {
   return (
-    <span style={{
-      fontSize: 12, fontWeight: 600, padding: "4px 12px",
-      borderRadius: 999, background: `${color}18`, color, border: `1px solid ${color}30`,
-    }}>
+    <span className="token-record__badge" style={{ background: `${color}18`, color, borderColor: `${color}30` }}>
       {children}
     </span>
   );

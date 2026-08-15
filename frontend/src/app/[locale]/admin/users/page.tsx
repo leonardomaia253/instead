@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { AdminPage, AdminSection } from "@/components/ui/Admin";
 
 type UserRow = {
   id: string;
@@ -43,26 +44,21 @@ export default function AdminUsersPage() {
 
 function AdminTablePage({ title, subtitle, error, headers, rows }: { title: string; subtitle: string; error: string; headers: string[]; rows: string[][] }) {
   return (
-    <main style={{ padding: 32 }}>
-      <h1 style={{ margin: 0, fontSize: 32 }}>{title}</h1>
-      <p style={{ color: "var(--text-muted)", marginTop: 8 }}>{subtitle}</p>
+    <AdminPage title={title} description={subtitle}>
       {error ? <p style={{ color: "var(--red)" }}>{error}</p> : null}
-      <div className="card" style={{ overflowX: "auto", marginTop: 24 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <AdminSection title="Contas registradas">
+        <table>
           <thead>
-            <tr>{headers.map((header) => <th key={header} style={th}>{header}</th>)}</tr>
+            <tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr>
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex} style={td}>{cell}</td>)}</tr>
+              <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>
             ))}
-            {rows.length === 0 ? <tr><td colSpan={headers.length} style={td}>Sem registros.</td></tr> : null}
+            {rows.length === 0 ? <tr><td colSpan={headers.length}>Sem registros.</td></tr> : null}
           </tbody>
         </table>
-      </div>
-    </main>
+      </AdminSection>
+    </AdminPage>
   );
 }
-
-const th = { padding: "14px 12px", textAlign: "left" as const, color: "var(--text-muted)", borderBottom: "1px solid var(--border)" };
-const td = { padding: "14px 12px", borderBottom: "1px solid var(--border)", fontSize: 14 };

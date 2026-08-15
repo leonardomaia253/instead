@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import type { CSSProperties } from "react";
 import { CheckCircle2, AlertCircle, Loader2, DollarSign, RefreshCw, Save } from "lucide-react";
 import { useWriteContract, useReadContract, useAccount } from "wagmi";
 import { parseUnits } from "viem";
+import { AdminPage, AdminSection, AdminStatus } from "@/components/ui/Admin";
 
 // ABI mínima para setFeeUSD e feeUSD
 const FACTORY_ABI = [
@@ -150,38 +150,28 @@ export default function AdminPricesPage() {
     : "–";
 
   return (
-    <div style={s.page}>
-      <header style={s.header}>
-        <div>
-          <div style={s.kicker}>Gestão de Preços</div>
-          <h1 style={s.title}>Tabela de Preços</h1>
-          <p style={s.subtitle}>
-            Atualize os preços cobrados na plataforma sem redeploy de código.
-            Mudanças entram em vigor em até 60 segundos.
-          </p>
-        </div>
-        <button style={s.refreshBtn} onClick={loadPrices} disabled={loading}>
+    <AdminPage
+      eyebrow="Gestão de preços"
+      title="Tabela de preços"
+      description="Atualize valores cobrados pela plataforma sem nova publicação de código. Alterações entram em vigor em até 60 segundos."
+      action={<button className="admin-action admin-action--secondary" onClick={loadPrices} disabled={loading}>
           <RefreshCw size={16} />
           Recarregar
-        </button>
-      </header>
+        </button>}
+    >
 
       {/* ── PRODUTOS FIAT ───────────────────────────────── */}
-      <section className="card" style={s.section}>
-        <h2 style={s.sectionTitle}>Produtos Fiat — Stripe &amp; Pagar.me</h2>
-        <p style={s.sectionNote}>
-          Os valores são em centavos internamente. Insira o preço em reais/dólares e salve.
-        </p>
+      <AdminSection title="Produtos fiat" description="Stripe e Pagar.me. Informe os valores de exibição em dólar e real; o armazenamento permanece em centavos." className="price-section">
 
         {loading && (
-          <div style={s.stateBox}>
-            <Loader2 size={22} style={{ animation: "spin 1s linear infinite" }} />
+          <div className="admin-state-box">
+            <Loader2 size={18} className="animate-spin" />
             <span>Carregando preços do banco…</span>
           </div>
         )}
 
         {loadError && (
-          <div style={{ ...s.stateBox, color: "var(--red, #f87171)" }}>
+          <div className="admin-state-box admin-text-critical">
             <AlertCircle size={20} />
             <span>{loadError}</span>
           </div>
@@ -191,36 +181,30 @@ export default function AdminPricesPage() {
           const edit = edits[p.product_code] ?? { usd: "0", brl: "0", label: p.label };
           const status = saveStatus[p.product_code] ?? "idle";
           return (
-            <article key={p.product_code} style={s.priceCard}>
-              <div style={s.priceCardTop}>
-                <div style={s.priceCardInfo}>
-                  <strong style={s.productCode}>{p.product_code}</strong>
-                  <span style={s.liveValues}>
+            <article key={p.product_code} className="price-editor">
+              <div className="price-editor__header">
+                <div className="price-editor__identity">
+                  <strong>{p.product_code}</strong>
+                  <span>
                     Atual: {centsToDisplay(p.amount_usd_cents, "usd")} USD &nbsp;|&nbsp;
                     {centsToDisplay(p.amount_brl_cents, "brl")} BRL
                   </span>
-                  <span style={s.updatedBy}>
+                  <small>
                     {p.updated_by
                       ? `Atualizado por ${p.updated_by.slice(0, 8)}…${p.updated_by.slice(-4)}`
                       : "Nunca atualizado"}{" "}
                     — {new Date(p.updated_at).toLocaleString("pt-BR")}
-                  </span>
+                  </small>
                 </div>
 
-                <div style={s.priceActions}>
+                <div>
                   <button
-                    style={{
-                      ...s.saveBtn,
-                      ...(status === "success"
-                        ? { background: "rgba(85,240,192,0.2)", borderColor: "var(--green, #55f0c0)", color: "var(--green, #55f0c0)" }
-                        : status === "error"
-                        ? { background: "rgba(248,113,113,0.15)", borderColor: "#f87171", color: "#f87171" }
-                        : {}),
-                    }}
+                    className="admin-action price-editor__save"
+                    data-status={status}
                     onClick={() => savePrice(p.product_code)}
                     disabled={status === "saving"}
                   >
-                    {status === "saving" && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+                    {status === "saving" && <Loader2 size={14} className="animate-spin" />}
                     {status === "success" && <CheckCircle2 size={14} />}
                     {status === "error" && <AlertCircle size={14} />}
                     {status === "idle" && <Save size={14} />}
@@ -229,11 +213,10 @@ export default function AdminPricesPage() {
                 </div>
               </div>
 
-              <div style={s.fieldRow}>
-                <label style={s.field}>
-                  <span style={s.fieldLabel}>Label do produto</span>
+              <div className="price-editor__fields">
+                <label>
+                  <span>Nome do produto</span>
                   <input
-                    style={s.input}
                     value={edit.label}
                     onChange={(e) =>
                       setEdits((prev) => ({
@@ -243,10 +226,9 @@ export default function AdminPricesPage() {
                     }
                   />
                 </label>
-                <label style={s.field}>
-                  <span style={s.fieldLabel}>Preço USD ($)</span>
+                <label>
+                  <span>Preço USD ($)</span>
                   <input
-                    style={s.input}
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -259,10 +241,9 @@ export default function AdminPricesPage() {
                     }
                   />
                 </label>
-                <label style={s.field}>
-                  <span style={s.fieldLabel}>Preço BRL (R$)</span>
+                <label>
+                  <span>Preço BRL (R$)</span>
                   <input
-                    style={s.input}
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -279,33 +260,22 @@ export default function AdminPricesPage() {
             </article>
           );
         })}
-      </section>
+      </AdminSection>
 
       {/* ── TAXA ON-CHAIN ───────────────────────────────── */}
-      <section className="card" style={s.section}>
-        <div style={s.sectionHeader}>
-          <div>
-            <h2 style={s.sectionTitle}>Taxa On-chain — Token Factory</h2>
-            <p style={s.sectionNote}>
-              Atualiza o valor de <code>feeUSD</code> diretamente no contrato <code>InsteadTokenFactory</code>.
-              Requer a carteira administradora do contrato conectada.
-            </p>
-          </div>
-          <DollarSign size={22} color="var(--accent-1)" />
-        </div>
+      <AdminSection title="Taxa on-chain de emissão" description="Atualiza feeUSD diretamente no contrato InsteadTokenFactory. Requer a carteira administradora conectada." action={<DollarSign size={18} />} className="price-section">
 
-        <div style={s.onchainGrid}>
-          <div style={s.onchainInfo}>
-            <span style={s.onchainLabel}>Valor atual no contrato</span>
-            <strong style={s.onchainValue}>{currentFeeDisplay}</strong>
-            <span style={s.onchainNote}>Convertido para ETH em tempo real via Chainlink (8 dec)</span>
+        <div className="onchain-price-grid">
+          <div className="onchain-price-current">
+            <span>Valor atual no contrato</span>
+            <strong>{currentFeeDisplay}</strong>
+            <small>Convertido para ETH via Chainlink, com oito casas decimais.</small>
           </div>
 
-          <div style={s.onchainControls}>
-            <label style={s.field}>
-              <span style={s.fieldLabel}>Novo valor (USD)</span>
+          <div className="onchain-price-controls">
+            <label>
+              <span>Novo valor (USD)</span>
               <input
-                style={s.input}
                 type="number"
                 min="0.01"
                 step="0.01"
@@ -314,63 +284,26 @@ export default function AdminPricesPage() {
               />
             </label>
             <button
-              style={{
-                ...s.saveBtn,
-                marginTop: 4,
-                opacity: !isConnected || !factoryAddress || isTxPending ? 0.5 : 1,
-                cursor: !isConnected || !factoryAddress ? "not-allowed" : "pointer",
-              }}
+              className="admin-action"
               onClick={updateOnchainFee}
               disabled={!isConnected || !factoryAddress || isTxPending}
             >
-              {isTxPending ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Save size={14} />}
-              {isTxPending ? "Aguardando confirmação…" : "Atualizar no Contrato"}
+              {isTxPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              {isTxPending ? "Aguardando confirmação…" : "Atualizar contrato"}
             </button>
             {!isConnected && (
-              <p style={{ color: "#f87171", fontSize: 12, marginTop: 6 }}>
+              <p className="admin-field-error">
                 Conecte a carteira administradora do contrato para atualizar a taxa on-chain.
               </p>
             )}
             {!factoryAddress && (
-              <p style={{ color: "#f87171", fontSize: 12, marginTop: 6 }}>
+              <p className="admin-field-error">
                 Configure <code>NEXT_PUBLIC_FACTORY_ADDRESS</code> no .env para habilitar.
               </p>
             )}
           </div>
         </div>
-      </section>
-    </div>
+      </AdminSection>
+    </AdminPage>
   );
 }
-
-const s: Record<string, CSSProperties> = {
-  page:          { padding: 32, display: "grid", gap: 24 },
-  header:        { display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "end" },
-  kicker:        { color: "var(--accent-1)", fontSize: 12, fontWeight: 800, textTransform: "uppercase", marginBottom: 10, letterSpacing: 1 },
-  title:         { fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(28px,4vw,44px)", lineHeight: 1, margin: 0 },
-  subtitle:      { color: "var(--text-muted)", fontSize: 15, lineHeight: 1.6, maxWidth: 680, marginTop: 10 },
-  refreshBtn:    { display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", background: "var(--bg-surface)", border: "1px solid var(--border)", color: "var(--text-primary)", cursor: "pointer", fontSize: 14, fontWeight: 600 },
-  section:       { display: "grid", gap: 20 },
-  sectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "start" },
-  sectionTitle:  { fontSize: 18, margin: 0, fontWeight: 700 },
-  sectionNote:   { color: "var(--text-muted)", fontSize: 14, lineHeight: 1.5, marginTop: 6 },
-  stateBox:      { display: "flex", alignItems: "center", gap: 10, padding: "16px 0", color: "var(--text-muted)" },
-  priceCard:     { border: "1px solid var(--border)", background: "var(--bg-surface)", padding: 20, display: "grid", gap: 16 },
-  priceCardTop:  { display: "flex", justifyContent: "space-between", alignItems: "start", flexWrap: "wrap" as const, gap: 12 },
-  priceCardInfo: { display: "grid", gap: 4 },
-  productCode:   { fontSize: 14, fontFamily: "monospace", color: "var(--accent-1)" },
-  liveValues:    { fontSize: 15, fontWeight: 600 },
-  updatedBy:     { fontSize: 12, color: "var(--text-muted)" },
-  priceActions:  { display: "flex", gap: 10, alignItems: "center" },
-  fieldRow:      { display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 16 },
-  field:         { display: "grid", gap: 6 },
-  fieldLabel:    { fontSize: 12, fontWeight: 700, textTransform: "uppercase" as const, color: "var(--text-muted)", letterSpacing: 0.5 },
-  input:         { background: "var(--bg-page, #0a0a0a)", border: "1px solid var(--border)", color: "var(--text-primary)", padding: "10px 12px", fontSize: 15, outline: "none", fontFamily: "inherit" },
-  saveBtn:       { display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "rgba(220,255,69,0.12)", border: "1px solid rgba(220,255,69,0.35)", color: "var(--accent-1)", cursor: "pointer", fontSize: 14, fontWeight: 700 },
-  onchainGrid:   { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 },
-  onchainInfo:   { display: "grid", gap: 6, alignContent: "start" },
-  onchainLabel:  { fontSize: 12, fontWeight: 700, textTransform: "uppercase" as const, color: "var(--text-muted)", letterSpacing: 1 },
-  onchainValue:  { fontSize: 48, lineHeight: 1, fontFamily: "'Space Grotesk', sans-serif", color: "var(--accent-1)" },
-  onchainNote:   { fontSize: 12, color: "var(--text-muted)" },
-  onchainControls: { display: "grid", gap: 10, alignContent: "start" },
-};

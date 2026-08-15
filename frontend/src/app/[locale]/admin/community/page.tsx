@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Award, BellRing, Hash, Send, Trophy, Users, Vote } from "lucide-react";
+import { AdminMetrics, AdminMetric, AdminPage, AdminSection, AdminStatus } from "@/components/ui/Admin";
 
 type Row = Record<string, any>;
 
@@ -70,24 +70,23 @@ export default function AdminCommunityPage() {
   }
 
   return (
-    <div style={{ padding: 32, display: "grid", gap: 24 }}>
-      <header>
-        <span style={eyebrow}>COMMUNITY OPS</span>
-        <h1 style={title}>Gerenciamento de comunidade</h1>
-        <p style={muted}>Discord, Telegram, canais cripto, missoes, XP, referrals e revisoes manuais em um so cockpit.</p>
-      </header>
+    <AdminPage
+      eyebrow="Community ops"
+      title="Gerenciamento de comunidade"
+      description="Discord, Telegram, canais, missões, XP, indicações e revisões manuais em uma única superfície operacional."
+    >
 
-      <section style={metricGrid}>
-        <Metric icon={<Users size={20} />} label="Membros" value={metrics.members ?? 0} />
-        <Metric icon={<Hash size={20} />} label="Discord conectado" value={metrics.connectedDiscord ?? 0} />
-        <Metric icon={<Send size={20} />} label="Telegram conectado" value={metrics.connectedTelegram ?? 0} />
-        <Metric icon={<Users size={20} />} label="Multi-canal" value={metrics.multiChannelMembers ?? 0} />
-        <Metric icon={<Trophy size={20} />} label="Whales/alta tracao" value={metrics.whales ?? 0} />
-        <Metric icon={<Award size={20} />} label="Revisoes pendentes" value={metrics.pendingReviews ?? 0} />
-        <Metric icon={<BellRing size={20} />} label="Mensagens na fila" value={metrics.queuedMessages ?? 0} />
-      </section>
+      <AdminMetrics>
+        <AdminMetric label="Membros" value={metrics.members ?? 0} />
+        <AdminMetric label="Discord conectado" value={metrics.connectedDiscord ?? 0} />
+        <AdminMetric label="Telegram conectado" value={metrics.connectedTelegram ?? 0} />
+        <AdminMetric label="Multicanal" value={metrics.multiChannelMembers ?? 0} />
+        <AdminMetric label="Alta tração" value={metrics.whales ?? 0} />
+        <AdminMetric label="Revisões pendentes" value={metrics.pendingReviews ?? 0} />
+        <AdminMetric label="Mensagens na fila" value={metrics.queuedMessages ?? 0} />
+      </AdminMetrics>
 
-      <section style={grid}>
+      <section className="admin-community-grid">
         <Panel title="Top membros">
           {(data?.members ?? []).slice(0, 12).map((member, index) => (
             <Line key={member.id} left={`#${index + 1} ${member.discord_username || member.telegram_username || shortWallet(member.wallet_address)}`} right={`${member.xp} XP`} sub={`${member.role_tier} · nivel ${member.level}`} />
@@ -163,51 +162,40 @@ export default function AdminCommunityPage() {
           ))}
         </Panel>
       </section>
-    </div>
-  );
-}
-
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return (
-    <div style={metricCard}>
-      <span style={{ color: "var(--accent-1)" }}>{icon}</span>
-      <strong>{value}</strong>
-      <small>{label}</small>
-    </div>
+    </AdminPage>
   );
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={panel}>
-      <h2 style={panelTitle}><Trophy size={18} /> {title}</h2>
-      <div style={{ display: "grid", gap: 10 }}>{children}</div>
-    </div>
+    <AdminSection title={title}>
+      <div className="admin-community-list">{children}</div>
+    </AdminSection>
   );
 }
 
 function Line({ left, right, sub }: { left: string; right: string; sub: string }) {
   return (
-    <div style={line}>
-      <div style={{ minWidth: 0 }}>
-        <strong style={{ display: "block", overflowWrap: "anywhere" }}>{left}</strong>
-        <small style={muted}>{sub}</small>
+    <div className="admin-community-row">
+      <div className="admin-community-row__body">
+        <strong>{left}</strong>
+        <small>{sub}</small>
       </div>
-      <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{right}</span>
+      <AdminStatus tone={statusTone(right)}>{right}</AdminStatus>
     </div>
   );
 }
 
 function ActionLine({ left, right, sub, actionLabel, disabled, onAction }: { left: string; right: string; sub: string; actionLabel: string; disabled: boolean; onAction: () => void }) {
   return (
-    <div style={line}>
-      <div style={{ minWidth: 0 }}>
-        <strong style={{ display: "block", overflowWrap: "anywhere" }}>{left}</strong>
-        <small style={muted}>{sub}</small>
+    <div className="admin-community-row">
+      <div className="admin-community-row__body">
+        <strong>{left}</strong>
+        <small>{sub}</small>
       </div>
-      <span style={reviewActions}>
-        <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{right}</span>
-        <button onClick={onAction} disabled={disabled} style={approveButton}>{actionLabel}</button>
+      <span className="admin-community-row__actions">
+        <AdminStatus tone={statusTone(right)}>{right}</AdminStatus>
+        <button className="admin-action" onClick={onAction} disabled={disabled}>{actionLabel}</button>
       </span>
     </div>
   );
@@ -216,18 +204,18 @@ function ActionLine({ left, right, sub, actionLabel, disabled, onAction }: { lef
 function QueueLine({ item, disabled, onCancel }: { item: Row; disabled: boolean; onCancel: () => void }) {
   const canCancel = ["queued", "processing"].includes(item.status);
   return (
-    <div style={line}>
-      <div style={{ minWidth: 0 }}>
-        <strong style={{ display: "block", overflowWrap: "anywhere" }}>{`${item.channel_kind} · ${shortWallet(item.wallet_address)}`}</strong>
-        <small style={muted}>{`${item.target_segment} · ${item.message_template}`}</small>
+    <div className="admin-community-row">
+      <div className="admin-community-row__body">
+        <strong>{`${item.channel_kind} · ${shortWallet(item.wallet_address)}`}</strong>
+        <small>{`${item.target_segment} · ${item.message_template}`}</small>
       </div>
       {canCancel ? (
-        <span style={reviewActions}>
-          <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{item.status}</span>
-          <button onClick={onCancel} disabled={disabled} style={rejectButton}>{disabled ? "Cancelando..." : "Cancelar"}</button>
+        <span className="admin-community-row__actions">
+          <AdminStatus tone={statusTone(item.status)}>{item.status}</AdminStatus>
+          <button className="admin-action admin-action--danger" onClick={onCancel} disabled={disabled}>{disabled ? "Cancelando..." : "Cancelar"}</button>
         </span>
       ) : (
-        <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{item.status}</span>
+        <AdminStatus tone={statusTone(item.status)}>{item.status}</AdminStatus>
       )}
     </div>
   );
@@ -235,18 +223,18 @@ function QueueLine({ item, disabled, onCancel }: { item: Row; disabled: boolean;
 
 function ReviewLine({ event, disabled, onApprove, onReject }: { event: Row; disabled: boolean; onApprove: () => void; onReject: () => void }) {
   return (
-    <div style={line}>
-      <div style={{ minWidth: 0 }}>
-        <strong style={{ display: "block", overflowWrap: "anywhere" }}>{event.event_type}</strong>
-        <small style={muted}>{`${shortWallet(event.wallet_address)} · ${event.channel_kind} · ${event.points} XP · ${event.status}`}</small>
+    <div className="admin-community-row">
+      <div className="admin-community-row__body">
+        <strong>{event.event_type}</strong>
+        <small>{`${shortWallet(event.wallet_address)} · ${event.channel_kind} · ${event.points} XP · ${event.status}`}</small>
       </div>
       {event.status === "pending" ? (
-        <span style={reviewActions}>
-          <button onClick={onApprove} disabled={disabled} style={approveButton}>Aprovar</button>
-          <button onClick={onReject} disabled={disabled} style={rejectButton}>Rejeitar</button>
+        <span className="admin-community-row__actions">
+          <button className="admin-action" onClick={onApprove} disabled={disabled}>Aprovar</button>
+          <button className="admin-action admin-action--danger" onClick={onReject} disabled={disabled}>Rejeitar</button>
         </span>
       ) : (
-        <span style={{ color: "var(--accent-1)", fontWeight: 800, whiteSpace: "nowrap" }}>{event.status}</span>
+        <AdminStatus tone={statusTone(event.status)}>{event.status}</AdminStatus>
       )}
     </div>
   );
@@ -264,15 +252,10 @@ function formatVoteResults(results?: Record<string, number>) {
     .join(" | ");
 }
 
-const eyebrow = { color: "var(--accent-1)", fontFamily: "monospace", fontSize: 12, fontWeight: 900, letterSpacing: "0.08em" };
-const title = { marginTop: 10, fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, lineHeight: 1 };
-const muted = { color: "var(--text-muted)", lineHeight: 1.55 };
-const metricGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14 };
-const metricCard = { border: "1px solid var(--border)", background: "var(--bg-card)", padding: 18, display: "grid", gap: 8 };
-const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 16 };
-const panel = { border: "1px solid var(--border)", background: "var(--bg-card)", padding: 20, minWidth: 0 };
-const panelTitle = { display: "flex", alignItems: "center", gap: 8, marginBottom: 16, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase" as const };
-const line = { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 12, alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--border)" };
-const reviewActions = { display: "flex", gap: 8, flexWrap: "wrap" as const, justifyContent: "flex-end" };
-const approveButton = { border: "1px solid var(--accent-1)", background: "var(--accent-1)", color: "#050604", padding: "7px 9px", fontWeight: 800, cursor: "pointer" };
-const rejectButton = { border: "1px solid var(--red)", background: "transparent", color: "var(--red)", padding: "7px 9px", fontWeight: 800, cursor: "pointer" };
+function statusTone(status: string): "neutral" | "positive" | "warning" | "critical" {
+  const value = status.toLowerCase();
+  if (["active", "approved", "sent", "open", "completed"].includes(value)) return "positive";
+  if (["pending", "queued", "processing"].includes(value)) return "warning";
+  if (["rejected", "failed", "cancelled", "closed"].includes(value)) return "critical";
+  return "neutral";
+}

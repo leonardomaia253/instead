@@ -7,7 +7,8 @@ import { Footer } from "@/components/Footer";
 import { supabase, type GeneratedToken } from "@/lib/supabase";
 import { CHAIN_META } from "@/lib/wagmi";
 import { TokenCardSkeleton } from "@/components/Skeleton";
-import { Search, Filter, ExternalLink, Coins, ShieldCheck, ArrowUpDown } from "lucide-react";
+import { Search, Filter, ExternalLink, ArrowUpDown } from "lucide-react";
+import { EmptyState, FilterBar, PageHeader, ProductShell } from "@/components/ui/Institutional";
 
 export default function TokenExplorerPage() {
   const [tokens, setTokens] = useState<GeneratedToken[]>([]);
@@ -57,63 +58,38 @@ export default function TokenExplorerPage() {
     });
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
+    <div className="public-page-frame">
       <Navbar />
 
-      <main className="container" style={{ flex: 1, paddingTop: 96, paddingBottom: 72 }}>
+      <ProductShell width="wide" className="token-explorer">
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 60 }}>
-          <span style={{ 
-            color: "var(--accent-1)", 
-            fontSize: 14, 
-            fontWeight: 700, 
-            textTransform: "uppercase", 
-            letterSpacing: 2 
-          }}>
-            Mapeamento On-Chain
-          </span>
-          <h1 className="gradient-text" style={{ 
-            fontSize: "clamp(32px, 5vw, 48px)", 
-            fontWeight: 800, 
-            marginTop: 12,
-            fontFamily: "'Space Grotesk', sans-serif" 
-          }}>
-            Token Hub Explorer
-          </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 16, maxWidth: 600, margin: "16px auto 0", lineHeight: 1.6 }}>
-            Explore, pesquise e analise todos os ativos digitais e contratos inteligentes criados de forma no-code através da Instead Token Factory.
-          </p>
-        </div>
+        <PageHeader
+          eyebrow="Registro on-chain"
+          title="Ativos emitidos pela Instead"
+          description="Consulte contratos, oferta e rede de cada ativo publicado. Informação verificável, sem linguagem promocional."
+        />
 
         {/* Controls Bar */}
-        <div className="card" style={{ 
-          padding: "20px 24px", 
-          marginBottom: 40, 
-          display: "flex", 
-          gap: 16, 
-          flexWrap: "wrap", 
-          alignItems: "center",
-          background: "var(--bg-surface)"
-        }}>
+        <FilterBar>
           {/* Search Input */}
-          <div style={{ flex: "1 1 220px", minWidth: 0, position: "relative" }}>
-            <Search size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+          <div className="filter-field filter-field--search">
+            <Search size={16} aria-hidden="true" />
             <input
               type="text"
               placeholder="Buscar por nome, símbolo ou contrato..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: 44, background: "rgba(0,0,0,0.2)" }}
+              className="filter-field__control"
             />
           </div>
 
           {/* Chain Filter */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 180px", minWidth: 0 }}>
-            <Filter size={16} style={{ color: "var(--text-muted)" }} />
+          <div className="filter-field">
+            <Filter size={15} aria-hidden="true" />
             <select 
               value={selectedChain} 
               onChange={(e) => setSelectedChain(e.target.value)}
-              style={{ background: "rgba(0,0,0,0.2)" }}
+              className="filter-field__control"
             >
               <option value="all">Todas as Redes</option>
               {Object.entries(CHAIN_META).map(([id, meta]) => (
@@ -123,110 +99,90 @@ export default function TokenExplorerPage() {
           </div>
 
           {/* Sort Select */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 180px", minWidth: 0 }}>
-            <ArrowUpDown size={16} style={{ color: "var(--text-muted)" }} />
+          <div className="filter-field">
+            <ArrowUpDown size={15} aria-hidden="true" />
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value as any)}
-              style={{ background: "rgba(0,0,0,0.2)" }}
+              className="filter-field__control"
             >
               <option value="newest">Mais Recentes</option>
               <option value="supply">Maior Supply</option>
             </select>
           </div>
-        </div>
+        </FilterBar>
 
         {/* Tokens Grid */}
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 20 }}>
+          <div className="asset-grid">
             {[...Array(6)].map((_, i) => (
               <TokenCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredTokens.length === 0 ? (
-          <div className="card" style={{ textAlign: "center", padding: "80px 40px", color: "var(--text-muted)" }}>
-            <Coins size={48} style={{ margin: "0 auto 20px", opacity: 0.4 }} />
-            <h3 style={{ color: "white", marginBottom: 8 }}>Nenhum token encontrado</h3>
-            <p>Tente ajustar seus filtros de busca ou rede.</p>
-            <Link href="/factory" className="btn-primary" style={{ marginTop: 24, textDecoration: "none" }}>
-              Criar Novo Token
-            </Link>
-          </div>
+          <EmptyState
+            title="Nenhum ativo encontrado"
+            description="Ajuste a busca ou selecione outra rede. Você também pode iniciar uma nova emissão."
+            action={<Link href="/factory" className="btn-primary">Iniciar emissão</Link>}
+          />
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 20 }}>
+          <div className="asset-grid">
             {filteredTokens.map((token) => {
               const chain = CHAIN_META[token.chain_id];
               return (
                 <Link 
                   key={token.id} 
                   href={`/token/${token.token_address}?chain=${token.chain_id}`}
-                  style={{ textDecoration: "none" }}
+                  className="asset-card-link"
                 >
-                  <div className="card" style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <article className="card asset-card asset-card--registry">
                     <div>
                       {/* Card Header */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
+                      <div className="asset-card__header">
                         <div>
-                          <h3 style={{ fontSize: 18, fontWeight: 700, color: "white", marginBottom: 4 }}>{token.name}</h3>
-                          <span style={{ color: "var(--accent-1)", fontWeight: 700, fontSize: 14 }}>${token.symbol}</span>
+                          <h3 className="asset-card__name">{token.name}</h3>
+                          <span className="asset-card__symbol">${token.symbol}</span>
                         </div>
-                        <span style={{ fontSize: 20 }} title={chain?.name}>
-                          {chain?.icon}
-                        </span>
+                        <span className="asset-card__chain" title={chain?.name}>{chain?.name}</span>
                       </div>
 
                       {/* Token Info */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                      <dl className="asset-card__facts">
+                        <div>
                           <span>Contrato:</span>
-                          <span style={{ fontFamily: "monospace", color: "var(--text-primary)" }}>
+                          <code>
                             {token.token_address.slice(0, 6)}...{token.token_address.slice(-4)}
-                          </span>
+                          </code>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                        <div>
                           <span>Supply Inicial:</span>
-                          <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
+                          <strong>
                             {token.initial_supply.toLocaleString()}
-                          </span>
+                          </strong>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                        <div>
                           <span>Rede:</span>
-                          <span style={{ color: "var(--text-primary)" }}>{chain?.name || `Chain ${token.chain_id}`}</span>
+                          <strong>{chain?.name || `Chain ${token.chain_id}`}</strong>
                         </div>
-                      </div>
+                      </dl>
                     </div>
 
                     {/* Card Footer */}
-                    <div style={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                      paddingTop: 16, 
-                      borderTop: "1px solid var(--border)" 
-                    }}>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    <footer className="asset-card__footer">
+                      <time dateTime={token.created_at}>
                         {new Date(token.created_at).toLocaleDateString("pt-BR")}
+                      </time>
+                      <span className="asset-card__action">
+                        Analisar ativo <ExternalLink size={11} />
                       </span>
-                      <span style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: 6, 
-                        fontSize: 12, 
-                        color: "var(--accent-1)", 
-                        fontWeight: 600 
-                      }}>
-                        Analisar Ativo <ExternalLink size={12} />
-                      </span>
-                    </div>
-                  </div>
+                    </footer>
+                  </article>
                 </Link>
               );
             })}
           </div>
         )}
-      </main>
+      </ProductShell>
 
       <Footer />
     </div>

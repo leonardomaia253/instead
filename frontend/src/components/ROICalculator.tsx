@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Calculator, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Calculator } from "lucide-react";
 
 interface ROICalculatorProps {
   defaultApr: number;
@@ -34,19 +34,19 @@ export function ROICalculator({ defaultApr, tokenSymbol }: ROICalculatorProps) {
   const roi = p > 0 ? (totalInterest / p) * 100 : 0;
 
   return (
-    <div className="card" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--border)", padding: 24, borderRadius: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <div style={{ background: "rgba(16,185,129,0.1)", padding: 8, borderRadius: 10, color: "var(--green)" }}>
+    <div className="card roi-calculator">
+      <div className="roi-calculator__header">
+        <div>
           <Calculator size={20} />
         </div>
-        <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
-          Calculadora de ROI Pro
+        <h4>
+          Projeção de rendimento
         </h4>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="roi-calculator__form">
         <div>
-          <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+          <label>
             Valor do Investimento ({tokenSymbol})
           </label>
           <input
@@ -54,13 +54,12 @@ export function ROICalculator({ defaultApr, tokenSymbol }: ROICalculatorProps) {
             value={principal}
             onChange={(e) => setPrincipal(e.target.value)}
             placeholder="1000"
-            style={{ fontSize: 15 }}
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
+        <div className="roi-calculator__grid">
           <div>
-            <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+            <label>
               Período (Anos)
             </label>
             <select value={years} onChange={(e) => setYears(Number(e.target.value))}>
@@ -72,7 +71,7 @@ export function ROICalculator({ defaultApr, tokenSymbol }: ROICalculatorProps) {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 6 }}>
+            <label>
               Capitalização
             </label>
             <select value={compoundFrequency} onChange={(e) => setCompoundFrequency(e.target.value)}>
@@ -84,30 +83,24 @@ export function ROICalculator({ defaultApr, tokenSymbol }: ROICalculatorProps) {
           </div>
         </div>
 
-        <div style={{
-          marginTop: 12,
-          padding: 16,
-          background: "rgba(255,255,255,0.02)",
-          borderRadius: 12,
-          border: "1px solid var(--border)"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Retorno Estimado:</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>
+        <div className="roi-calculator__results">
+          <div>
+            <span>Retorno estimado</span>
+            <strong>
               {futureValue.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {tokenSymbol}
-            </span>
+            </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Rendimento Total:</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--green)" }}>
+          <div>
+            <span>Rendimento total</span>
+            <strong data-tone="positive">
               +{totalInterest.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {tokenSymbol}
-            </span>
+            </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>ROI Estimado:</span>
-            <span style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-1)" }}>
+          <div>
+            <span>ROI estimado</span>
+            <strong data-tone="accent">
               {roi.toFixed(2)}%
-            </span>
+            </strong>
           </div>
         </div>
       </div>
