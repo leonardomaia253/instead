@@ -2718,3 +2718,100 @@ input:focus, select:focus, textarea:focus {
     transform: none;
   }
 }
+
+/* Security architecture: fluid at every breakpoint */
+.protocol-section--split .split-proof {
+  align-items: start;
+}
+
+.protocol-section--split .section-ledger h2 {
+  max-width: 12ch;
+  text-wrap: balance;
+}
+
+.protocol-section--split .proof-stack {
+  width: 100%;
+  overflow: hidden;
+  background: rgba(244, 244, 239, 0.025);
+}
+
+.protocol-section--split .proof-row {
+  grid-template-columns: clamp(128px, 14vw, 170px) minmax(0, 1fr);
+  min-height: 92px;
+}
+
+.protocol-section--split .proof-row strong {
+  align-items: flex-start;
+  padding: 22px 16px;
+  text-align: left;
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+}
+
+.protocol-section--split .proof-row span {
+  display: flex;
+  align-items: center;
+  padding: 20px clamp(16px, 2.5vw, 28px);
+  color: rgba(244, 244, 239, 0.78);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .protocol-section--split {
+    padding: 76px 0;
+  }
+
+  .protocol-section--split .split-proof {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 30px;
+  }
+
+  .protocol-section--split .section-ledger {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    gap: 24px;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .protocol-section--split {
+    padding: 58px 0;
+  }
+
+  .protocol-section--split .section-ledger {
+    display: block;
+  }
+
+  .protocol-section--split .section-ledger > span {
+    display: block;
+    margin-bottom: 16px;
+    font-size: 10px;
+  }
+
+  .protocol-section--split .section-ledger h2 {
+    max-width: 11ch;
+    font-size: clamp(32px, 11vw, 48px);
+  }
+
+  .protocol-section--split .proof-stack {
+    border-color: rgba(244, 244, 239, 0.2);
+  }
+
+  .protocol-section--split .proof-row {
+    display: block;
+    min-height: 0;
+  }
+
+  .protocol-section--split .proof-row strong {
+    min-height: 42px;
+    padding: 13px 15px 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+  }
+
+  .protocol-section--split .proof-row span {
+    min-height: 72px;
+    padding: 14px 15px 18px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+}
