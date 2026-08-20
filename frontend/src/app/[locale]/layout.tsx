@@ -29,6 +29,10 @@ export async function generateMetadata({
         ? 'A Instead Finance é um ecossistema DeFi completo para lending, borrowing e criação de tokens no-code.'
         : 'Instead Finance is a complete DeFi ecosystem for lending, borrowing, and no-code token creation.',
     keywords: 'defi, crypto lending, token factory, ethereum, arbitrum, polygon, web3',
+    icons: {
+      icon: [{ url: '/instead-logo.svg', type: 'image/svg+xml' }],
+      shortcut: ['/instead-logo.svg'],
+    },
     openGraph: {
       title: 'Instead DeFi',
       description: 'The fastest way to lend and create tokens on blockchain.',

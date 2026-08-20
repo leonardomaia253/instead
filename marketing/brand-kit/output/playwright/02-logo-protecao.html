@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital@1&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #F3F0E8;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .canvas-root {
+            width: 1600px;
+            height: 1000px;
+            background-color: #F3F0E8;
+            color: #111412;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-guide {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            padding: 72px;
+            height: 100%;
+            width: 100%;
+            grid-template-rows: 150px 300px 310px 60px;
+            row-gap: 12px;
+        }
+
+        .serif-editorial {
+            font-family: 'Lora', serif;
+            font-style: italic;
+        }
+
+        .acid-lima {
+            background-color: #C9FF3D;
+        }
+
+        .text-acid-lima {
+            color: #C9FF3D;
+        }
+
+        .rule-line {
+            height: 1px;
+            background-color: rgba(17, 20, 18, 0.1);
+            width: 100%;
+        }
+
+        .protection-zone {
+            border: 1px dashed #C9FF3D;
+            position: relative;
+        }
+
+        .protection-marker {
+            position: absolute;
+            color: #C9FF3D;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .logo-placeholder-box {
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 250px;
+        }
+
+        .grid-guide > .grid.mt-12 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="canvas-root">
+        <!-- Main Layout Grid -->
+        <div class="grid-guide relative z-10">
+            
+            <!-- Header Row -->
+            <div class="col-span-12 flex justify-between items-start">
+                <div class="flex flex-col gap-6">
+                    <div class="w-24 h-24 bg-white flex items-center justify-center overflow-hidden">
+                        <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" alt="Instead Logo" class="w-full h-full object-contain">
+                    </div>
+                    <div class="text-[11px] tracking-[0.2em] font-semibold text-[#075B3A] uppercase">
+                        INSTEAD — SISTEMA DE IDENTIDADE
+                    </div>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <div class="text-[14px] font-medium tracking-tight mb-1">02 / 06</div>
+                    <div class="w-12 h-[2px] acid-lima"></div>
+                </div>
+            </div>
+
+            <!-- Title & Introduction -->
+            <div class="col-span-5 pt-4">
+                <h1 class="text-[64px] leading-[1.0] font-semibold tracking-[-0.03em] text-[#053524] mb-8">
+                    Uma marca.<br>Espaço para respirar.
+                </h1>
+                <p class="text-[16px] leading-6 max-w-sm text-[#111412]/80 font-light">
+                    O símbolo deve permanecer íntegro, silencioso e reconhecível em qualquer escala.
+                </p>
+            </div>
+
+            <!-- Main Content Area: Visual Breakdown -->
+            <div class="col-span-12 grid grid-cols-12 gap-6 mt-12">
+                
+                <!-- Section: Assinatura Principal -->
+                <div class="col-span-4">
+                    <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4">ASSINATURA PRINCIPAL</div>
+                    <div class="rule-line mb-8"></div>
+                    <div class="logo-placeholder-box w-full shadow-sm border border-[#111412]/5">
+                        <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" class="w-48 h-48 object-contain">
+                    </div>
+                </div>
+
+                <!-- Section: Área de Proteção -->
+                <div class="col-span-4">
+                    <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4">ÁREA DE PROTEÇÃO</div>
+                    <div class="rule-line mb-8"></div>
+                    <div class="logo-placeholder-box w-full bg-white relative p-8 overflow-hidden shadow-sm border border-[#111412]/5">
+                         <!-- Protection box simulated -->
+                         <div class="protection-zone w-48 h-48 flex items-center justify-center">
+                             <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" class="w-24 h-24">
+                             <!-- Markers -->
+                             <div class="protection-marker -top-6 left-1/2 -translate-x-1/2">1X</div>
+                             <div class="protection-marker -bottom-6 left-1/2 -translate-x-1/2">1X</div>
+                             <div class="protection-marker top-1/2 -left-6 -translate-y-1/2">1X</div>
+                             <div class="protection-marker top-1/2 -right-6 -translate-y-1/2">1X</div>
+                         </div>
+                    </div>
+                    <div class="mt-4 text-[10px] font-semibold tracking-wider opacity-40">
+                        X = DIÂMETRO VISUAL DO NÚCLEO
+                    </div>
+                </div>
+
+                <!-- Section: Escala Mínima & Usos Incorretos -->
+                <div class="col-span-4 flex flex-col gap-6">
+                    <div>
+                        <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4">ESCALA MÍNIMA</div>
+                        <div class="rule-line mb-6"></div>
+                        <div class="flex items-end gap-12">
+                             <div class="flex flex-col items-center gap-2">
+                                 <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" class="w-8 h-8">
+                                 <span class="text-[10px] font-bold text-[#075B3A]">DIGITAL 32 px</span>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4">USOS INCORRETOS</div>
+                        <div class="rule-line mb-6"></div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="relative">
+                                <div class="w-full aspect-square border border-[#111412]/10 bg-[#111412]/5 flex items-center justify-center">
+                                    <div class="absolute w-full h-[1px] bg-red-400 rotate-45"></div>
+                                    <div class="absolute w-full h-[1px] bg-red-400 -rotate-45"></div>
+                                </div>
+                                <div class="text-[9px] mt-2 font-bold tracking-tighter opacity-60 uppercase">Não Distorcer</div>
+                            </div>
+                            <div class="relative">
+                                <div class="w-full aspect-square border border-[#111412]/10 bg-[#111412]/5 flex items-center justify-center">
+                                    <div class="absolute w-full h-[1px] bg-red-400 rotate-45"></div>
+                                    <div class="absolute w-full h-[1px] bg-red-400 -rotate-45"></div>
+                                </div>
+                                <div class="text-[9px] mt-2 font-bold tracking-tighter opacity-60 uppercase">Não Recolorir</div>
+                            </div>
+                            <div class="relative">
+                                <div class="w-full aspect-square border border-[#111412]/10 bg-[#111412]/5 flex items-center justify-center">
+                                    <div class="absolute w-full h-[1px] bg-red-400 rotate-45"></div>
+                                    <div class="absolute w-full h-[1px] bg-red-400 -rotate-45"></div>
+                                </div>
+                                <div class="text-[9px] mt-2 font-bold tracking-tighter opacity-60 uppercase">Não Aplicar Efeitos</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Row -->
+            <div class="absolute bottom-[72px] right-[72px] flex justify-end items-baseline">
+                <span></span>
+                <span class="text-[11px] font-medium tracking-[0.3em] uppercase opacity-60">
+                    KIT DE MARCA · 2026
+                </span>
+            </div>
+
+        </div>
+
+        <!-- Subtle vertical rule -->
+        <div class="absolute top-0 left-[72px] w-[1px] h-full bg-[#111412]/5 pointer-events-none"></div>
+    </div>
+</body></html>

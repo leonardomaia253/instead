@@ -1,0 +1,38 @@
+Add-Type -AssemblyName System.Drawing
+$root='C:\Users\Administrator\instead\marketing\linkedin'
+$out=Join-Path $root 'creatives-final-v2'
+New-Item -ItemType Directory -Force $out|Out-Null
+$logoSource=[Drawing.Bitmap]::FromFile('C:\Users\Administrator\Downloads\1784922766495.jpg')
+$logo=New-Object Drawing.Bitmap 160,160,([Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$lg=[Drawing.Graphics]::FromImage($logo);$lg.InterpolationMode='HighQualityBicubic'
+$lg.DrawImage($logoSource,(New-Object Drawing.Rectangle 0,0,160,160),31,31,38,38,[Drawing.GraphicsUnit]::Pixel)
+$lg.Dispose();$logoSource.Dispose()
+for($y=0;$y -lt 160;$y++){for($x=0;$x -lt 160;$x++){$px=$logo.GetPixel($x,$y);if($px.R -gt 230 -and $px.G -gt 230 -and $px.B -gt 230){$logo.SetPixel($x,$y,[Drawing.Color]::Transparent)}}}
+$data=@(
+@('pexels-1.jpg','your-token-dark.png','Your token should not be born in the dark.','Clear parameters. Review before deployment.'),
+@('pexels-2.jpg','assisted-deployment.png','Assisted deployment is only the beginning.','Structure, review and multichain execution.'),
+@('pexels-3.jpg','no-code-judgment.png','No-code still requires judgment.','Simple to configure. Responsible to launch.'),
+@('pexels-4.jpg','decision-before-contract.png','The decision comes before the contract.','Tokenomics, permissions and risk under review.'),
+@('pexels-5.jpg','liquidity-risk.png','Liquidity requires risk visibility.','See the position before you sign.'))
+foreach($d in $data){
+ $photo=[Drawing.Bitmap]::FromFile((Join-Path $root "sources\$($d[0])"))
+ $canvas=New-Object Drawing.Bitmap 1200,1200
+ $g=[Drawing.Graphics]::FromImage($canvas)
+ $g.InterpolationMode='HighQualityBicubic';$g.TextRenderingHint='AntiAliasGridFit'
+ $scale=[Math]::Max(1200/$photo.Width,1200/$photo.Height)
+ $w=[int]($photo.Width*$scale);$h=[int]($photo.Height*$scale)
+ $g.DrawImage($photo,[int]((1200-$w)/2),[int]((1200-$h)/2),$w,$h)
+ $shade=New-Object Drawing.SolidBrush ([Drawing.Color]::FromArgb(220,5,6,4))
+ $g.FillRectangle($shade,0,770,1200,430);$shade.Dispose()
+ $lime=[Drawing.ColorTranslator]::FromHtml('#DCFF45')
+ $pen=New-Object Drawing.Pen $lime,3;$g.DrawLine($pen,76,785,1124,785);$pen.Dispose()
+ $g.DrawImage($logo,1015,60,120,120)
+ $headline=New-Object Drawing.Font 'Arial',64,([Drawing.FontStyle]::Bold),([Drawing.GraphicsUnit]::Pixel)
+ $support=New-Object Drawing.Font 'Arial',30,([Drawing.FontStyle]::Regular),([Drawing.GraphicsUnit]::Pixel)
+ $white=New-Object Drawing.SolidBrush ([Drawing.Color]::White)
+ $rect=New-Object Drawing.RectangleF 82,825,1030,210
+ $g.DrawString($d[2],$headline,$white,$rect);$g.DrawString($d[3],$support,$white,88,1080)
+ $canvas.Save((Join-Path $out $d[1]),[Drawing.Imaging.ImageFormat]::Png)
+ $white.Dispose();$headline.Dispose();$support.Dispose();$g.Dispose();$canvas.Dispose();$photo.Dispose()
+}
+$logo.Dispose()

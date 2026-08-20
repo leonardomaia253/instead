@@ -1,0 +1,222 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital@1&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #F3F0E8;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .canvas-root {
+            width: 1600px;
+            height: 1000px;
+            background-color: #F3F0E8;
+            color: #111412;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-guide {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: 24px;
+            row-gap: 14px;
+            padding: 72px;
+            height: 100%;
+            width: 100%;
+            grid-template-rows: 150px 300px 300px 64px;
+        }
+
+        .serif-editorial {
+            font-family: 'Lora', serif;
+            font-style: italic;
+        }
+
+        .acid-lima-accent {
+            background-color: #C9FF3D;
+        }
+
+        .rule-line {
+            height: 1px;
+            background-color: rgba(17, 20, 18, 0.1);
+            width: 100%;
+        }
+
+        /* Technical grid overlay decoration */
+        .tech-grid-bg {
+            position: absolute;
+            top: 72px; left: 72px; right: 72px; bottom: 72px;
+            background-image: 
+                linear-gradient(to right, rgba(17, 20, 18, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(17, 20, 18, 0.03) 1px, transparent 1px);
+            background-size: calc((100% - 11 * 24px) / 12 + 24px) 100px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Abstract geometric modules */
+        .abstract-module-node {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 1px solid rgba(7, 91, 58, 0.1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .node-circle {
+            width: 60%;
+            height: 60%;
+            border: 1.5px solid #075B3A;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .node-inner {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px; height: 8px;
+            background: #C9FF3D;
+            border-radius: 50%;
+        }
+
+        .texture-dots {
+            background-image: radial-gradient(rgba(5, 53, 36, 0.2) 1px, transparent 1px);
+            background-size: 8px 8px;
+        }
+
+        .photo-abstract {
+            background: linear-gradient(135deg, #E5E1D5 0%, #D8D4C7 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-abstract::before {
+            content: '';
+            position: absolute;
+            top: 20%; left: 20%;
+            width: 60%; height: 100%;
+            background: rgba(7, 91, 58, 0.05);
+            transform: skewY(-10deg);
+        }
+
+        .grid-guide > .mt-12 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="canvas-root">
+        <div class="tech-grid-bg"></div>
+
+        <div class="grid-guide relative z-10">
+            
+            <!-- Header Row -->
+            <div class="col-span-12 flex justify-between items-start">
+                <div class="flex flex-col gap-6">
+                    <div class="w-32 h-32 bg-white flex items-center justify-center overflow-hidden">
+                        <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" alt="Instead Logo" class="w-full h-full object-contain">
+                    </div>
+                    <div class="text-[11px] tracking-[0.2em] font-semibold text-[#075B3A] uppercase">
+                        INSTEAD — SISTEMA DE IDENTIDADE
+                    </div>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <div class="text-[14px] font-medium tracking-tight mb-1">05 / 06</div>
+                    <div class="w-12 h-[2px] acid-lima-accent"></div>
+                </div>
+            </div>
+
+            <!-- Headline Section -->
+            <div class="col-span-6 pt-6 self-start">
+                <h1 class="text-[72px] leading-[0.95] font-semibold tracking-[-0.03em] text-[#053524] mb-8">
+                    Conexões que revelam estrutura.
+                </h1>
+                <p class="text-[20px] leading-relaxed max-w-sm text-[#111412]/80 font-light">
+                    O sistema gráfico traduz complexidade em relações visíveis.
+                </p>
+            </div>
+
+            <!-- Visual Modules -->
+            <div class="col-span-6 grid grid-cols-3 gap-6 pt-6">
+                <div class="flex flex-col gap-4">
+                    <div class="abstract-module-node">
+                         <div class="node-circle"></div>
+                         <div class="node-inner"></div>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-[0.15em] text-[#075B3A]">NÓ</span>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="abstract-module-node overflow-hidden">
+                        <div class="absolute w-[150%] h-[1px] bg-[#075B3A]/30 rotate-45"></div>
+                        <div class="absolute w-[150%] h-[1px] bg-[#075B3A]/30 -rotate-45"></div>
+                        <div class="w-4 h-4 border border-[#075B3A] rotate-45"></div>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-[0.15em] text-[#075B3A]">FLUXO</span>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="abstract-module-node bg-[#053524] flex-col gap-1">
+                        <div class="w-8 h-[1px] bg-white/20"></div>
+                        <div class="w-8 h-[1px] bg-[#C9FF3D]"></div>
+                        <div class="w-8 h-[1px] bg-white/20"></div>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-[0.15em] text-[#075B3A]">CAMADA</span>
+                </div>
+            </div>
+
+            <!-- Middle Technical Section -->
+            <div class="col-span-8 grid grid-cols-2 gap-6 mt-12">
+                <div class="space-y-4">
+                    <div class="text-[10px] font-bold tracking-[0.15em] text-[#075B3A] uppercase">GRID 12 COLUNAS</div>
+                    <div class="h-40 border border-[#111412]/10 flex">
+                        <div class="flex-1 border-r border-[#111412]/5 bg-[#111412]/[0.02]"></div>
+                        <div class="flex-1 border-r border-[#111412]/5"></div>
+                        <div class="flex-1 border-r border-[#111412]/5 bg-[#111412]/[0.02]"></div>
+                        <div class="flex-1 border-r border-[#111412]/5"></div>
+                        <div class="flex-1 border-r border-[#111412]/5"></div>
+                        <div class="flex-1 border-r border-[#111412]/5 bg-[#C9FF3D]/10"></div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="text-[10px] font-bold tracking-[0.15em] text-[#075B3A] uppercase">DADOS COMO TEXTURA</div>
+                    <div class="h-40 texture-dots opacity-40 border border-[#111412]/10"></div>
+                </div>
+            </div>
+
+            <div class="col-span-4 mt-12 space-y-8">
+                 <div class="space-y-4">
+                    <div class="text-[10px] font-bold tracking-[0.15em] text-[#075B3A] uppercase">FOTOGRAFIA COM CONTEXTO</div>
+                    <div class="flex gap-4">
+                        <div class="w-1/2 aspect-square photo-abstract"></div>
+                        <div class="w-1/2 aspect-square photo-abstract opacity-60"></div>
+                    </div>
+                    <p class="text-[13px] leading-snug text-[#111412]/60">
+                        Pessoas em decisão, tecnologia em uso, luz natural e enquadramentos honestos.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer Row -->
+            <div class="col-span-12 self-end flex justify-between items-baseline border-t border-[#111412]/10 pt-4">
+                <div class="flex flex-col gap-2">
+                    <span class="serif-editorial text-[22px] text-[#075B3A]">
+                        LINHAS CONECTAM · CAMPOS ORGANIZAM · O LIMA SINALIZA
+                    </span>
+                </div>
+                <span class="text-[11px] font-medium tracking-[0.3em] uppercase opacity-60">
+                    KIT DE MARCA · 2026
+                </span>
+            </div>
+
+        </div>
+
+        <!-- Vertical Swiss Axis -->
+        <div class="absolute top-0 left-[72px] w-[1px] h-full bg-[#111412]/5 pointer-events-none"></div>
+    </div>
+</body></html>

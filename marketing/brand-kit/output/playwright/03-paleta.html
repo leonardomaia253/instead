@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital@1&display=swap");
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f3f0e8;
+        font-family: "Inter", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .canvas-root {
+        width: 1600px;
+        height: 1000px;
+        background-color: #f3f0e8;
+        color: #111412;
+        overflow: hidden;
+        position: relative;
+      }
+      .grid-guide {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        grid-template-rows: 140px 180px 300px 80px 50px;
+        column-gap: 24px;
+        row-gap: 18px;
+        padding: 72px;
+        height: 100%;
+        width: 100%;
+      }
+      .grid-guide > .mt-12,
+      .grid-guide > .mt-16 {
+        margin-top: 0;
+      }
+      .brand-header {
+        position: absolute;
+        left: 72px;
+        top: 72px;
+        z-index: 20;
+      }
+      .serif-editorial {
+        font-family: "Lora", serif;
+        font-style: italic;
+      }
+      .rule-line {
+        height: 1px;
+        background-color: rgba(17, 20, 18, 0.1);
+        width: 100%;
+      }
+      .color-card {
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 24px;
+      }
+      .proportion-bar {
+        height: 8px;
+        border-radius: 999px;
+        overflow: hidden;
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas-root">
+      <div class="grid-guide relative z-10">
+        <div class="col-span-12 flex justify-between items-start">
+          <div class="brand-header flex flex-col gap-6">
+            <div
+              class="w-24 h-24 bg-white flex items-center justify-center overflow-hidden"
+            >
+              <img
+                src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg"
+                alt="Instead Logo"
+                class="w-full h-full object-contain"
+              />
+            </div>
+            <div
+              class="text-[11px] tracking-[0.2em] font-semibold text-[#075B3A] uppercase"
+            >
+              INSTEAD — SISTEMA DE IDENTIDADE
+            </div>
+          </div>
+          <div class="text-right flex flex-col items-end">
+            <div class="text-[14px] font-medium tracking-tight mb-1">
+              03 / 06
+            </div>
+            <div class="w-12 h-[2px] bg-[#C9FF3D]"></div>
+          </div>
+        </div>
+        <div class="col-span-5 self-center mt-12">
+          <h1
+            class="text-[72px] leading-[0.95] font-semibold tracking-[-0.03em] text-[#053524] mb-6"
+          >
+            Cor com função.
+          </h1>
+          <p
+            class="text-[22px] leading-relaxed max-w-sm text-[#111412]/80 font-light"
+          >
+            A paleta combina confiança institucional, calor humano e sinalização
+            de precisão.
+          </p>
+        </div>
+        <div class="col-span-12 mt-12 grid grid-cols-5 gap-6">
+          <div class="color-card bg-[#075B3A] text-white">
+            <div class="text-[11px] font-bold tracking-[0.1em] opacity-60 mb-2">
+              VERDE INSTEAD
+            </div>
+            <div class="text-[18px] font-medium">#075B3A</div>
+            <div class="text-[11px] opacity-60">RGB 7 91 58</div>
+          </div>
+          <div class="color-card bg-[#053524] text-white">
+            <div class="text-[11px] font-bold tracking-[0.1em] opacity-60 mb-2">
+              VERDE PROFUNDO
+            </div>
+            <div class="text-[18px] font-medium">#053524</div>
+            <div class="text-[11px] opacity-60">RGB 5 53 36</div>
+          </div>
+          <div
+            class="color-card bg-[#F3F0E8] text-[#111412] border border-[#111412]/10"
+          >
+            <div class="text-[11px] font-bold tracking-[0.1em] opacity-60 mb-2">
+              MARFIM
+            </div>
+            <div class="text-[18px] font-medium">#F3F0E8</div>
+            <div class="text-[11px] opacity-60">RGB 243 240 232</div>
+          </div>
+          <div class="color-card bg-[#111412] text-white">
+            <div class="text-[11px] font-bold tracking-[0.1em] opacity-60 mb-2">
+              PRETO SUAVE
+            </div>
+            <div class="text-[18px] font-medium">#111412</div>
+            <div class="text-[11px] opacity-60">RGB 17 20 18</div>
+          </div>
+          <div class="color-card bg-[#C9FF3D] text-[#053524]">
+            <div class="text-[11px] font-bold tracking-[0.1em] opacity-60 mb-2">
+              LIMA SINAL
+            </div>
+            <div class="text-[18px] font-medium">#C9FF3D</div>
+            <div class="text-[11px] opacity-60">RGB 201 255 61</div>
+          </div>
+        </div>
+        <div class="col-span-12 mt-16">
+          <div class="flex justify-between items-end mb-4">
+            <div
+              class="text-[11px] font-bold tracking-[0.2em] uppercase text-[#075B3A]"
+            >
+              Hierarquia de Uso
+            </div>
+            <div class="serif-editorial text-[18px] text-[#075B3A]">
+              O lima orienta. Nunca domina.
+            </div>
+          </div>
+          <div class="proportion-bar w-full">
+            <div
+              class="h-full bg-[#F3F0E8] border border-[#111412]/10"
+              style="width: 55%"
+            ></div>
+            <div class="h-full bg-[#075B3A]" style="width: 25%"></div>
+            <div class="h-full bg-[#111412]" style="width: 15%"></div>
+            <div class="h-full bg-[#C9FF3D]" style="width: 5%"></div>
+          </div>
+          <div
+            class="flex justify-between mt-3 text-[10px] font-bold tracking-widest uppercase opacity-40"
+          >
+            <span style="width: 55%">55% BASE (MARFIM)</span
+            ><span style="width: 25%">25% PROFUNDIDADE</span
+            ><span style="width: 15%">15% TEXTO</span
+            ><span style="width: 5%" class="text-right">5% SINAL</span>
+          </div>
+        </div>
+        <div
+          class="col-span-12 self-end flex justify-between items-baseline border-t border-[#111412]/10 pt-8"
+        >
+          <span></span><span
+            class="text-[11px] font-medium tracking-[0.3em] uppercase opacity-60"
+            >KIT DE MARCA · 2026</span
+          >
+        </div>
+      </div>
+      <div class="absolute left-[72px] top-[72px] z-30 flex flex-col gap-6">
+        <div class="w-24 h-24 bg-white flex items-center justify-center overflow-hidden">
+          <img
+            src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg"
+            alt="Instead Logo"
+            class="w-full h-full object-contain"
+          />
+        </div>
+        <div class="text-[11px] tracking-[0.2em] font-semibold text-[#075B3A] uppercase">
+          INSTEAD — SISTEMA DE IDENTIDADE
+        </div>
+      </div>
+      <div
+        class="absolute top-0 left-[72px] w-[1px] h-full bg-[#111412]/5 pointer-events-none"
+      ></div>
+      <div
+        class="absolute top-0 right-[72px] w-[1px] h-full bg-[#111412]/5 pointer-events-none"
+      ></div>
+    </div>
+  </body>
+</html>

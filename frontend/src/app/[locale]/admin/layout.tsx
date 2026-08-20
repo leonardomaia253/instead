@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { Activity, BarChart3, CircleDollarSign, Coins, CreditCard, Handshake, MessageCircle, Settings, TrendingUp, Users } from "lucide-react";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
+import { BrandMark } from "@/components/BrandMark";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { address, isConnected } = useAccount();
@@ -61,8 +62,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <aside className="admin-sidebar">
         <div className="admin-brand">
           <Link href={`/${locale}`} style={{ textDecoration: "none" }}>
-            <div className="admin-brand__text">
-              Instead <span>Operations</span>
+            <div className="admin-brand__lockup">
+              <BrandMark decorative />
+              <div className="admin-brand__text">
+                Instead <span>Operations</span>
+              </div>
             </div>
           </Link>
         </div>

@@ -7,6 +7,7 @@ import { useSignMessage } from "wagmi";
 import { getSupabaseFunctionUrl, setWalletAccessToken } from "@/lib/supabase";
 import Link from "next/link";
 import { WalletHelpCard } from "@/components/ElderFriendly";
+import { BrandMark } from "@/components/BrandMark";
 
 export default function AdminLoginPage() {
   const { address, isConnected } = useAccount();
@@ -76,6 +77,7 @@ export default function AdminLoginPage() {
     <main className="admin-login">
       <div className="admin-login__inner">
         <div className="admin-login__header">
+          <BrandMark decorative />
           <span>Instead Operations</span>
           <h1>Acesso operacional</h1>
           <p>Ambiente restrito a carteiras autorizadas.</p>

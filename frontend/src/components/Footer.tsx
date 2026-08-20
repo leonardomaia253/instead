@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Link } from "@/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import { Github, MessageSquare, ShieldCheck, Terminal, Twitter } from "lucide-react";
 
 const optionalSocialLinks: Array<{ href: string | undefined; label: string; icon: React.ReactNode }> = [
@@ -16,7 +17,10 @@ export function Footer() {
     <footer className="proto-footer">
       <div className="container proto-footer__inner">
         <div className="proto-footer__manifesto">
-          <span>INSTEAD / LIQUIDITY INFRASTRUCTURE</span>
+          <div className="proto-footer__brand-lockup">
+            <BrandMark decorative />
+            <span>INSTEAD / LIQUIDITY INFRASTRUCTURE</span>
+          </div>
           <h2>Capital on-chain com controle verificável.</h2>
           <p>
             Crédito, garantias e execução multichain em uma única camada operacional. Cada posição mantém risco, custódia e histórico visíveis.

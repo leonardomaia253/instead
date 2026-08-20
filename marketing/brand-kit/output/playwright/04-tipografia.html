@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital@1&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #F3F0E8;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .canvas-root {
+            width: 1600px;
+            height: 1000px;
+            background-color: #F3F0E8;
+            color: #111412;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-guide {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            padding: 72px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .serif-editorial {
+            font-family: 'Lora', 'Georgia', serif;
+            font-style: italic;
+        }
+
+        .acid-lima-dot {
+            background-color: #C9FF3D;
+        }
+
+        .rule-line {
+            height: 1px;
+            background-color: rgba(17, 20, 18, 0.1);
+            width: 100%;
+        }
+
+        .rule-line-strong {
+            height: 1px;
+            background-color: #053524;
+            width: 100%;
+        }
+
+        .type-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #075B3A;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-root">
+        <!-- Subtle vertical rule for Swiss grid feel -->
+        <div class="absolute top-0 left-[72px] w-[1px] h-full bg-[#111412]/5 pointer-events-none"></div>
+
+        <!-- Main Layout Grid -->
+        <div class="grid-guide relative z-10">
+            
+            <!-- Header Row -->
+            <div class="col-span-12 flex justify-between items-start">
+                <div class="flex flex-col gap-6">
+                    <!-- Logo Container: Small real logo in white field as per request -->
+                    <div class="w-24 h-24 bg-white flex items-center justify-center overflow-hidden">
+                        <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" alt="Instead Logo" class="w-full h-full object-contain">
+                    </div>
+                    <div class="text-[11px] tracking-[0.2em] font-semibold text-[#075B3A] uppercase">
+                        INSTEAD — SISTEMA DE IDENTIDADE
+                    </div>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <div class="text-[14px] font-medium tracking-tight mb-1">04 / 06</div>
+                    <div class="w-12 h-[2px] acid-lima-dot"></div>
+                </div>
+            </div>
+
+            <!-- Middle Row: Headline and Intro -->
+            <div class="col-span-12 flex items-baseline gap-12 pt-12 border-b border-[#111412]/10 pb-8">
+                <h1 class="text-[48px] leading-[1.1] font-semibold tracking-[-0.03em] text-[#053524] flex-1">
+                    A voz é precisa. O ritmo é humano.
+                </h1>
+                <p class="text-[22px] leading-[1.3] max-w-sm text-[#111412]/80 font-light">
+                    A tipografia organiza decisões complexas sem perder proximidade.
+                </p>
+            </div>
+
+            <!-- Content Sections: Split between Primary and Secondary -->
+            <div class="col-span-7 pt-12 space-y-20">
+                <!-- Section: Primary Typeface -->
+                <div class="space-y-8">
+                    <div class="flex items-center gap-4">
+                        <span class="type-label">PRIMÁRIA</span>
+                        <span class="text-[24px] font-medium tracking-tight">INTER</span>
+                    </div>
+                    <div class="rule-line-strong"></div>
+                    
+                    <div class="grid grid-cols-2 gap-12">
+                        <div>
+                            <div class="text-[86px] font-semibold tracking-tighter leading-none mb-4">Aa</div>
+                            <div class="text-[22px] tracking-tight text-[#111412]/60">Aa Bb Cc 0123456789</div>
+                        </div>
+                        <div class="space-y-6 pt-4">
+                            <div class="flex justify-between items-end border-b border-[#111412]/5 pb-2">
+                                <span class="type-label text-[9px] opacity-60">DISPLAY 86 / 82</span>
+                                <span class="text-[32px] font-semibold tracking-tighter">Estrutura para executar.</span>
+                            </div>
+                            <div class="flex justify-between items-end border-b border-[#111412]/5 pb-2">
+                                <span class="type-label text-[9px] opacity-60">TÍTULO 48 / 52</span>
+                                <span class="text-[24px] font-medium">Clareza para decidir.</span>
+                            </div>
+                            <div class="flex justify-between items-end border-b border-[#111412]/5 pb-2">
+                                <span class="type-label text-[9px] opacity-60">CORPO 22 / 34</span>
+                                <span class="text-[18px] font-light leading-relaxed">Transparência e acompanhamento.</span>
+                            </div>
+                            <div class="flex justify-between items-end border-b border-[#111412]/5 pb-2">
+                                <span class="type-label text-[9px] opacity-60">LEGENDA 11 / 16</span>
+                                <span class="text-[11px] font-bold uppercase tracking-widest">CONTROLE E CONTINUIDADE.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-4 col-start-9 pt-12">
+                <!-- Section: Secondary Typeface -->
+                <div class="space-y-8">
+                    <div class="flex items-center gap-4">
+                        <span class="type-label">SECUNDÁRIA</span>
+                        <span class="text-[24px] serif-editorial">GEORGIA ITALIC</span>
+                    </div>
+                    <div class="rule-line"></div>
+                    
+                    <div class="space-y-12">
+                        <div class="serif-editorial text-[64px] leading-tight text-[#075B3A]">
+                            A confiança nasce antes da transação.
+                        </div>
+                        <div class="text-[11px] font-medium tracking-[0.2em] text-[#111412]/40">
+                            USADA EXCLUSIVAMENTE PARA CITAÇÕES, ÊNFASES EDITORIAIS E NOTAS DE RODAPÉ.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Row -->
+            <div class="col-span-12 self-end flex justify-between items-baseline pt-8">
+                <span class="text-[12px] font-bold text-[#075B3A] tracking-[0.15em] uppercase">
+                    CAIXA ALTA PARA SISTEMA · SENTENÇA PARA IDEIAS
+                </span>
+                <span class="text-[11px] font-medium tracking-[0.3em] uppercase opacity-60">
+                    KIT DE MARCA · 2026
+                </span>
+            </div>
+
+        </div>
+    </div>
+</body></html>

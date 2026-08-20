@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Instead - Brand Mark QA</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f3f0e8; color: #053524; }
+      .surface { min-height: 50vh; padding: 48px; display: grid; align-content: center; gap: 32px; }
+      .surface.dark { background: #0b0d0c; color: #f3f0e8; }
+      .lockup { display: flex; align-items: center; gap: 14px; }
+      .mark { display: block; width: 36px; height: 36px; object-fit: contain; }
+      .footer .mark { width: 52px; height: 52px; }
+      strong { display: block; font-size: 18px; letter-spacing: -.04em; }
+      span { display: block; margin-top: 3px; color: #728078; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+      .dark span { color: #9ba79f; }
+      .swatches { display: flex; gap: 16px; }
+      .swatch { width: 84px; height: 84px; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.12); }
+      .swatch img { width: 44px; height: 44px; }
+      @media (max-width: 600px) { .surface { min-height: 50vh; padding: 28px 22px; } .mark { width: 32px; height: 32px; } }
+    </style>
+  </head>
+  <body>
+    <section class="surface dark">
+      <div class="lockup"><img class="mark" src="/public/instead-logo.svg" alt="Instead" /><div><strong>Instead</strong><span>Liquidity infrastructure</span></div></div>
+      <div class="lockup footer"><img class="mark" src="/public/instead-logo.svg" alt="" /><div><strong>Capital on-chain.</strong><span>Controle verificável</span></div></div>
+    </section>
+    <section class="surface">
+      <div class="lockup"><img class="mark" src="/public/instead-logo.svg" alt="Instead" /><div><strong>Instead</strong><span>Operations</span></div></div>
+      <div class="swatches">
+        <div class="swatch" style="background:#fff"><img src="/public/instead-logo.svg" alt="" /></div>
+        <div class="swatch" style="background:#f3f0e8"><img src="/public/instead-logo.svg" alt="" /></div>
+        <div class="swatch" style="background:#053524"><img src="/public/instead-logo.svg" alt="" /></div>
+      </div>
+    </section>
+  </body>
+</html>

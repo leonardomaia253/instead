@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital@1&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #F3F0E8;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .canvas-root {
+            width: 1600px;
+            height: 1000px;
+            background-color: #F3F0E8;
+            color: #111412;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .grid-guide {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            padding: 72px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .serif-editorial {
+            font-family: 'Lora', serif;
+            font-style: italic;
+        }
+
+        .acid-lima-dot {
+            background-color: #C9FF3D;
+        }
+
+        /* Linear, concentric, woven abstract shape using CSS gradients and masks */
+        .abstract-element {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            right: -100px;
+            bottom: -100px;
+            border-radius: 50%;
+            background: repeating-radial-gradient(
+                circle at center,
+                rgba(7, 91, 58, 0.08) 0px,
+                rgba(7, 91, 58, 0.08) 2px,
+                transparent 2px,
+                transparent 40px
+            );
+            z-index: 0;
+        }
+
+        .abstract-element::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-radial-gradient(
+                circle at 40% 40%,
+                rgba(5, 53, 36, 0.05) 0px,
+                rgba(5, 53, 36, 0.05) 1px,
+                transparent 1px,
+                transparent 30px
+            );
+            transform: scale(1.1);
+            border-radius: 50%;
+        }
+
+        .rule-line {
+            height: 1px;
+            background-color: rgba(17, 20, 18, 0.1);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-root" data-sd-id="1">
+        <!-- Abstract Geometric Background -->
+        <div class="abstract-element" data-sd-id="2"></div>
+
+        <!-- Main Layout Grid -->
+        <div class="grid-guide relative z-10" data-sd-id="3">
+            
+            <!-- Header Row -->
+            <div class="col-span-12 flex justify-between items-start" data-sd-id="4">
+                <div class="flex flex-col gap-6" data-sd-id="5">
+                    <!-- Logo Container: Fixed size to keep margins of the original image -->
+                    <div class="w-32 h-32 bg-white flex items-center justify-center overflow-hidden" data-sd-id="6">
+                        <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8566f8cf-e7f4-41d4-8356-293c1db2bd4e/brand-assets/instead-primary-logo/1784922766495.jpg" alt="Instead Logo" class="w-full h-full object-contain" data-sd-id="7">
+                    </div>
+                    <div class="text-[11px] tracking-[0.2em] font-semibold text-[#075B3A] uppercase" data-sd-id="8">
+                        INSTEAD — SISTEMA DE IDENTIDADE
+                    </div>
+                </div>
+                <div class="text-right flex flex-col items-end" data-sd-id="9">
+                    <div class="text-[14px] font-medium tracking-tight mb-1" data-sd-id="10">01 / 06</div>
+                    <div class="w-12 h-[2px] acid-lima-dot" data-sd-id="11"></div>
+                </div>
+            </div>
+
+            <!-- Middle Row: Headline and Principles -->
+            <div class="col-span-7 self-center pt-20" data-sd-id="12">
+                <h1 class="text-[86px] leading-[0.95] font-semibold tracking-[-0.03em] text-[#053524] mb-12" data-sd-id="13">
+                    Clareza para decidir.<br>Estrutura para executar.
+                </h1>
+                <p class="text-[22px] leading-relaxed max-w-md text-[#111412]/80 font-light" data-sd-id="14">
+                    Tecnologia financeira com critério, transparência e acompanhamento humano.
+                </p>
+            </div>
+
+            <div class="col-span-4 col-start-9 self-center space-y-24" data-sd-id="15">
+                <div class="space-y-16" data-sd-id="16">
+                    <div class="group" data-sd-id="17">
+                        <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4" data-sd-id="18">01</div>
+                        <div class="rule-line mb-4" data-sd-id="19"></div>
+                        <div class="text-[32px] font-light tracking-tight" data-sd-id="20">CLAREZA</div>
+                    </div>
+                    <div class="group" data-sd-id="21">
+                        <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4" data-sd-id="22">02</div>
+                        <div class="rule-line mb-4" data-sd-id="23"></div>
+                        <div class="text-[32px] font-light tracking-tight" data-sd-id="24">CONTROLE</div>
+                    </div>
+                    <div class="group" data-sd-id="25">
+                        <div class="text-[11px] font-bold tracking-[0.1em] text-[#075B3A] mb-4" data-sd-id="26">03</div>
+                        <div class="rule-line mb-4" data-sd-id="27"></div>
+                        <div class="text-[32px] font-light tracking-tight" data-sd-id="28">CONTINUIDADE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Row -->
+            <div class="col-span-12 self-end flex justify-between items-baseline border-t border-[#111412]/10 pt-8" data-sd-id="29">
+                <span class="serif-editorial text-[24px] text-[#075B3A]" data-sd-id="30">
+                    A confiança nasce antes da transação.
+                </span>
+                <span class="text-[11px] font-medium tracking-[0.3em] uppercase opacity-60" data-sd-id="31">
+                    KIT DE MARCA · 2026
+                </span>
+            </div>
+
+        </div>
+
+        <!-- Subtle vertical rule for Swiss grid feel -->
+        <div class="absolute top-0 left-[72px] w-[1px] h-full bg-[#111412]/5 pointer-events-none" data-sd-id="32"></div>
+    </div>
+
+</body></html>

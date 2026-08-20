@@ -4549,3 +4549,24 @@ input, select, textarea {
   margin: 16px 0 0 auto;
 }
 .ai-assistant > button { width: auto !important; height: auto !important; }
+
+/* Instead master mark: used only in institutional brand lockups. */
+.instead-brand-mark {
+  display: block;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.proto-brand > .instead-brand-mark { width: 36px; height: 36px; }
+.proto-footer__brand-lockup { display: flex; align-items: center; gap: 14px; align-self: start; }
+.proto-footer__brand-lockup .instead-brand-mark { width: 52px; height: 52px; }
+.proto-footer__brand-lockup span { max-width: 17ch; line-height: 1.45; }
+.admin-brand__lockup { display: flex; align-items: center; gap: 10px; }
+.admin-brand__lockup .instead-brand-mark { width: 42px; height: 42px; }
+.admin-login__header > .instead-brand-mark { width: 64px; height: 64px; margin-bottom: 18px; }
+
+@media (max-width: 768px) {
+  .proto-brand > .instead-brand-mark { width: 32px; height: 32px; }
+  .proto-footer__brand-lockup .instead-brand-mark { width: 44px; height: 44px; }
+}

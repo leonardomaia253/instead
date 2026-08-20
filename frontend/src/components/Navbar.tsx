@@ -1,20 +1,12 @@
 "use client";
 
 import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { BrandMark } from "@/components/BrandMark";
 
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/navigation";
 import { Activity, ChevronDown, Gauge, Menu, Moon, Sun, Zap, X } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
-
-const Logo = () => (
-  <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <rect x="1" y="1" width="36" height="36" fill="#050604" stroke="#dcff45" strokeWidth="2" />
-    <path d="M10 8H28V13H22V25H28V30H10V25H16V13H10V8Z" fill="#dcff45" />
-    <path d="M6 6L12 6L6 12V6Z" fill="#55f0c0" />
-    <path d="M32 32H26L32 26V32Z" fill="#55f0c0" />
-  </svg>
-);
 
 import { useLocale } from "next-intl";
 
@@ -58,7 +50,7 @@ export function Navbar() {
     <nav className={`proto-nav ${scrolled ? "proto-nav--scrolled" : ""}`}>
       <div className="container proto-nav__inner">
         <Link href="/" className="proto-brand" aria-label="Instead home">
-          <Logo />
+          <BrandMark decorative />
           <span>
             <strong>Instead</strong>
             <em>Liquidity OS</em>
