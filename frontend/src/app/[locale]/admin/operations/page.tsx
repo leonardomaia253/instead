@@ -70,7 +70,7 @@ export default function AdminOperationsPage() {
   }), [data]);
 
   return (
-    <AdminPage eyebrow="Operação" title="Centro de controle" description="Saldos, incidentes, KYC, webhooks, filas e auditoria em uma visão operacional." action={<button onClick={() => load()} className="admin-action admin-action--secondary"><RefreshCw size={15} /> Atualizar</button>}>
+    <AdminPage eyebrow="Operação" title="Centro de controle administrativo" description="Saldos, incidentes, KYC, webhooks, filas e auditoria em uma visão operacional." action={<button onClick={() => load()} className="admin-action admin-action--secondary"><RefreshCw size={15} /> Atualizar</button>}>
 
       {error && <div className="admin-notice" data-tone="critical">{error}</div>}
 

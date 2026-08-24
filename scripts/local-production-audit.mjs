@@ -34,7 +34,7 @@ const checks = [
   { label: "contract security scan", command: "pnpm", args: ["contracts:security"], timeout: 60_000 },
   { label: "contract tests", command: "pnpm", args: ["contracts:test"], timeout: 240_000 },
   { label: "production dependency audit", command: "pnpm", args: ["audit:prod"], timeout: 120_000 },
-  { label: "frontend production build", command: "pnpm", args: ["build"], timeout: 300_000 },
+  { label: "frontend production build", command: "pnpm", args: ["build"], timeout: 900_000 },
   { label: "frontend typecheck", command: "pnpm", args: ["typecheck"], timeout: 180_000 },
 ];
 

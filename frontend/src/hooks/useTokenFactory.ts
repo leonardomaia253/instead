@@ -30,8 +30,8 @@ export function useTokenFactory() {
     hasBlacklist?: boolean;
     creatorWallet: string;
   }) {
-    if (!feeInEth) throw new Error("Could not fetch creation fee");
-    if (!chainId) throw new Error("Wallet network is required before creating a token");
+    if (!feeInEth) throw new Error("Não foi possível consultar a taxa de publicação. Tente novamente em instantes.");
+    if (!chainId) throw new Error("Escolha uma rede na carteira antes de publicar o ativo.");
 
     // Adiciona 5% de slippage ao fee para tolerar movimentos de preço do ETH
     const feeWithSlippage = (feeInEth * 105n) / 100n;

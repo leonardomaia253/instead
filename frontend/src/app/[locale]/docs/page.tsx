@@ -10,10 +10,10 @@ export default function DocsPage() {
       <main className="doc-shell">
         <div className="container">
           <header className="doc-hero">
-            <span>DOCS / OPERATOR MANUAL</span>
-            <h1>Manual de operação do protocolo.</h1>
+            <span>CENTRAL DE AJUDA</span>
+            <h1>Use a Instead com mais segurança.</h1>
             <p>
-              A documentação da Instead foi organizada como mesa de comando: arquitetura, fluxos, riscos e integrações separados por decisão operacional.
+              Encontre orientações sobre cada produto, entenda os riscos e siga os passos necessários para concluir suas operações.
             </p>
           </header>
 
@@ -28,7 +28,7 @@ export default function DocsPage() {
             <article className="doc-panel">
               <code>02 / FACTORY</code>
               <h3>Token launch</h3>
-              <p>Crie ativos com supply, mint, burn e taxa sem escrever Solidity. Deploy de contratos fica bloqueado até auditoria e testes.</p>
+              <p>Defina oferta, criação adicional, queima e taxas sem programar. A publicação só é liberada quando as verificações de segurança necessárias estiverem concluídas.</p>
             </article>
             <article className="doc-panel">
               <code>03 / AUTENTICAÇÃO</code>

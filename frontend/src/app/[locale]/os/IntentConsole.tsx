@@ -32,7 +32,7 @@ export function IntentConsole() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "Could not persist intent");
+      if (!response.ok) throw new Error(body.error || "Não foi possível salvar o plano");
       if (body.saved?.id) {
         setSavedId(body.saved.id);
         setSaveState("saved");
@@ -47,11 +47,11 @@ export function IntentConsole() {
   return (
     <section className="os-console">
       <div className="os-console__input">
-        <span>INTENT ENGINE / FOUNDATION</span>
-        <h2>Digite um objetivo. A Instead transforma em rota, risco e proximas acoes.</h2>
+        <span>PLANEJE SUA PRÓXIMA AÇÃO</span>
+        <h2>Conte o que você quer fazer. Nós mostramos caminhos, riscos e próximos passos.</h2>
         <textarea value={intent} onChange={(event) => setIntent(event.target.value)} rows={4} />
         <label>
-          Health factor opcional
+          Fator de saúde (opcional)
           <input value={healthFactor} onChange={(event) => setHealthFactor(event.target.value)} inputMode="decimal" />
         </label>
         <div className="os-console__examples">
@@ -60,19 +60,19 @@ export function IntentConsole() {
           ))}
         </div>
         <button className="os-console__save" onClick={persistPlan} disabled={saveState === "saving"}>
-          {saveState === "saving" ? "Salvando plano..." : "Salvar plano de intent"}
+          {saveState === "saving" ? "Salvando plano..." : "Salvar meu plano"}
         </button>
-        {saveState === "saved" && <p className="os-console__status">Plano salvo: {savedId}</p>}
-        {saveState === "local" && <p className="os-console__status">Plano gerado; persistencia indisponivel neste ambiente.</p>}
-        {saveState === "error" && <p className="os-console__status os-console__status--error">Nao foi possivel salvar agora.</p>}
+        {saveState === "saved" && <p className="os-console__status">Seu plano foi salvo.</p>}
+        {saveState === "local" && <p className="os-console__status">Seu plano está pronto para consulta nesta tela, mas não pôde ser salvo.</p>}
+        {saveState === "error" && <p className="os-console__status os-console__status--error">Não foi possível salvar agora. Tente novamente em instantes.</p>}
       </div>
       <div className="os-console__plan">
         <span className={`os-risk os-risk--${plan.risk}`}>{plan.risk}</span>
         <h3>{plan.title}</h3>
         <p>{plan.summary}</p>
-        <strong>Rota recomendada</strong>
+        <strong>Caminho recomendado</strong>
         <p>{plan.recommendedRoute}</p>
-        <strong>Proximas acoes</strong>
+        <strong>Próximas ações</strong>
         <ol>
           {plan.nextActions.map((action) => <li key={action}>{action}</li>)}
         </ol>

@@ -15,7 +15,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export function assertSupabaseConfigured() {
   if (!isSupabaseConfigured) {
-    throw new Error("Supabase não está configurado neste build. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY e gere um novo deploy.");
+    throw new Error("Este recurso está temporariamente indisponível. Tente novamente em instantes.");
   }
 }
 
@@ -87,7 +87,7 @@ export async function setWalletAccessToken(token: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
   });
-  if (!response.ok) throw new Error("Could not persist wallet session");
+  if (!response.ok) throw new Error("Não foi possível manter sua sessão. Conecte a carteira novamente.");
 }
 
 export async function clearWalletAccessToken() {

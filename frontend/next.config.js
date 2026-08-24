@@ -49,6 +49,16 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    // ox resolves optional Tempo implementations dynamically. Webpack cannot
+    // statically enumerate that third-party request, but the package ships the
+    // referenced implementation and does not accept user-controlled paths.
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /ox[\\/]_esm[\\/]tempo[\\/]internal[\\/]virtualMasterPool\.js$/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+    ];
     config.resolve.alias = {
       ...config.resolve.alias,
       '@react-native-async-storage/async-storage': false,

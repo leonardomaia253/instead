@@ -10,10 +10,10 @@ export default function SecurityPage() {
       <main className="doc-shell">
         <div className="container">
           <header className="doc-hero">
-            <span>SECURITY / THREAT SURFACE</span>
-            <h1>Segurança como arquitetura, não selo.</h1>
+            <span>COMO PROTEGEMOS VOCÊ</span>
+            <h1>Segurança em cada operação.</h1>
             <p>
-              A Instead prioriza controles verificáveis: autenticação por assinatura, isolamento de dados, edge functions restritas e deploy de contratos somente depois da fase de auditoria.
+              A Instead protege seu acesso com assinatura pela carteira, mantém os dados de cada conta separados e só libera novos contratos após testes de segurança.
             </p>
           </header>
 
@@ -31,7 +31,7 @@ export default function SecurityPage() {
             <article className="doc-panel">
               <code>FIREWALL</code>
               <h3>Proteção de Aplicação</h3>
-              <p>Rate limiting, sanitização de payloads e proteção contra ataques automatizados em todas as APIs do ecossistema.</p>
+              <p>Limitamos tentativas excessivas, validamos as informações recebidas e bloqueamos ações automatizadas suspeitas.</p>
             </article>
             <article className="doc-panel doc-panel--wide">
               <code>CONTRATOS</code>
@@ -43,7 +43,7 @@ export default function SecurityPage() {
             <article className="doc-panel">
               <code>MONITORAMENTO</code>
               <h3>Alertas em Tempo Real</h3>
-              <p>Infraestrutura de monitoramento ativo monitora a saúde das conexões blockchain e liquidez em tempo real.</p>
+              <p>Acompanhamos continuamente as conexões com as redes e as condições de liquidez para identificar instabilidades.</p>
             </article>
           </section>
         </div>

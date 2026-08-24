@@ -170,7 +170,7 @@ export default function AdminRevenuePage() {
         <AdminMetric label="Emissões com falha" value={deploymentMetrics.failed} tone={deploymentMetrics.failed ? "critical" : "default"} />
       </AdminMetrics>
 
-      <AdminSection title="Emissões assistidas" description="Fila fiat do relayer, com filtros, tentativas, erros operacionais e referências on-chain." action={<AdminStatus>{deployments.length} recentes</AdminStatus>}>
+      <AdminSection title="Controle de deploys assistidos" description="Fila fiat do relayer, com filtros, tentativas, erros operacionais e referências on-chain." action={<AdminStatus>{deployments.length} recentes</AdminStatus>}>
         <div className="admin-filter-grid">
           <select value={deploymentFilters.status} onChange={(event) => setDeploymentFilters((prev) => ({ ...prev, status: event.target.value }))}>
             <option value="all">Todos status</option>
@@ -249,7 +249,7 @@ export default function AdminRevenuePage() {
         </div>
       </AdminSection>
 
-      <AdminSection title="Provisionar Widget/API B2B" description="Crie um cliente parceiro, gere a credencial e habilite o módulo de crédito e risco." action={<AdminStatus tone="positive">Disponível</AdminStatus>}>
+      <AdminSection title="Provisionar Widget/API B2B" description="Crie um cliente parceiro, gere uma API key e habilite o módulo de crédito e risco." action={<AdminStatus tone="positive">Disponível</AdminStatus>}>
         <div className="admin-form-grid">
           <input placeholder="Nome do parceiro" value={b2bForm.name} onChange={(event) => setB2bForm((prev) => ({ ...prev, name: event.target.value }))} />
           <input placeholder="dominio.com" value={b2bForm.domain} onChange={(event) => setB2bForm((prev) => ({ ...prev, domain: event.target.value }))} />

@@ -320,12 +320,11 @@ export default function LendingPage() {
         />
         </div>
 
-        {/* Lending desabilitado — card institucional limpo, sem expor lógica interna */}
         {!isLendingEnabled && (
           <div className="availability-notice">
-            <strong>Operações on-chain indisponíveis neste ambiente</strong>
+            <strong>Novas operações estão temporariamente indisponíveis</strong>
             <p>
-              Configure contratos, rotas e gates de producao antes de liberar operacoes com capital real.
+              No momento, você ainda não pode depositar garantias ou solicitar crédito. Fale com nosso atendimento para tirar dúvidas ou saber quando o acesso estará disponível.
             </p>
             {SUPPORT_EMAIL ? (
               <a
@@ -429,7 +428,7 @@ export default function LendingPage() {
                   disabled={isPending || !amount || !isLendingEnabled}
                 >
                   {!isLendingEnabled
-                    ? "Indisponivel neste ambiente"
+                    ? "Temporariamente indisponível"
                     : isPending
                     ? "Aguardando confirmação…"
                     : tab === "deposit"
@@ -483,7 +482,7 @@ export default function LendingPage() {
               <div className="card protection-card">
                 <div>
                   <h3>
-                    Proteção da posição
+                    Lending Pro Stack — Proteção da posição
                   </h3>
                   <p>
                     Risco atual: <strong style={{ color: liveHF < 1.35 ? "var(--red)" : "var(--accent-1)" }}>{riskLabel}</strong>. {recommendation}

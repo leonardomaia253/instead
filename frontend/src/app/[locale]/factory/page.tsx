@@ -575,9 +575,9 @@ function StepReview({
               "Publicar ativo"}
       </button>
       <div style={{ marginTop: 16, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Pagar sem crypto</div>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Pagar em reais ou com cartão</div>
         <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 12 }}>
-          Para clientes que preferem cartao ou PIX, gere um checkout fiat. A equipe comercial libera o deploy assistido apos confirmacao do webhook.
+          Escolha cartão ou PIX para solicitar a publicação assistida. Após a confirmação do pagamento, você poderá acompanhar o pedido no seu painel.
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
           <button
@@ -585,14 +585,14 @@ function StepReview({
             onClick={() => onFiatCheckout("stripe", form.template === "fair_launch" ? "token_fair_launch_assisted" : "token_deploy_premium")}
             disabled={fiatCheckoutStatus === "loading"}
           >
-            Cartao global
+            Pagar com cartão
           </button>
           <button
             className="btn-outline"
             onClick={() => onFiatCheckout("pagarme", form.template === "fair_launch" ? "token_fair_launch_assisted" : "token_deploy_premium")}
             disabled={fiatCheckoutStatus === "loading"}
           >
-            Brasil: cartao ou PIX
+            Pagar com cartão ou PIX
           </button>
         </div>
         {fiatCheckoutStatus === "error" && (
@@ -1105,8 +1105,8 @@ export default function FactoryPage() {
         <SafetyChecklist
           items={[
             "Nada é publicado enquanto você não chegar na revisão final.",
-            "Nome, símbolo e regras ficam permanentes depois do deploy.",
-            "Se preferir, use checkout com cartão/PIX e deploy assistido.",
+            "Nome, símbolo e regras ficam permanentes depois da publicação.",
+            "Se preferir, pague com cartão ou PIX e solicite a publicação assistida.",
           ]}
         />
         </div>

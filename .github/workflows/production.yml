@@ -12,7 +12,7 @@ permissions:
 jobs:
   frontend-and-security:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -74,9 +74,12 @@ jobs:
       - name: Production dependency audit
         run: pnpm audit:prod
 
-      - name: Production readiness
-        run: pnpm readiness
+      - name: Strict EVM production gate
+        run: pnpm production:gate
         env:
+          PRODUCTION_TARGET: evm
+          REQUIRE_STRICT_PRODUCTION_GATE: 'true'
+          REQUIRE_EXTERNAL_AUDIT: 'true'
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID }}
@@ -107,17 +110,52 @@ jobs:
           AAVE_POOL_ADDRESSES_PROVIDER: ${{ vars.AAVE_POOL_ADDRESSES_PROVIDER }}
           PRODUCTION_MULTISIG_ADDRESS: ${{ vars.PRODUCTION_MULTISIG_ADDRESS }}
           INCIDENT_PAUSE_RUNBOOK_URL: ${{ vars.INCIDENT_PAUSE_RUNBOOK_URL }}
-          REQUIRE_DEPLOYMENT_MANIFEST: ${{ vars.REQUIRE_DEPLOYMENT_MANIFEST || 'false' }}
-          REQUIRE_OWNERSHIP_VERIFICATION: ${{ vars.REQUIRE_OWNERSHIP_VERIFICATION || 'false' }}
+          REQUIRE_DEPLOYMENT_MANIFEST: 'true'
+          REQUIRE_OWNERSHIP_VERIFICATION: 'true'
           DEPLOYMENT_NETWORK: ${{ vars.DEPLOYMENT_NETWORK }}
           DEPLOYMENT_RPC_URL: ${{ secrets.DEPLOYMENT_RPC_URL }}
 
-      - name: Smoke tests
-        if: ${{ vars.RUN_SMOKE_TESTS == 'true' }}
-        run: pnpm smoke:test
+
+  solana-production:
+    if: ${{ vars.REQUIRE_SOLANA_PRODUCTION == 'true' }}
+    runs-on: ubuntu-latest
+    container: solanafoundation/anchor:0.31.1
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Require Solana production configuration
+        run: pnpm solana:check
         env:
-          APP_ORIGIN: ${{ vars.APP_ORIGIN || 'https://instead.finance' }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
-          SMOKE_TIMEOUT_MS: 10000
+          REQUIRE_SOLANA_PRODUCTION: 'true'
+          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+          NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID: ${{ vars.NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID }}
+
+      - name: Require configured Solana toolchain
+        run: |
+          anchor --version
+          solana --version
+          cargo --version
+
+      - name: Build and test Solana program
+        run: |
+          pnpm solana:build
+          pnpm solana:test
+        env:
+          ANCHOR_PROVIDER_URL: ${{ secrets.SOLANA_RPC_URL }}
+          NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID: ${{ vars.NEXT_PUBLIC_SOLANA_FACTORY_PROGRAM_ID }}

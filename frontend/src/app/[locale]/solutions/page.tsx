@@ -58,7 +58,7 @@ export default function SolutionsPage() {
             <div className="solutions-command-card">
               <span>O QUE VOCÊ PODE FAZER</span>
               <strong>Token, crédito e risco</strong>
-              <p>Escolha um fluxo, veja o que está incluso e avance para a tela certa sem precisar entender a arquitetura por trás.</p>
+              <p>Escolha o que você quer fazer, veja o que está incluído e siga direto para a próxima etapa.</p>
               <div>
                 <small>CRIAR TOKEN</small>
                 <small>TOMAR LIQUIDEZ</small>

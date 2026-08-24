@@ -7,6 +7,11 @@ const pillarOrder = Object.keys(VISION_PILLARS) as VisionPillar[];
 
 export default function InsteadOSPage() {
   const progress = roadmapProgress();
+  const statusLabel = {
+    live: "Disponível agora",
+    foundation: "Disponibilidade limitada",
+    planned: "Ainda indisponível",
+  } as const;
 
   return (
     <div className="site-shell">
@@ -14,15 +19,15 @@ export default function InsteadOSPage() {
       <main className="os-shell">
         <section className="os-hero">
           <div className="container os-hero__inner">
-            <span>INSTEAD OS / 100 MELHORIAS</span>
-            <h1>O cockpit para criar ativos, acessar liquidez e controlar risco.</h1>
+            <span>INSTEAD OS</span>
+            <h1>Encontre o caminho certo para o seu objetivo.</h1>
             <p>
-              Esta pagina transforma a visao de 100 melhorias em backlog executavel dentro do produto. Cada bloco abaixo vira modulo, API, automacao ou fluxo de interface.
+              Descreva o que você quer fazer e veja as opções, os riscos e os próximos passos antes de movimentar seu patrimônio.
             </p>
             <div className="os-metrics">
-              <strong>{progress.total}<small>melhorias mapeadas</small></strong>
-              <strong>{progress.foundation}<small>fundacoes iniciadas</small></strong>
-              <strong>{progress.planned}<small>proximas entregas</small></strong>
+              <strong>{progress.total}<small>recursos apresentados</small></strong>
+              <strong>{progress.live}<small>disponíveis agora</small></strong>
+              <strong>{progress.foundation}<small>com acesso limitado</small></strong>
             </div>
           </div>
         </section>
@@ -48,7 +53,7 @@ export default function InsteadOSPage() {
                           <strong>{item.title}</strong>
                           <p>{item.outcome}</p>
                         </div>
-                        <span data-status={item.status}>{item.status}</span>
+                        <span data-status={item.status}>{statusLabel[item.status]}</span>
                       </div>
                     ))}
                   </div>

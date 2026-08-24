@@ -127,7 +127,7 @@ export default function DashboardPage() {
 
         <div className="dashboard-ops-grid">
           <div className="card dashboard-panel">
-            <PanelHeader title="Plano Instead" description="Planos ativos e benefícios liberados." action={<Link href="/solutions">Ver planos</Link>} />
+            <PanelHeader title="Meu plano Instead" description="Planos ativos e benefícios liberados." action={<Link href="/solutions">Ver planos</Link>} />
             {revenueAuthRequired ? (
               <div className="dashboard-message" data-tone="accent">
                 Entre com sua wallet para assinar a sessao e carregar planos, pagamentos e automacoes premium.
@@ -154,7 +154,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="card dashboard-panel">
-            <PanelHeader title="Emissões assistidas" description="Ativos pagos em moeda fiduciária e executados pelo relayer." />
+            <PanelHeader title="Deploys assistidos" description="Ativos pagos em moeda fiduciária e executados pelo relayer." />
             {revenueAuthRequired ? (
               <div className="dashboard-message" data-tone="accent">Assine a sessão para carregar suas emissões assistidas.</div>
             ) : assistedDeployments.length === 0 ? (

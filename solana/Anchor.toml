@@ -2,6 +2,10 @@
 resolution = true
 skip-lint = false
 
+[toolchain]
+anchor_version = "0.31.1"
+solana_version = "2.1.0"
+
 [programs.localnet]
 instead_solana_factory = "BXg5tAMHYNbYhfxd6eYR7j3njk2nozb5Bk6JZuqhdtzy"
 
